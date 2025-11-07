@@ -60,7 +60,7 @@
         <true/>
         <key>NSExceptionDomains</key>
         <dict>
-            <key>192.0.0.3</key>
+            <key>192.0.0.2</key>
             <dict>
                 <key>NSExceptionAllowsInsecureHTTPLoads</key>
                 <true/>
@@ -69,7 +69,7 @@
                 <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
                 <true/>
             </dict>
-            <key>192.0.0.2</key>
+            <key>192.0.0.3</key>
             <dict>
                 <key>NSExceptionAllowsInsecureHTTPLoads</key>
                 <true/>
