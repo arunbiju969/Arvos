@@ -229,6 +229,7 @@ struct PointCloud {
         var ply = Data()
 
         // PLY header
+        let colorProps = colors != nil ? "property uchar red\nproperty uchar green\nproperty uchar blue\n" : ""
         let header = """
         ply
         format binary_little_endian 1.0
@@ -236,7 +237,7 @@ struct PointCloud {
         property float x
         property float y
         property float z
-        \(colors != nil ? "property uchar red\nproperty uchar green\nproperty uchar blue\n" : "")end_header
+        \(colorProps)end_header
 
         """
         ply.append(header.data(using: .utf8)!)
