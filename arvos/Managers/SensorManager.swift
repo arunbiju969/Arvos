@@ -151,9 +151,36 @@ class SensorManager: ObservableObject {
             }
 
         } catch {
-            print("Failed to start streaming: \(error)")
-            stopStreaming()
+            handleStartupFailure(error, config: config)
+            return
         }
+    }
+
+    private func handleStartupFailure(_ error: Error, config: ModeConfiguration) {
+        print("Failed to start streaming: \(error)")
+
+        if let cameraError = error as? CameraError, config.cameraEnabled {
+            sensorStatuses.camera = .error
+            networkManager.sendError("camera_error", details: cameraError.localizedDescription)
+        }
+
+        if let arError = error as? ARKitError, (config.depthEnabled || config.poseEnabled) {
+            sensorStatuses.depth = .error
+            sensorStatuses.pose = .error
+            networkManager.sendError("arkit_error", details: arError.localizedDescription)
+        }
+
+        if let imuError = error as? IMUError, config.imuEnabled {
+            sensorStatuses.imu = .error
+            networkManager.sendError("imu_error", details: imuError.localizedDescription)
+        }
+
+        if let gpsError = error as? GPSError, config.gpsEnabled {
+            sensorStatuses.gps = .error
+            networkManager.sendError("gps_error", details: gpsError.localizedDescription)
+        }
+
+        stopStreaming()
     }
 
     func stopStreaming() {

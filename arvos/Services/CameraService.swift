@@ -43,12 +43,27 @@ class CameraService: NSObject {
         targetFPS = fps
         frameInterval = Constants.Time.nanosPerSecond / UInt64(fps)
 
+        var configurationError: Error?
+
+        sessionQueue.sync {
+            do {
+                try self.configureSessionLocked(fps: fps)
+            } catch {
+                configurationError = error
+            }
+        }
+
+        if let error = configurationError {
+            throw error
+        }
+    }
+
+    private func configureSessionLocked(fps: Int) throws {
         captureSession = AVCaptureSession()
         guard let session = captureSession else { return }
 
         session.beginConfiguration()
 
-        // Set preset based on target resolution
         if session.canSetSessionPreset(.hd1920x1080) {
             session.sessionPreset = .hd1920x1080
         } else if session.canSetSessionPreset(.hd1280x720) {
@@ -57,13 +72,12 @@ class CameraService: NSObject {
             session.sessionPreset = .high
         }
 
-        // Add camera input
         guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            session.commitConfiguration()
             throw CameraError.noCameraAvailable
         }
 
         do {
-            // Configure camera for specific FPS
             try camera.lockForConfiguration()
             camera.activeVideoMinFrameDuration = CMTime(value: 1, timescale: CMTimeScale(fps))
             camera.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: CMTimeScale(fps))
@@ -73,13 +87,14 @@ class CameraService: NSObject {
             if session.canAddInput(input) {
                 session.addInput(input)
             } else {
+                session.commitConfiguration()
                 throw CameraError.cannotAddInput
             }
         } catch {
+            session.commitConfiguration()
             throw CameraError.configurationFailed(error)
         }
 
-        // Add video output
         videoOutput = AVCaptureVideoDataOutput()
         videoOutput?.setSampleBufferDelegate(self, queue: sessionQueue)
         videoOutput?.videoSettings = [
@@ -90,10 +105,10 @@ class CameraService: NSObject {
         if let output = videoOutput, session.canAddOutput(output) {
             session.addOutput(output)
         } else {
+            session.commitConfiguration()
             throw CameraError.cannotAddOutput
         }
 
-        // Configure video orientation
         if let connection = videoOutput?.connection(with: .video) {
             if connection.isVideoOrientationSupported {
                 connection.videoOrientation = .portrait
@@ -103,7 +118,6 @@ class CameraService: NSObject {
             }
         }
 
-        // Create preview layer
         previewLayer = AVCaptureVideoPreviewLayer(session: session)
         previewLayer?.videoGravity = .resizeAspectFill
 
