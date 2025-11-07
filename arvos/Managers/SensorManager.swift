@@ -180,7 +180,9 @@ class SensorManager: ObservableObject {
             networkManager.sendError("gps_error", details: gpsError.localizedDescription)
         }
 
+        let failureStatuses = sensorStatuses
         stopStreaming()
+        sensorStatuses = failureStatuses
     }
 
     func stopStreaming() {
@@ -392,6 +394,16 @@ struct SensorStatuses {
     var pose: SensorStatus = .inactive
     var imu: SensorStatus = .inactive
     var gps: SensorStatus = .inactive
+
+    func merged(with other: SensorStatuses) -> SensorStatuses {
+        return SensorStatuses(
+            camera: self.camera == .error ? other.camera : self.camera,
+            depth: self.depth == .error ? other.depth : self.depth,
+            pose: self.pose == .error ? other.pose : self.pose,
+            imu: self.imu == .error ? other.imu : self.imu,
+            gps: self.gps == .error ? other.gps : self.gps
+        )
+    }
 }
 
 // MARK: - Statistics
