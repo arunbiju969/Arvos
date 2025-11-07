@@ -198,12 +198,14 @@ class ARKitService: NSObject {
 
                 // Unproject to 3D
                 let normalizedPoint = CGPoint(x: CGFloat(x) / CGFloat(width), y: CGFloat(y) / CGFloat(height))
-                let point = camera.unprojectPoint(
+                guard let point = camera.unprojectPoint(
                     normalizedPoint,
                     ontoPlane: simd_float4x4(1),
                     orientation: .portrait,
                     viewportSize: CGSize(width: width, height: height)
-                )
+                ) else {
+                    continue
+                }
 
                 // Apply depth
                 let direction = simd_normalize(point)
