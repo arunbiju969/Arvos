@@ -127,11 +127,16 @@ class CameraService: NSObject {
     // MARK: - Control
 
     func start() {
-        guard let session = captureSession, !isRunning else { return }
+        guard let session = captureSession, !isRunning else {
+            print("⚠️ Camera start failed: session=\(captureSession != nil), isRunning=\(isRunning)")
+            return
+        }
 
+        print("🚀 Starting camera service (target FPS: \(targetFPS))")
         sessionQueue.async { [weak self] in
             session.startRunning()
             self?.isRunning = true
+            print("✅ Camera session started")
         }
     }
 
