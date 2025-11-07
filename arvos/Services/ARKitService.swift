@@ -34,7 +34,7 @@ class ARKitService: NSObject {
 
     // Camera frame timing
     private var lastCameraTime: UInt64 = 0
-    private var cameraInterval: UInt64 = 100_000_000  // 10 FPS default
+    private var cameraInterval: UInt64 = 33_333_333  // 30 FPS (33ms)
 
     // Frame counters
     private var frameCount = 0
