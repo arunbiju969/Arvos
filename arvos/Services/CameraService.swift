@@ -175,10 +175,13 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         let timestamp = Constants.Time.now()
 
         // Frame rate limiting
-        if timestamp - lastFrameTime < frameInterval {
+        let timeSinceLastFrame = timestamp - lastFrameTime
+        if lastFrameTime > 0 && timeSinceLastFrame < frameInterval {
+            print("⏭️ Frame skipped: \(timeSinceLastFrame)ns < \(frameInterval)ns target")
             return
         }
         lastFrameTime = timestamp
+        print("✅ Frame captured: interval=\(timeSinceLastFrame)ns, target=\(frameInterval)ns")
 
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
 

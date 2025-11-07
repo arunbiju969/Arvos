@@ -67,7 +67,7 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
                 imuHz: 100,
                 poseEnabled: true,
                 poseHz: 30,
-                gpsEnabled: false,
+                gpsEnabled: true,  // Enable GPS for visualization
                 recordingEnabled: false,
                 autoDuration: nil
             )

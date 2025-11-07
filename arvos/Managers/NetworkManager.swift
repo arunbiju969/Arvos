@@ -51,9 +51,10 @@ class NetworkManager: ObservableObject {
     /// Stream GPS data
     func stream(gpsData: GPSData) {
         do {
+            print("📤 Sending GPS: (\(gpsData.latitude), \(gpsData.longitude)), accuracy: ±\(gpsData.horizontalAccuracy)m")
             try webSocketService.send(json: gpsData)
         } catch {
-            print("Failed to stream GPS data: \(error)")
+            print("❌ Failed to stream GPS data: \(error)")
         }
     }
 
@@ -76,9 +77,10 @@ class NetworkManager: ObservableObject {
             let message = BinaryMessage(header: header, data: cameraFrame.data)
             let encoded = message.encode()
 
+            print("📤 Sending camera frame: \(cameraFrame.data.count) bytes, encoded: \(encoded.count) bytes")
             webSocketService.send(data: encoded, asText: false)
         } catch {
-            print("Failed to stream camera frame: \(error)")
+            print("❌ Failed to stream camera frame: \(error)")
         }
     }
 
@@ -86,6 +88,7 @@ class NetworkManager: ObservableObject {
     func stream(depthFrame: DepthFrame) {
         do {
             let plyData = depthFrame.pointCloud.toPLY()
+            print("📤 Sending depth frame: \(depthFrame.pointCloud.points.count) points, PLY size: \(plyData.count) bytes")
             let metadata = depthFrame.metadata()
             let header = try BinaryMessageHeader(metadata: metadata, dataSize: plyData.count)
 

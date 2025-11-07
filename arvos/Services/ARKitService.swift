@@ -78,7 +78,16 @@ class ARKitService: NSObject {
     // MARK: - Control
 
     func start() {
-        guard let session = arSession, let config = configuration, !isRunning else { return }
+        guard let session = arSession, let config = configuration, !isRunning else {
+            print("⚠️ ARKit start failed: session=\(arSession != nil), config=\(configuration != nil), isRunning=\(isRunning)")
+            return
+        }
+
+        print("🚀 Starting ARKit session")
+        print("   LiDAR: \(hasLiDAR), Depth: \(supportsDepth)")
+        print("   Scene reconstruction: \(config.sceneReconstruction)")
+        print("   Frame semantics: \(config.frameSemantics)")
+        print("   Depth enabled: \(depthEnabled), Target FPS: \(targetDepthFPS)")
 
         session.run(config, options: [.resetTracking, .removeExistingAnchors])
         isRunning = true
@@ -132,12 +141,19 @@ class ARKitService: NSObject {
     // MARK: - Helper Methods
 
     private func processDepthFrame(_ frame: ARFrame) {
-        guard depthEnabled else { return }
+        guard depthEnabled else {
+            print("⏭️ Depth disabled, skipping")
+            return
+        }
 
         let timestamp = Constants.Time.now()
 
         // Rate limiting for depth
-        guard timestamp - lastDepthTime >= depthInterval else { return }
+        let timeSinceLastDepth = timestamp - lastDepthTime
+        guard lastDepthTime == 0 || timeSinceLastDepth >= depthInterval else {
+            print("⏭️ Depth skipped: \(timeSinceLastDepth)ns < \(depthInterval)ns")
+            return
+        }
         lastDepthTime = timestamp
 
         // Try to get depth data
@@ -146,16 +162,23 @@ class ARKitService: NSObject {
 
         // LiDAR depth (preferred)
         if let sceneDepth = frame.sceneDepth {
+            print("✅ Got LiDAR depth data")
             depthMap = sceneDepth.depthMap
         }
         // ARKit depth estimation (fallback)
         else if let estimatedDepth = frame.estimatedDepthData {
+            print("✅ Got estimated depth data")
             depthMap = estimatedDepth
+        }
+        else {
+            print("❌ No depth data available from ARFrame")
+            return
         }
 
         // Convert depth map to point cloud
         if let depthBuffer = depthMap {
             pointCloud = createPointCloud(from: depthBuffer, camera: frame.camera, frame: frame)
+            print("✅ Created point cloud with \(pointCloud?.points.count ?? 0) points")
         }
 
         // Create depth frame
@@ -256,6 +279,8 @@ extension ARKitService: ARSessionDelegate {
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
         let timestamp = Constants.Time.now()
 
+        print("📊 ARFrame received: tracking=\(frame.camera.trackingState), sceneDepth=\(frame.sceneDepth != nil), estimatedDepth=\(frame.estimatedDepthData != nil)")
+
         // Process pose at target FPS
         if timestamp - lastPoseTime >= poseInterval {
             lastPoseTime = timestamp
@@ -270,6 +295,7 @@ extension ARKitService: ARSessionDelegate {
     }
 
     func session(_ session: ARSession, didFailWithError error: Error) {
+        print("❌ ARSession error: \(error)")
         delegate?.arKitService(self, didEncounterError: error)
     }
 
