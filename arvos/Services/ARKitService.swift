@@ -12,6 +12,7 @@ import Combine
 protocol ARKitServiceDelegate: AnyObject {
     func arKitService(_ service: ARKitService, didUpdate pose: PoseData)
     func arKitService(_ service: ARKitService, didCapture depth: DepthFrame)
+    func arKitService(_ service: ARKitService, didCapture camera: CameraFrame)
     func arKitService(_ service: ARKitService, didEncounterError error: Error)
 }
 
@@ -290,6 +291,10 @@ class ARKitService: NSObject {
 extension ARKitService: ARSessionDelegate {
     private static var frameCount = 0
 
+    private static var cameraFrameCount = 0
+    private var lastCameraTime: UInt64 = 0
+    private var cameraInterval: UInt64 = 100_000_000  // 10 FPS default
+
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
         let timestamp = Constants.Time.now()
 
@@ -297,6 +302,12 @@ extension ARKitService: ARSessionDelegate {
         Self.frameCount += 1
         if Self.frameCount % 30 == 0 {
             print("📊 ARFrame #\(Self.frameCount): tracking=\(frame.camera.trackingState), sceneDepth=\(frame.sceneDepth != nil), estimatedDepth=\(frame.estimatedDepthData != nil)")
+        }
+
+        // Process camera frame at target FPS (10 FPS)
+        if lastCameraTime == 0 || timestamp - lastCameraTime >= cameraInterval {
+            lastCameraTime = timestamp
+            processCameraFrame(frame, timestamp: timestamp)
         }
 
         // Process pose at target FPS
@@ -310,6 +321,36 @@ extension ARKitService: ARSessionDelegate {
         if depthEnabled {
             processDepthFrame(frame)
         }
+    }
+
+    private func processCameraFrame(_ frame: ARFrame, timestamp: UInt64) {
+        // Get camera image from ARFrame
+        let pixelBuffer = frame.capturedImage
+
+        // Convert to JPEG
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return }
+        let uiImage = UIImage(cgImage: cgImage)
+        guard let jpegData = uiImage.jpegData(compressionQuality: Constants.Camera.jpegQuality) else { return }
+
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+
+        let cameraFrame = CameraFrame(
+            timestamp: timestamp,
+            data: jpegData,
+            width: width,
+            height: height,
+            intrinsics: nil  // Could extract from frame.camera if needed
+        )
+
+        Self.cameraFrameCount += 1
+        if Self.cameraFrameCount <= 3 || Self.cameraFrameCount % 10 == 0 {
+            print("✅ ARKit camera frame #\(Self.cameraFrameCount): \(width)x\(height), \(jpegData.count) bytes")
+        }
+
+        delegate?.arKitService(self, didCapture: cameraFrame)
     }
 
     func session(_ session: ARSession, didFailWithError error: Error) {

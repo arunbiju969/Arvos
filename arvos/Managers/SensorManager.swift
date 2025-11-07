@@ -332,6 +332,18 @@ extension SensorManager: ARKitServiceDelegate {
         }
     }
 
+    func arKitService(_ service: ARKitService, didCapture camera: CameraFrame) {
+        updateFPS()
+
+        // Stream to network
+        networkManager.stream(cameraFrame: camera)
+
+        // Record if enabled
+        if recordingManager.isRecording {
+            recordingManager.record(cameraFrame: camera)
+        }
+    }
+
     func arKitService(_ service: ARKitService, didEncounterError error: Error) {
         print("ARKit error: \(error)")
         sensorStatuses.depth = .error

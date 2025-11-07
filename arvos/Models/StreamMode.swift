@@ -59,7 +59,7 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .liveStream:
             return ModeConfiguration(
-                cameraEnabled: true,
+                cameraEnabled: false,  // Disabled - ARKit provides camera frames
                 cameraFPS: 10,
                 depthEnabled: true,
                 depthFPS: 5,
