@@ -20,6 +20,7 @@ class GPSService: NSObject {
     private let locationManager = CLLocationManager()
     private var isRunning = false
     private var targetHz: Int = 1
+    private var shouldStartWhenAuthorized = false
 
     private var lastUpdateTime: UInt64 = 0
     private var updateInterval: UInt64 = 0
@@ -48,7 +49,9 @@ class GPSService: NSObject {
 
         switch status {
         case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
+            DispatchQueue.main.async { [weak self] in
+                self?.locationManager.requestWhenInUseAuthorization()
+            }
         case .denied, .restricted:
             delegate?.gpsService(self, didEncounterError: GPSError.permissionDenied)
         case .authorizedWhenInUse, .authorizedAlways:
@@ -69,7 +72,16 @@ class GPSService: NSObject {
         guard !isRunning else { return }
 
         let status = locationManager.authorizationStatus
-        guard status == .authorizedWhenInUse || status == .authorizedAlways else {
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
+            break
+        case .notDetermined:
+            shouldStartWhenAuthorized = true
+            DispatchQueue.main.async { [weak self] in
+                self?.locationManager.requestWhenInUseAuthorization()
+            }
+            return
+        default:
             delegate?.gpsService(self, didEncounterError: GPSError.permissionDenied)
             return
         }
@@ -137,10 +149,13 @@ extension GPSService: CLLocationManagerDelegate {
         switch status {
         case .denied, .restricted:
             delegate?.gpsService(self, didEncounterError: GPSError.permissionDenied)
+            shouldStartWhenAuthorized = false
             stop()
         case .authorizedWhenInUse, .authorizedAlways:
-            // Permission granted, can start if needed
-            break
+            if shouldStartWhenAuthorized {
+                shouldStartWhenAuthorized = false
+                start()
+            }
         default:
             break
         }
