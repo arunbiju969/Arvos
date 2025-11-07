@@ -259,6 +259,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Arvos needs camera access to capture and stream video data for AR and 3D reconstruction.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Arvos needs location access to tag sensor data with GPS coordinates for spatial mapping.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Arvos needs motion sensor access to capture IMU data for accurate 3D positioning and reconstruction.";
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -295,6 +296,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Arvos needs camera access to capture and stream video data for AR and 3D reconstruction.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Arvos needs location access to tag sensor data with GPS coordinates for spatial mapping.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Arvos needs motion sensor access to capture IMU data for accurate 3D positioning and reconstruction.";
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
