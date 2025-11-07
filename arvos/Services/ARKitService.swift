@@ -136,7 +136,7 @@ class ARKitService: NSObject {
                 config.frameSemantics.insert(.sceneDepth)
             }
         } else {
-            config.sceneReconstruction = .none
+            config.sceneReconstruction = []
             config.frameSemantics.remove(.sceneDepth)
         }
 
