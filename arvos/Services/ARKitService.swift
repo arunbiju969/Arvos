@@ -328,12 +328,12 @@ extension ARKitService: ARSessionDelegate {
         // Get camera image from ARFrame
         let pixelBuffer = frame.capturedImage
 
-        // Convert to JPEG
+        // Convert to JPEG with lower quality for speed (0.5 instead of 0.8)
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
-        let context = CIContext()
+        let context = CIContext(options: [.useSoftwareRenderer: false])
         guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return }
         let uiImage = UIImage(cgImage: cgImage)
-        guard let jpegData = uiImage.jpegData(compressionQuality: Constants.Camera.jpegQuality) else { return }
+        guard let jpegData = uiImage.jpegData(compressionQuality: 0.5) else { return }
 
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
