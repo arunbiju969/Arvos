@@ -171,17 +171,22 @@ class CameraService: NSObject {
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 
 extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
+    private static var cameraFrameCount = 0
+
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         let timestamp = Constants.Time.now()
 
         // Frame rate limiting
         let timeSinceLastFrame = timestamp - lastFrameTime
         if lastFrameTime > 0 && timeSinceLastFrame < frameInterval {
-            print("⏭️ Frame skipped: \(timeSinceLastFrame)ns < \(frameInterval)ns target")
             return
         }
         lastFrameTime = timestamp
-        print("✅ Frame captured: interval=\(timeSinceLastFrame)ns, target=\(frameInterval)ns")
+
+        Self.cameraFrameCount += 1
+        if Self.cameraFrameCount <= 3 || Self.cameraFrameCount % 10 == 0 {
+            print("✅ Camera frame #\(Self.cameraFrameCount) captured (interval: \(timeSinceLastFrame / 1_000_000)ms)")
+        }
 
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
 

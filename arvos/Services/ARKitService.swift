@@ -65,8 +65,14 @@ class ARKitService: NSObject {
         // Enable depth if supported and requested
         if depthEnabled {
             if hasLiDAR && ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+                // Enable mesh reconstruction for LiDAR
                 configuration?.sceneReconstruction = .mesh
+                // ALSO enable scene depth to get depth frames
+                if supportsDepth {
+                    configuration?.frameSemantics.insert(.sceneDepth)
+                }
             } else if supportsDepth {
+                // Fallback to estimated depth for non-LiDAR devices
                 configuration?.frameSemantics.insert(.sceneDepth)
             }
         }
@@ -122,11 +128,15 @@ class ARKitService: NSObject {
         if enabled {
             if hasLiDAR && ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
                 config.sceneReconstruction = .mesh
+                // ALSO enable scene depth for LiDAR
+                if supportsDepth {
+                    config.frameSemantics.insert(.sceneDepth)
+                }
             } else if supportsDepth {
                 config.frameSemantics.insert(.sceneDepth)
             }
         } else {
-            config.sceneReconstruction = .meshWithClassification
+            config.sceneReconstruction = .none
             config.frameSemantics.remove(.sceneDepth)
         }
 
@@ -140,18 +150,16 @@ class ARKitService: NSObject {
 
     // MARK: - Helper Methods
 
+    private static var depthFrameCount = 0
+
     private func processDepthFrame(_ frame: ARFrame) {
-        guard depthEnabled else {
-            print("⏭️ Depth disabled, skipping")
-            return
-        }
+        guard depthEnabled else { return }
 
         let timestamp = Constants.Time.now()
 
         // Rate limiting for depth
         let timeSinceLastDepth = timestamp - lastDepthTime
         guard lastDepthTime == 0 || timeSinceLastDepth >= depthInterval else {
-            print("⏭️ Depth skipped: \(timeSinceLastDepth)ns < \(depthInterval)ns")
             return
         }
         lastDepthTime = timestamp
@@ -162,23 +170,27 @@ class ARKitService: NSObject {
 
         // LiDAR depth (preferred)
         if let sceneDepth = frame.sceneDepth {
-            print("✅ Got LiDAR depth data")
             depthMap = sceneDepth.depthMap
         }
         // ARKit depth estimation (fallback)
         else if let estimatedDepth = frame.estimatedDepthData {
-            print("✅ Got estimated depth data")
             depthMap = estimatedDepth
         }
         else {
-            print("❌ No depth data available from ARFrame")
+            // Only print first few failures
+            if Self.depthFrameCount < 5 {
+                print("❌ No depth data available from ARFrame (tracking: \(frame.camera.trackingState))")
+            }
             return
         }
 
         // Convert depth map to point cloud
         if let depthBuffer = depthMap {
             pointCloud = createPointCloud(from: depthBuffer, camera: frame.camera, frame: frame)
-            print("✅ Created point cloud with \(pointCloud?.points.count ?? 0) points")
+            Self.depthFrameCount += 1
+            if Self.depthFrameCount <= 3 || Self.depthFrameCount % 10 == 0 {
+                print("✅ Depth frame #\(Self.depthFrameCount): \(pointCloud?.points.count ?? 0) points")
+            }
         }
 
         // Create depth frame
@@ -276,10 +288,16 @@ class ARKitService: NSObject {
 // MARK: - ARSessionDelegate
 
 extension ARKitService: ARSessionDelegate {
+    private static var frameCount = 0
+
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
         let timestamp = Constants.Time.now()
 
-        print("📊 ARFrame received: tracking=\(frame.camera.trackingState), sceneDepth=\(frame.sceneDepth != nil), estimatedDepth=\(frame.estimatedDepthData != nil)")
+        // Only print every 30th frame to reduce spam
+        Self.frameCount += 1
+        if Self.frameCount % 30 == 0 {
+            print("📊 ARFrame #\(Self.frameCount): tracking=\(frame.camera.trackingState), sceneDepth=\(frame.sceneDepth != nil), estimatedDepth=\(frame.estimatedDepthData != nil)")
+        }
 
         // Process pose at target FPS
         if timestamp - lastPoseTime >= poseInterval {
