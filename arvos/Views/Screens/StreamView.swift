@@ -265,10 +265,15 @@ struct ModeCard: View {
             }
             .frame(width: 120)
             .padding()
-            .background(
-                RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
-                    .fill(isSelected ? Color.blue : .regularMaterial)
-            )
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
+                        .fill(Color.blue)
+                } else {
+                    RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
+                        .fill(.regularMaterial)
+                }
+            }
         }
         .buttonStyle(.plain)
     }
