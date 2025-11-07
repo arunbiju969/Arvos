@@ -13,12 +13,11 @@ struct StreamView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Camera Preview (background)
+                Color(.systemBackground)
+                    .ignoresSafeArea()
+
                 if viewModel.isStreaming {
                     CameraPreviewView()
-                        .edgesIgnoringSafeArea(.all)
-                } else {
-                    Color.black
                         .edgesIgnoringSafeArea(.all)
                 }
 
@@ -37,6 +36,7 @@ struct StreamView: View {
                         .background(.ultraThinMaterial)
                 }
             }
+            .background(Color(.systemBackground))
             .navigationTitle("")
             .navigationBarHidden(true)
             .sheet(isPresented: $viewModel.showingConnectionSheet) {
