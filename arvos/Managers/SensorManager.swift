@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import ARKit
+import AVFoundation
 
 class SensorManager: ObservableObject {
     static let shared = SensorManager()
@@ -22,6 +23,7 @@ class SensorManager: ObservableObject {
     private let arKitService = ARKitService()
     private let imuService = IMUService()
     private let gpsService = GPSService()
+    private var awaitingCameraAuthorization = false
 
     // Managers
     private let networkManager = NetworkManager.shared
@@ -62,6 +64,40 @@ class SensorManager: ObservableObject {
         guard !isStreaming else { return }
 
         let config = currentMode.config
+
+        if config.cameraEnabled {
+            let status = AVCaptureDevice.authorizationStatus(for: .video)
+            switch status {
+            case .authorized:
+                break
+            case .notDetermined:
+                guard !awaitingCameraAuthorization else { return }
+                awaitingCameraAuthorization = true
+                AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                    DispatchQueue.main.async {
+                        guard let self else { return }
+                        self.awaitingCameraAuthorization = false
+                        if granted {
+                            self.startStreaming()
+                        } else {
+                            self.sensorStatuses.camera = .error
+                            self.networkManager.sendError(
+                                "camera_permission_denied",
+                                details: "Camera access denied by user"
+                            )
+                        }
+                    }
+                }
+                return
+            default:
+                sensorStatuses.camera = .error
+                networkManager.sendError(
+                    "camera_permission_denied",
+                    details: "Camera access denied. Enable camera in Settings."
+                )
+                return
+            }
+        }
 
         do {
             // Configure and start camera
