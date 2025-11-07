@@ -27,48 +27,14 @@ struct StreamView: View {
                     // Top Status Bar
                     topStatusBar
                         .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 0)
-                                .fill(.ultraThinMaterial)
-                                .overlay(
-                                    Rectangle()
-                                        .fill(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [
-                                                    Color.white.opacity(0.1),
-                                                    Color.clear
-                                                ]),
-                                                startPoint: .top,
-                                                endPoint: .bottom
-                                            )
-                                        )
-                                )
-                                .shadow(color: .black.opacity(0.3), radius: 10, y: 5)
-                        )
+                        .background(.ultraThinMaterial)
 
                     Spacer()
 
                     // Bottom Controls
                     bottomControls
                         .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 0)
-                                .fill(.ultraThinMaterial)
-                                .overlay(
-                                    Rectangle()
-                                        .fill(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [
-                                                    Color.clear,
-                                                    Color.white.opacity(0.1)
-                                                ]),
-                                                startPoint: .top,
-                                                endPoint: .bottom
-                                            )
-                                        )
-                                )
-                                .shadow(color: .black.opacity(0.3), radius: 10, y: -5)
-                        )
+                        .background(.ultraThinMaterial)
                 }
             }
             .navigationTitle("")
@@ -95,7 +61,6 @@ struct StreamView: View {
                 Circle()
                     .fill(viewModel.isConnected ? Color.green : Color.red)
                     .frame(width: 8, height: 8)
-                    .shadow(color: viewModel.isConnected ? .green.opacity(0.6) : .red.opacity(0.6), radius: 4)
 
                 Text(viewModel.isConnected ? "Connected" : "Disconnected")
                     .font(.subheadline)
@@ -105,16 +70,12 @@ struct StreamView: View {
 
                 Text(viewModel.selectedMode.rawValue)
                     .font(.subheadline.weight(.medium))
-                    .foregroundColor(.primary)
+                    .foregroundColor(.secondary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
+                        Capsule()
+                            .fill(.regularMaterial)
                     )
             }
 
@@ -170,23 +131,10 @@ struct StreamView: View {
                 .padding()
                 .background(
                     RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: viewModel.isStreaming ? 
-                                    [Color.red, Color.red.opacity(0.8)] : 
-                                    [Color.blue, Color.blue.opacity(0.8)]
-                                ),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        )
-                        .shadow(color: (viewModel.isStreaming ? Color.red : Color.blue).opacity(0.5), radius: 10, y: 5)
+                        .fill(viewModel.isStreaming ? Color.red : Color.blue)
                 )
             }
+            .buttonStyle(.plain)
 
             // Connection Button
             if !viewModel.isConnected && !viewModel.isStreaming {
@@ -202,14 +150,10 @@ struct StreamView: View {
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
-                                    .stroke(Color.blue.opacity(0.5), lineWidth: 1.5)
-                            )
-                            .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                            .fill(.regularMaterial)
                     )
                 }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -261,19 +205,11 @@ struct SensorStatusBadge: View {
             Circle()
                 .fill(statusColor)
                 .frame(width: 6, height: 6)
-                .shadow(color: statusColor.opacity(0.6), radius: 3)
 
             Text(name)
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 4)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(.ultraThinMaterial)
-                .opacity(0.5)
-        )
     }
 
     private var statusColor: Color {
@@ -323,7 +259,7 @@ struct ModeCard: View {
 
                 Text(mode.description)
                     .font(.caption2)
-                    .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+                    .foregroundColor(isSelected ? .white.opacity(0.9) : .secondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
             }
@@ -331,30 +267,10 @@ struct ModeCard: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
-                    .fill(isSelected ? 
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ) :
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.clear, Color.clear]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
-                            .fill(.ultraThinMaterial)
-                            .opacity(isSelected ? 0 : 1)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
-                            .stroke(isSelected ? Color.white.opacity(0.3) : Color.blue.opacity(0.3), lineWidth: 1)
-                    )
-                    .shadow(color: isSelected ? Color.blue.opacity(0.5) : .black.opacity(0.1), radius: isSelected ? 8 : 3, y: 2)
+                    .fill(isSelected ? Color.blue : .regularMaterial)
             )
         }
+        .buttonStyle(.plain)
     }
 }
 
