@@ -32,6 +32,15 @@ class ARKitService: NSObject {
     private var depthInterval: UInt64 = 0
     private var poseInterval: UInt64 = 0
 
+    // Camera frame timing
+    private var lastCameraTime: UInt64 = 0
+    private var cameraInterval: UInt64 = 100_000_000  // 10 FPS default
+
+    // Frame counters
+    private var frameCount = 0
+    private var cameraFrameCount = 0
+    private var depthFrameCount = 0
+
     // Device capabilities
     let hasLiDAR: Bool
     let supportsDepth: Bool
@@ -151,8 +160,6 @@ class ARKitService: NSObject {
 
     // MARK: - Helper Methods
 
-    private static var depthFrameCount = 0
-
     private func processDepthFrame(_ frame: ARFrame) {
         guard depthEnabled else { return }
 
@@ -179,7 +186,7 @@ class ARKitService: NSObject {
         }
         else {
             // Only print first few failures
-            if Self.depthFrameCount < 5 {
+            if depthFrameCount < 5 {
                 print("❌ No depth data available from ARFrame (tracking: \(frame.camera.trackingState))")
             }
             return
@@ -188,9 +195,9 @@ class ARKitService: NSObject {
         // Convert depth map to point cloud
         if let depthBuffer = depthMap {
             pointCloud = createPointCloud(from: depthBuffer, camera: frame.camera, frame: frame)
-            Self.depthFrameCount += 1
-            if Self.depthFrameCount <= 3 || Self.depthFrameCount % 10 == 0 {
-                print("✅ Depth frame #\(Self.depthFrameCount): \(pointCloud?.points.count ?? 0) points")
+            depthFrameCount += 1
+            if depthFrameCount <= 3 || depthFrameCount % 10 == 0 {
+                print("✅ Depth frame #\(depthFrameCount): \(pointCloud?.points.count ?? 0) points")
             }
         }
 
@@ -289,19 +296,13 @@ class ARKitService: NSObject {
 // MARK: - ARSessionDelegate
 
 extension ARKitService: ARSessionDelegate {
-    private static var frameCount = 0
-
-    private static var cameraFrameCount = 0
-    private var lastCameraTime: UInt64 = 0
-    private var cameraInterval: UInt64 = 100_000_000  // 10 FPS default
-
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
         let timestamp = Constants.Time.now()
 
         // Only print every 30th frame to reduce spam
-        Self.frameCount += 1
-        if Self.frameCount % 30 == 0 {
-            print("📊 ARFrame #\(Self.frameCount): tracking=\(frame.camera.trackingState), sceneDepth=\(frame.sceneDepth != nil), estimatedDepth=\(frame.estimatedDepthData != nil)")
+        frameCount += 1
+        if frameCount % 30 == 0 {
+            print("📊 ARFrame #\(frameCount): tracking=\(frame.camera.trackingState), sceneDepth=\(frame.sceneDepth != nil), estimatedDepth=\(frame.estimatedDepthData != nil)")
         }
 
         // Process camera frame at target FPS (10 FPS)
@@ -345,9 +346,9 @@ extension ARKitService: ARSessionDelegate {
             intrinsics: nil  // Could extract from frame.camera if needed
         )
 
-        Self.cameraFrameCount += 1
-        if Self.cameraFrameCount <= 3 || Self.cameraFrameCount % 10 == 0 {
-            print("✅ ARKit camera frame #\(Self.cameraFrameCount): \(width)x\(height), \(jpegData.count) bytes")
+        cameraFrameCount += 1
+        if cameraFrameCount <= 3 || cameraFrameCount % 10 == 0 {
+            print("✅ ARKit camera frame #\(cameraFrameCount): \(width)x\(height), \(jpegData.count) bytes")
         }
 
         delegate?.arKitService(self, didCapture: cameraFrame)
