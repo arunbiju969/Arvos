@@ -173,11 +173,8 @@ struct CameraPreviewView: UIViewRepresentable {
         let view = UIView()
         view.backgroundColor = .black
 
-        // Get preview layer from camera service
-        // This is a simplified version - in production, you'd get this from CameraService
-        if let previewLayer = SensorManager.shared.value(forKey: "cameraService") as? CameraService {
-            // Add preview layer
-        }
+        // TODO: Add camera preview layer
+        // Would need to expose previewLayer from CameraService
 
         return view
     }

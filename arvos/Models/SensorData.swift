@@ -67,6 +67,15 @@ struct IMUData: SensorData {
             yaw: motion.attitude.yaw
         )
     }
+
+    // Memberwise initializer for custom use
+    init(timestampNs: UInt64, angularVelocity: SIMD3<Double>, linearAcceleration: SIMD3<Double>, magneticField: SIMD3<Double>? = nil, attitude: Attitude? = nil) {
+        self.timestampNs = timestampNs
+        self.angularVelocity = angularVelocity
+        self.linearAcceleration = linearAcceleration
+        self.magneticField = magneticField
+        self.attitude = attitude
+    }
 }
 
 /// Device attitude (orientation)
@@ -124,7 +133,10 @@ struct PoseData: SensorData {
 
         let transform = camera.transform
         self.position = SIMD3(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
-        self.orientation = simd_quaternion(transform)
+
+        // Convert rotation matrix to quaternion
+        let quat = simd_quaternion(transform)
+        self.orientation = SIMD4(quat.vector.x, quat.vector.y, quat.vector.z, quat.vector.w)
 
         switch camera.trackingState {
         case .normal:

@@ -197,20 +197,24 @@ class ARKitService: NSObject {
                 }
 
                 // Unproject to 3D
+                let normalizedPoint = CGPoint(x: CGFloat(x) / CGFloat(width), y: CGFloat(y) / CGFloat(height))
                 let point = camera.unprojectPoint(
-                    SIMD3<Float>(Float(x), Float(y), depthValue),
-                    ontoPlaneWithTransform: camera.transform,
+                    normalizedPoint,
+                    ontoPlane: simd_float4x4(1),
                     orientation: .portrait,
                     viewportSize: CGSize(width: width, height: height)
                 )
 
-                points.append(point)
+                // Apply depth
+                let direction = simd_normalize(point)
+                let depthPoint = direction * depthValue
+
+                points.append(depthPoint)
 
                 // Try to get color from camera image
-                if let pixelBuffer = frame.capturedImage {
-                    let color = getColor(from: pixelBuffer, at: (x, y))
-                    colors.append(color)
-                }
+                let pixelBuffer = frame.capturedImage
+                let color = getColor(from: pixelBuffer, at: (x, y))
+                colors.append(color)
             }
         }
 
