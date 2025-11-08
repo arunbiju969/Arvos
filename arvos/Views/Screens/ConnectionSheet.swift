@@ -2,7 +2,7 @@
 //  ConnectionSheet.swift
 //  arvos
 //
-//  Connection setup sheet with QR scanner and manual entry
+//  Connection setup sheet
 //
 
 import SwiftUI
@@ -17,37 +17,40 @@ struct ConnectionSheet: View {
                 Section {
                     HStack {
                         Image(systemName: "network")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.primary)
                             .frame(width: 30)
 
                         TextField("Host (e.g., 192.168.1.100)", text: $viewModel.connectionHost)
                             .textContentType(.URL)
                             .keyboardType(.URL)
                             .autocapitalization(.none)
+                            .font(.system(.body, design: .monospaced))
                     }
 
                     HStack {
                         Image(systemName: "number")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.primary)
                             .frame(width: 30)
 
                         TextField("Port", text: $viewModel.connectionPort)
                             .keyboardType(.numberPad)
+                            .font(.system(.body, design: .monospaced))
                     }
                 } header: {
-                    Text("Manual Connection")
+                    Text("SERVER DETAILS")
                 } footer: {
-                    Text("Enter the IP address and port of your computer running the Arvos server.")
+                    Text("Enter the IP address and port of your server")
+                        .font(.system(.caption, design: .monospaced))
                 }
 
                 Section {
-                    Button(action: {
+                    Button {
                         viewModel.showingQRScanner = true
                         dismiss()
-                    }) {
+                    } label: {
                         HStack {
                             Image(systemName: "qrcode.viewfinder")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.primary)
 
                             Text("Scan QR Code")
                                 .foregroundColor(.primary)
@@ -60,27 +63,28 @@ struct ConnectionSheet: View {
                         }
                     }
                 } header: {
-                    Text("Quick Setup")
+                    Text("QUICK SETUP")
                 } footer: {
-                    Text("Scan a QR code from your Arvos server to connect automatically.")
+                    Text("Scan QR code from your server")
+                        .font(.system(.caption, design: .monospaced))
                 }
 
                 Section {
-                    Button(action: {
+                    Button {
                         viewModel.connectToServer()
                         dismiss()
-                    }) {
+                    } label: {
                         HStack {
                             Spacer()
-                            Text("Connect")
-                                .fontWeight(.semibold)
+                            Text("CONNECT")
+                                .font(.system(.subheadline, design: .monospaced).weight(.semibold))
                             Spacer()
                         }
                     }
                     .disabled(viewModel.connectionHost.isEmpty)
                 }
             }
-            .navigationTitle("Connect to Server")
+            .navigationTitle("Server Connection")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
