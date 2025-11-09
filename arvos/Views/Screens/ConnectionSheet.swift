@@ -24,7 +24,6 @@ struct ConnectionSheet: View {
                             .textContentType(.URL)
                             .keyboardType(.URL)
                             .autocapitalization(.none)
-                            .font(.system(.body, design: .monospaced))
                     }
 
                     HStack {
@@ -34,13 +33,11 @@ struct ConnectionSheet: View {
 
                         TextField("Port", text: $viewModel.connectionPort)
                             .keyboardType(.numberPad)
-                            .font(.system(.body, design: .monospaced))
                     }
                 } header: {
                     Text("SERVER DETAILS")
                 } footer: {
                     Text("Enter the IP address and port of your server")
-                        .font(.system(.caption, design: .monospaced))
                 }
 
                 Section {
@@ -66,7 +63,6 @@ struct ConnectionSheet: View {
                     Text("QUICK SETUP")
                 } footer: {
                     Text("Scan QR code from your server")
-                        .font(.system(.caption, design: .monospaced))
                 }
 
                 Section {
@@ -77,7 +73,7 @@ struct ConnectionSheet: View {
                         HStack {
                             Spacer()
                             Text("CONNECT")
-                                .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                                .font(.system(.subheadline).weight(.semibold))
                             Spacer()
                         }
                     }

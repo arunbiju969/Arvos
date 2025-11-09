@@ -76,7 +76,7 @@ struct StreamView: View {
                         .frame(width: 6, height: 6)
 
                     Text(viewModel.isConnected ? "CONNECTED" : "DISCONNECTED")
-                        .font(.system(.caption2, design: .monospaced).weight(.medium))
+                        .font(.system(.caption2).weight(.medium))
                         .foregroundColor(.secondary)
                 }
 
@@ -152,7 +152,7 @@ struct StreamView: View {
                         .font(.system(size: 14, weight: .medium))
 
                     Text(viewModel.isStreaming ? "STOP" : "START")
-                        .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                        .font(.system(.subheadline).weight(.semibold))
                 }
                 .foregroundColor(viewModel.isStreaming ? Color(.systemBackground) : .primary)
                 .frame(maxWidth: .infinity)
@@ -172,7 +172,7 @@ struct StreamView: View {
                         Image(systemName: "network")
                             .font(.system(size: 12))
                         Text("CONNECT TO SERVER")
-                            .font(.system(.caption, design: .monospaced).weight(.medium))
+                            .font(.system(.caption).weight(.medium))
                     }
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity)
@@ -192,9 +192,8 @@ struct StreamView: View {
     private var liveDataBentoBox: some View {
         VStack(spacing: 0) {
             Text("STREAMING")
-                .font(.system(.caption, design: .monospaced).weight(.semibold))
+                .font(.system(.caption).weight(.semibold))
                 .foregroundColor(.orange)
-                .tracking(2)
         }
     }
 
@@ -204,29 +203,26 @@ struct StreamView: View {
         VStack(spacing: 20) {
             // App Name
             Text("ARVOS")
-                .font(.system(size: 28, design: .monospaced).weight(.bold))
+                .font(.system(size: 28).weight(.bold))
                 .foregroundColor(.primary)
-                .tracking(4)
 
             // Status Message
             VStack(spacing: 6) {
                 if !viewModel.isConnected {
                     Text("NOT CONNECTED")
-                        .font(.system(.caption2, design: .monospaced))
+                        .font(.system(.caption2))
                         .foregroundColor(.secondary)
-                        .tracking(1)
 
                     Text("Configure server connection below")
-                        .font(.system(.caption2, design: .monospaced))
+                        .font(.system(.caption2))
                         .foregroundColor(.secondary.opacity(0.6))
                 } else {
                     Text("READY")
-                        .font(.system(.caption2, design: .monospaced).weight(.medium))
+                        .font(.system(.caption2).weight(.medium))
                         .foregroundColor(.primary)
-                        .tracking(1)
 
                     Text("Select mode and start")
-                        .font(.system(.caption2, design: .monospaced))
+                        .font(.system(.caption2))
                         .foregroundColor(.secondary.opacity(0.6))
                 }
             }
@@ -261,11 +257,11 @@ struct MetricBadge: View {
     var body: some View {
         VStack(spacing: 2) {
             Text(value)
-                .font(.system(.body, design: .monospaced).weight(.medium))
+                .font(.system(.body).weight(.medium))
                 .foregroundColor(.primary)
 
             Text(label)
-                .font(.system(.caption2, design: .monospaced))
+                .font(.system(.caption2))
                 .foregroundColor(.secondary)
         }
         .padding(.horizontal, 10)
@@ -286,7 +282,7 @@ struct SensorBadge: View {
             Image(systemName: icon)
                 .font(.system(size: 10, weight: .medium))
             Text(label)
-                .font(.system(.caption2, design: .monospaced).weight(.medium))
+                .font(.system(.caption2).weight(.medium))
         }
         .foregroundColor(.primary)
         .padding(.horizontal, 8)
@@ -313,11 +309,11 @@ struct ModeCard: View {
                     .foregroundColor(isSelected ? Color(.systemBackground) : .primary)
 
                 Text(mode.rawValue.uppercased())
-                    .font(.system(.caption2, design: .monospaced).weight(.semibold))
+                    .font(.system(.caption2).weight(.semibold))
                     .foregroundColor(isSelected ? Color(.systemBackground) : .primary)
 
                 Text(mode.description)
-                    .font(.system(.caption2, design: .monospaced))
+                    .font(.system(.caption2))
                     .foregroundColor(isSelected ? Color(.systemBackground).opacity(0.8) : .secondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
@@ -352,11 +348,10 @@ struct DataSourcePicker: View {
                 Section {
                     VStack(spacing: 8) {
                         Text("DATA SOURCES")
-                            .font(.system(.headline, design: .monospaced).weight(.bold))
-                            .tracking(2)
+                            .font(.system(.headline).weight(.bold))
 
                         Text("Configure sensor inputs")
-                            .font(.system(.caption, design: .monospaced))
+                            .font(.system(.caption))
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -414,7 +409,7 @@ struct DataSourcePicker: View {
                         dismiss()
                     } label: {
                         Text("APPLY")
-                            .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                            .font(.system(.subheadline).weight(.semibold))
                             .foregroundStyle(Color(.systemBackground))
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
@@ -456,10 +451,10 @@ struct DataSourceToggle: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(.body, design: .default).weight(.medium))
+                        .font(.system(.body).weight(.medium))
 
                     Text(subtitle)
-                        .font(.system(.caption, design: .monospaced))
+                        .font(.system(.caption))
                         .foregroundStyle(.secondary)
                 }
             }
