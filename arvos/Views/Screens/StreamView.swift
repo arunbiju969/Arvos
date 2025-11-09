@@ -13,36 +13,78 @@ struct StreamView: View {
     @State private var scannedQRCode: String?
 
     var body: some View {
-        ZStack {
-            // Background
-            Color(.systemBackground)
-                .ignoresSafeArea()
+        GeometryReader { geometry in
+            let isLandscape = geometry.size.width > geometry.size.height
+            let isIPad = UIDevice.current.userInterfaceIdiom == .pad
 
-            // Camera Preview (when streaming)
-            if viewModel.isStreaming {
-                Color.black
+            ZStack {
+                // Background
+                Color(.systemBackground)
                     .ignoresSafeArea()
-            }
 
-            VStack(spacing: 0) {
-                // Top Status Bar
-                topStatusBar
-                    .background(Color(.systemBackground))
-
-                Spacer()
-
-                // Center Content
+                // Camera Preview (when streaming)
                 if viewModel.isStreaming {
-                    liveDataBentoBox
-                } else {
-                    centerContent
+                    Color.black
+                        .ignoresSafeArea()
                 }
 
-                Spacer()
+                if isIPad && isLandscape {
+                    // iPad Landscape: Side-by-side layout
+                    HStack(spacing: 0) {
+                        // Left side: Status and content
+                        VStack(spacing: 0) {
+                            topStatusBar
+                                .background(Color(.systemBackground))
 
-                // Bottom Controls
-                bottomControls
-                    .background(Color(.systemBackground))
+                            Spacer()
+
+                            if viewModel.isStreaming {
+                                liveDataBentoBox
+                            } else {
+                                centerContent
+                            }
+
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        // Right side: Controls
+                        VStack(spacing: 16) {
+                            if !viewModel.isStreaming {
+                                modeSelector
+                                    .padding(.horizontal)
+                            }
+
+                            Spacer()
+
+                            bottomControls
+                                .background(Color(.systemBackground))
+                        }
+                        .frame(width: geometry.size.width * 0.4)
+                    }
+                } else {
+                    // iPhone or iPad Portrait: Vertical layout
+                    VStack(spacing: 0) {
+                        // Top Status Bar
+                        topStatusBar
+                            .background(Color(.systemBackground))
+
+                        Spacer()
+
+                        // Center Content
+                        if viewModel.isStreaming {
+                            liveDataBentoBox
+                        } else {
+                            centerContent
+                        }
+
+                        Spacer()
+
+                        // Bottom Controls
+                        bottomControls
+                            .background(Color(.systemBackground))
+                    }
+                }
             }
         }
         .sheet(isPresented: $showDataSourcePicker) {
@@ -233,18 +275,44 @@ struct StreamView: View {
     // MARK: - Mode Selector
 
     private var modeSelector: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(StreamMode.allCases) { mode in
-                    ModeCard(
-                        mode: mode,
-                        isSelected: viewModel.selectedMode == mode,
-                        action: { viewModel.selectMode(mode) }
-                    )
+        GeometryReader { geometry in
+            let isLandscape = geometry.size.width > geometry.size.height
+            let isIPad = UIDevice.current.userInterfaceIdiom == .pad
+
+            if isIPad || isLandscape {
+                // Grid layout for iPad and landscape
+                LazyVGrid(columns: [
+                    GridItem(.flexible(), spacing: 10),
+                    GridItem(.flexible(), spacing: 10),
+                    GridItem(.flexible(), spacing: 10),
+                    GridItem(.flexible(), spacing: 10)
+                ], spacing: 10) {
+                    ForEach(StreamMode.allCases) { mode in
+                        ModeCard(
+                            mode: mode,
+                            isSelected: viewModel.selectedMode == mode,
+                            action: { viewModel.selectMode(mode) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 2)
+            } else {
+                // Horizontal scroll for iPhone portrait
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(StreamMode.allCases) { mode in
+                            ModeCard(
+                                mode: mode,
+                                isSelected: viewModel.selectedMode == mode,
+                                action: { viewModel.selectMode(mode) }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 2)
                 }
             }
-            .padding(.horizontal, 2)
         }
+        .frame(height: 120)
     }
 }
 
@@ -307,10 +375,13 @@ struct ModeCard: View {
                 Image(systemName: mode.icon)
                     .font(.system(size: 16, weight: .regular))
                     .foregroundColor(isSelected ? Color(.systemBackground) : .primary)
+                    .frame(height: 20)
 
                 Text(mode.rawValue.uppercased())
                     .font(.system(.caption2).weight(.semibold))
                     .foregroundColor(isSelected ? Color(.systemBackground) : .primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
                 Text(mode.description)
                     .font(.system(.caption2))
@@ -318,8 +389,9 @@ struct ModeCard: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
+                    .frame(height: 36)
             }
-            .frame(width: 110)
+            .frame(width: 110, height: 90)
             .padding(.vertical, 12)
             .padding(.horizontal, 8)
             .background(
