@@ -2,51 +2,129 @@
 
 **Stream iPhone sensors to your computer for AR/robotics research.**
 
-## What It Does
+Turn your iPhone into a professional research sensor platform with LiDAR, cameras, IMU, and ARKit pose tracking.
 
-ARVOS streams sensor data from your iPhone to desktop applications over WiFi:
+---
 
-- **Camera**: 30 FPS @ 1920x1080 (JPEG)
-- **Depth**: 5 FPS LiDAR point clouds (PLY)
-- **IMU**: 100 Hz accelerometer + gyroscope
-- **Pose**: 30 Hz 6DOF tracking (ARKit)
-- **GPS**: 1 Hz location
+## 🌐 Quickest Start: Web Viewer (No Install!)
 
-## How To Use
+Stream to your browser in 30 seconds:
 
-### 1. Start Server (Python)
 ```bash
-pip install arvos-sdk
-python -m arvos.examples.basic_server
+cd arvos-sdk/web-viewer
+./start-viewer.sh
+# Scan QR code with iPhone → Done!
 ```
 
-### 2. Connect iPhone
-1. Open ARVOS app
-2. Tap "CONNECT TO SERVER"
-3. Enter your computer's IP address
-4. Tap "CONNECT"
+[→ Full Web Viewer Guide](https://github.com/jaskirat1616/arvos-sdk/tree/main/web-viewer)
 
-### 3. Stream
-1. Tap slider icon to enable/disable sensors
-2. Tap "START"
-3. Data flows to your server
+---
 
-## For Researchers
+## 📱 What It Streams
 
-- **SLAM**: Real-time camera + depth + IMU
-- **ROS 2**: Bridge to robot systems (see SDK examples)
-- **ML**: Collect training datasets
-- **Sensor Fusion**: All sensors time-synchronized
+- **Camera**: 30 FPS @ 1920x1080 RGB
+- **LiDAR Depth**: 5 FPS point clouds with confidence maps
+- **IMU**: 100-200 Hz accelerometer + gyroscope + gravity
+- **ARKit Pose**: 30-60 Hz 6DOF tracking with quality flags
+- **GPS**: 1 Hz location (outdoor)
 
-## Requirements
+**All sensors nanosecond-synchronized** for research-grade data.
 
+---
+
+## 🚀 Getting Started
+
+### Option 1: Web Viewer (Recommended)
+No Python needed - works on ANY device with a browser:
+```bash
+cd arvos-sdk/web-viewer
+./start-viewer.sh
+```
+
+### Option 2: Python SDK
+For custom applications and ROS 2 integration:
+```bash
+pip install arvos-sdk
+python examples/01_quickstart.py
+```
+
+### Connect iPhone
+1. Open **ARVOS** app
+2. Tap **"CONNECT TO SERVER"**
+3. Scan QR code (or enter IP manually)
+4. Tap **"START"** to stream
+
+---
+
+## 🎯 Use Cases
+
+**For Researchers:**
+- SLAM algorithm development with ARKit ground truth
+- Sensor fusion experiments
+- ML dataset collection
+- Real-time 3D reconstruction
+
+**For Robotics Engineers:**
+- ROS 2 perception testing
+- Mobile sensor platform
+- Algorithm prototyping
+- Live demos
+
+**For Students:**
+- Computer vision learning
+- AR experiments
+- Sensor data visualization
+- Course projects
+
+---
+
+## 📦 Features
+
+- ✅ **7 Streaming Modes** - RGBD, Visual-Inertial, LiDAR, Full Sensor, etc.
+- ✅ **Research Metadata** - Depth confidence, IMU calibration, pose quality
+- ✅ **Local Recording** - MCAP format with H.264 video
+- ✅ **Zero-Install Option** - Web viewer works everywhere
+- ✅ **Professional Tools** - CLI for batch export (KITTI, TUM, EuRoC)
+- ✅ **Open Formats** - PLY, CSV, ROS bags
+
+---
+
+## 💻 Requirements
+
+**iPhone:**
 - iPhone 12 Pro or newer (for LiDAR)
-- iOS 14.0+
+- iOS 17.0+
 - Same WiFi network as computer
 
-## SDK
+**Computer:**
+- Any OS with Python 3.8+ or modern browser
+- Same WiFi network as iPhone
+- Firewall allows port 8765
 
-Documentation: `/Users/jaskiratsingh/Desktop/arvos-sdk/`
+---
+
+## 📚 Documentation
+
+- **Web Viewer**: [arvos-sdk/web-viewer/README.md](https://github.com/jaskirat1616/arvos-sdk/tree/main/web-viewer)
+- **Python SDK**: [arvos-sdk/README.md](https://github.com/jaskirat1616/arvos-sdk)
+- **Examples**: [arvos-sdk/examples/](https://github.com/jaskirat1616/arvos-sdk/tree/main/examples)
+- **CLI Tools**: [arvos-sdk/arvos/cli/](https://github.com/jaskirat1616/arvos-sdk/tree/main/arvos/cli)
+
+---
+
+## 🤝 Contributing
+
+Found a bug? Have a feature request? [Open an issue!](https://github.com/jaskirat1616/arvos/issues)
+
+---
+
+## 📜 License
+
+MIT License - Use freely in your research and projects
+
+---
+
+**Made for the robotics and AR research community** ❤️
 
 Examples:
 - `basic_server.py` - Simple data receiver
