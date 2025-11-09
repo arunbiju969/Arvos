@@ -128,6 +128,11 @@ struct PoseData: SensorData {
     /// Tracking state quality
     let trackingState: String
 
+    /// Whether tracking quality is good (helper for researchers)
+    var isTrackingGood: Bool {
+        return trackingState == "normal"
+    }
+
     init(timestamp: UInt64, camera: ARCamera) {
         self.timestampNs = timestamp
 
@@ -203,8 +208,9 @@ struct DepthFrameMetadata: SensorData {
     let compressedSize: Int
     let minDepth: Float // meters
     let maxDepth: Float // meters
+    let hasConfidenceData: Bool // Whether depth confidence map is available
 
-    init(timestamp: UInt64, width: Int, height: Int, pointCount: Int, format: String, size: Int, minDepth: Float, maxDepth: Float) {
+    init(timestamp: UInt64, width: Int, height: Int, pointCount: Int, format: String, size: Int, minDepth: Float, maxDepth: Float, hasConfidenceData: Bool = false) {
         self.timestampNs = timestamp
         self.width = width
         self.height = height
@@ -213,6 +219,7 @@ struct DepthFrameMetadata: SensorData {
         self.compressedSize = size
         self.minDepth = minDepth
         self.maxDepth = maxDepth
+        self.hasConfidenceData = hasConfidenceData
     }
 }
 
@@ -223,6 +230,7 @@ struct PointCloud {
     let timestamp: UInt64
     let points: [SIMD3<Float>] // xyz positions
     let colors: [SIMD3<UInt8>]? // rgb colors (optional)
+    let confidenceLevels: [UInt8]? // Confidence per point: 0=low, 1=medium, 2=high (optional)
 
     /// Convert to PLY format binary data
     func toPLY() -> Data {
@@ -230,6 +238,7 @@ struct PointCloud {
 
         // PLY header
         let colorProps = colors != nil ? "property uchar red\nproperty uchar green\nproperty uchar blue\n" : ""
+        let confidenceProps = confidenceLevels != nil ? "property uchar confidence\n" : ""
         let header = """
         ply
         format binary_little_endian 1.0
@@ -237,7 +246,7 @@ struct PointCloud {
         property float x
         property float y
         property float z
-        \(colorProps)end_header
+        \(colorProps)\(confidenceProps)end_header
 
         """
         ply.append(header.data(using: .utf8)!)
@@ -250,6 +259,11 @@ struct PointCloud {
             if let colors = colors {
                 var color = colors[i]
                 ply.append(Data(bytes: &color, count: MemoryLayout<SIMD3<UInt8>>.size))
+            }
+
+            if let confidence = confidenceLevels {
+                var conf = confidence[i]
+                ply.append(Data(bytes: &conf, count: MemoryLayout<UInt8>.size))
             }
         }
 

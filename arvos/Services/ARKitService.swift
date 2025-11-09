@@ -174,11 +174,13 @@ class ARKitService: NSObject {
 
         // Try to get depth data
         var depthMap: CVPixelBuffer?
+        var confidenceMap: CVPixelBuffer?
         var pointCloud: PointCloud?
 
         // LiDAR depth (preferred)
         if let sceneDepth = frame.sceneDepth {
             depthMap = sceneDepth.depthMap
+            confidenceMap = sceneDepth.confidenceMap  // Add confidence data
         }
         // ARKit depth estimation (fallback)
         else if let estimatedDepth = frame.estimatedDepthData {
@@ -194,7 +196,7 @@ class ARKitService: NSObject {
 
         // Convert depth map to point cloud
         if let depthBuffer = depthMap {
-            pointCloud = createPointCloud(from: depthBuffer, camera: frame.camera, frame: frame)
+            pointCloud = createPointCloud(from: depthBuffer, camera: frame.camera, frame: frame, confidenceMap: confidenceMap)
             depthFrameCount += 1
             if depthFrameCount <= 3 || depthFrameCount % 10 == 0 {
                 print("✅ Depth frame #\(depthFrameCount): \(pointCloud?.points.count ?? 0) points")
@@ -206,13 +208,14 @@ class ARKitService: NSObject {
             let depthFrame = DepthFrame(
                 timestamp: timestamp,
                 pointCloud: cloud,
-                camera: frame.camera
+                camera: frame.camera,
+                confidenceMap: confidenceMap  // Pass confidence to depth frame
             )
             delegate?.arKitService(self, didCapture: depthFrame)
         }
     }
 
-    private func createPointCloud(from depthMap: CVPixelBuffer, camera: ARCamera, frame: ARFrame) -> PointCloud {
+    private func createPointCloud(from depthMap: CVPixelBuffer, camera: ARCamera, frame: ARFrame, confidenceMap: CVPixelBuffer?) -> PointCloud {
         CVPixelBufferLockBaseAddress(depthMap, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(depthMap, .readOnly) }
 
@@ -221,11 +224,24 @@ class ARKitService: NSObject {
         let baseAddress = CVPixelBufferGetBaseAddress(depthMap)
 
         guard let floatBuffer = baseAddress?.assumingMemoryBound(to: Float32.self) else {
-            return PointCloud(timestamp: Constants.Time.now(), points: [], colors: nil)
+            return PointCloud(timestamp: Constants.Time.now(), points: [], colors: nil, confidenceLevels: nil)
+        }
+
+        // Lock confidence map if available
+        var confidenceBuffer: UnsafeMutablePointer<UInt8>?
+        if let confMap = confidenceMap {
+            CVPixelBufferLockBaseAddress(confMap, .readOnly)
+            confidenceBuffer = CVPixelBufferGetBaseAddress(confMap)?.assumingMemoryBound(to: UInt8.self)
+        }
+        defer {
+            if let confMap = confidenceMap {
+                CVPixelBufferUnlockBaseAddress(confMap, .readOnly)
+            }
         }
 
         var points: [SIMD3<Float>] = []
         var colors: [SIMD3<UInt8>] = []
+        var confidenceLevels: [UInt8] = []
 
         // Downsample for performance
         let step = Constants.Depth.downsampleFactor
@@ -237,6 +253,18 @@ class ARKitService: NSObject {
                 // Filter by depth range
                 guard depthValue >= Constants.Depth.minDepth && depthValue <= Constants.Depth.maxDepth else {
                     continue
+                }
+
+                // Filter by confidence if available (0=low, 1=medium, 2=high)
+                // Only keep medium (1) and high (2) confidence points
+                if let confBuf = confidenceBuffer {
+                    let confidence = confBuf[y * width + x]
+                    if confidence == 0 { // Skip low confidence points
+                        continue
+                    }
+                    confidenceLevels.append(confidence)
+                } else {
+                    confidenceLevels.append(2) // Assume high confidence if no map
                 }
 
                 // Unproject to 3D
@@ -266,7 +294,8 @@ class ARKitService: NSObject {
         return PointCloud(
             timestamp: Constants.Time.now(),
             points: points,
-            colors: colors.isEmpty ? nil : colors
+            colors: colors.isEmpty ? nil : colors,
+            confidenceLevels: confidenceLevels.isEmpty ? nil : confidenceLevels
         )
     }
 
@@ -374,6 +403,7 @@ struct DepthFrame {
     let timestamp: UInt64
     let pointCloud: PointCloud
     let camera: ARCamera
+    let confidenceMap: CVPixelBuffer?  // Depth confidence map (0=low, 1=medium, 2=high)
 
     func metadata() -> DepthFrameMetadata {
         let plyData = pointCloud.toPLY()
@@ -388,7 +418,8 @@ struct DepthFrame {
             format: "point_cloud",
             size: plyData.count,
             minDepth: minDepth,
-            maxDepth: maxDepth
+            maxDepth: maxDepth,
+            hasConfidenceData: confidenceMap != nil
         )
     }
 }
