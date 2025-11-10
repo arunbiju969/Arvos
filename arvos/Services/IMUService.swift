@@ -114,8 +114,7 @@ class IMUService {
                 timestampNs: timestamp,
                 angularVelocity: SIMD3<Double>(0, 0, 0),
                 linearAcceleration: SIMD3<Double>(data.acceleration.x, data.acceleration.y, data.acceleration.z),
-                magneticField: nil,
-                attitude: nil
+                gravity: SIMD3<Double>(0, 0, -9.81)
             )
 
             self.delegate?.imuService(self, didUpdate: imuData)

@@ -210,11 +210,15 @@ class ARKitService: NSObject {
         guard !isProcessingDepth else { return }
         isProcessingDepth = true
 
-        // Retain pixel buffers for async processing instead of full memcpy
-        let retainedDepth = retainPixelBuffer(depthBuffer)
-        let retainedConfidence: CVPixelBuffer? = {
-            if let confidenceMap {
-                return retainPixelBuffer(confidenceMap)
+        // Copy pixel buffers for async processing
+        guard let depthCopy = copyPixelBuffer(depthBuffer) else {
+            isProcessingDepth = false
+            return
+        }
+
+        let confidenceCopy: CVPixelBuffer? = {
+            if let confidenceMap, let copied = copyPixelBuffer(confidenceMap) {
+                return copied
             }
             return nil
         }()
@@ -223,27 +227,14 @@ class ARKitService: NSObject {
         let hasConfidence = confidenceMap != nil
 
         depthProcessingQueue.async { [weak self] in
-            guard let self else {
-                // Release retained buffers if self is deallocated
-                CVPixelBufferRelease(retainedDepth)
-                if let confidence = retainedConfidence {
-                    CVPixelBufferRelease(confidence)
-                }
-                return
-            }
+            guard let self else { return }
 
             let cloud = self.createPointCloud(
-                from: retainedDepth,
+                from: depthCopy,
                 cameraTransform: cameraTransform,
                 intrinsics: intrinsics,
-                confidenceMap: retainedConfidence
+                confidenceMap: confidenceCopy
             )
-
-            // Release retained buffers after processing
-            CVPixelBufferRelease(retainedDepth)
-            if let confidence = retainedConfidence {
-                CVPixelBufferRelease(confidence)
-            }
 
             DispatchQueue.main.async {
                 self.isProcessingDepth = false
@@ -362,12 +353,41 @@ class ARKitService: NSObject {
         )
     }
 
-    // Retain pixel buffer for async processing
-    // Using CVPixelBufferRetain is more efficient than full memcpy
-    // ARKit's pixel buffers remain valid as long as they're retained
-    private func retainPixelBuffer(_ pixelBuffer: CVPixelBuffer) -> CVPixelBuffer {
-        CVPixelBufferRetain(pixelBuffer)
-        return pixelBuffer
+    // Copy pixel buffer for async processing
+    // Swift 6 uses automatic memory management for Core Foundation objects
+    private func copyPixelBuffer(_ pixelBuffer: CVPixelBuffer) -> CVPixelBuffer? {
+        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
+
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        let pixelFormat = CVPixelBufferGetPixelFormatType(pixelBuffer)
+        let sourceBytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+
+        var copy: CVPixelBuffer?
+        let status = CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            width,
+            height,
+            pixelFormat,
+            nil,
+            &copy
+        )
+
+        guard status == kCVReturnSuccess, let copy else {
+            return nil
+        }
+
+        CVPixelBufferLockBaseAddress(copy, [])
+        defer { CVPixelBufferUnlockBaseAddress(copy, []) }
+
+        guard let sourceBase = CVPixelBufferGetBaseAddress(pixelBuffer),
+              let destinationBase = CVPixelBufferGetBaseAddress(copy) else {
+            return nil
+        }
+
+        memcpy(destinationBase, sourceBase, sourceBytesPerRow * height)
+        return copy
     }
 }
 
@@ -409,24 +429,17 @@ extension ARKitService: ARSessionDelegate {
         let height = CVPixelBufferGetHeight(pixelBuffer)
         let intrinsicsMatrix = frame.camera.intrinsics
 
-        // Retain instead of copy - much more efficient
-        let retainedBuffer = retainPixelBuffer(pixelBuffer)
+        // Copy buffer for async processing
+        guard let bufferCopy = copyPixelBuffer(pixelBuffer) else { return }
         let frameIntrinsics = CameraIntrinsics(intrinsics: intrinsicsMatrix)
 
         cameraProcessingQueue.async { [weak self] in
             autoreleasepool {
-                guard let self else {
-                    CVPixelBufferRelease(retainedBuffer)
+                guard let self else { return }
+
+                guard let jpegData = self.encodeJPEG(from: bufferCopy, quality: self.arkitJPEGQuality) else {
                     return
                 }
-
-                guard let jpegData = self.encodeJPEG(from: retainedBuffer, quality: self.arkitJPEGQuality) else {
-                    CVPixelBufferRelease(retainedBuffer)
-                    return
-                }
-
-                // Release buffer after encoding
-                CVPixelBufferRelease(retainedBuffer)
 
                 let cameraFrame = CameraFrame(
                     timestamp: timestamp,
