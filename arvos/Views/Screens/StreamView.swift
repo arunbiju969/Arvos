@@ -185,7 +185,34 @@ struct StreamView: View {
                 modeSelector
             }
 
-            // Main Control Button
+            // Primary Actions: Connection + Start/Stop
+            if !viewModel.isStreaming {
+                // Connection Button (emphasized as primary workflow)
+                Button {
+                    viewModel.showingConnectionSheet = true
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: viewModel.isConnected ? "checkmark.circle.fill" : "network")
+                            .font(.system(size: 14, weight: .medium))
+
+                        Text(viewModel.isConnected ? "CONNECTED" : "CONNECT TO SERVER")
+                            .font(.system(.subheadline).weight(.semibold))
+                    }
+                    .foregroundColor(viewModel.isConnected ? .green : .primary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(viewModel.isConnected ? Color.green.opacity(0.15) : Color(.systemGray5))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(viewModel.isConnected ? Color.green.opacity(0.3) : Color.clear, lineWidth: 1)
+                    )
+                }
+            }
+
+            // Start/Stop Button (prominent when ready)
             Button {
                 viewModel.toggleStreaming()
             } label: {
@@ -193,36 +220,60 @@ struct StreamView: View {
                     Image(systemName: viewModel.isStreaming ? "stop.fill" : "play.fill")
                         .font(.system(size: 14, weight: .medium))
 
-                    Text(viewModel.isStreaming ? "STOP" : "START")
+                    Text(viewModel.isStreaming ? "STOP STREAMING" : "START STREAMING")
                         .font(.system(.subheadline).weight(.semibold))
                 }
                 .foregroundColor(viewModel.isStreaming ? Color(.systemBackground) : .primary)
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 54)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(viewModel.isStreaming ? Color.primary : Color(.systemGray5))
+                        .fill(viewModel.isStreaming ? Color.red : Color.blue)
                 )
             }
+            .disabled(!viewModel.isStreaming && !viewModel.isConnected)
+            .opacity((!viewModel.isStreaming && !viewModel.isConnected) ? 0.5 : 1.0)
 
-            // Connection Button (when not connected)
-            if !viewModel.isConnected && !viewModel.isStreaming {
-                Button {
-                    viewModel.showingConnectionSheet = true
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "network")
-                            .font(.system(size: 12))
-                        Text("CONNECT TO SERVER")
-                            .font(.system(.caption).weight(.medium))
+            // Secondary Actions Row: Advanced Settings + QR Code
+            if !viewModel.isStreaming {
+                HStack(spacing: 12) {
+                    // Advanced Settings Button
+                    Button {
+                        showDataSourcePicker = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: 11))
+                            Text("Advanced")
+                                .font(.system(.caption).weight(.medium))
+                        }
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1)
+                        )
                     }
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 40)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1)
-                    )
+
+                    // QR Scanner Button
+                    Button {
+                        viewModel.showingQRScanner = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "qrcode.viewfinder")
+                                .font(.system(size: 11))
+                            Text("Scan QR")
+                                .font(.system(.caption).weight(.medium))
+                        }
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1)
+                        )
+                    }
                 }
             }
         }
