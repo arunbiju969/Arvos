@@ -21,7 +21,7 @@ struct SensorTestView: View {
                     controlSection
 
                     // LiDAR Point Cloud Preview
-                    if viewModel.showLiDAR && viewModel.latestPointCloud != nil {
+                    if viewModel.showLiDAR {
                         lidarSection
                     }
 
@@ -98,28 +98,32 @@ struct SensorTestView: View {
             HStack {
                 Image(systemName: "cube.fill")
                     .foregroundColor(.purple)
-                Text("LiDAR Point Cloud")
+                Text("LiDAR Depth Point Cloud")
                     .font(.headline)
                 Spacer()
-                if let cloud = viewModel.latestPointCloud {
-                    Text("\(cloud.points.count) points")
+                if let sample = viewModel.latestDepthSample {
+                    Text("\(sample.width)×\(sample.height)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
 
-            if let pointCloud = viewModel.latestPointCloud {
-                PointCloudMetalView(pointCloud: pointCloud)
-                    .frame(height: 300)
+            if let depthSample = viewModel.latestDepthSample {
+                DepthPointCloudView(depthSample: depthSample)
+                    .frame(height: 400)
                     .cornerRadius(8)
             } else {
-                Text("Waiting for depth data...")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .frame(height: 300)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.black)
-                    .cornerRadius(8)
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Text("Initializing LiDAR...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(height: 400)
+                .frame(maxWidth: .infinity)
+                .background(Color.black)
+                .cornerRadius(8)
             }
         }
         .padding()

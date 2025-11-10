@@ -25,6 +25,7 @@ class SensorTestViewModel: ObservableObject {
 
     // Latest sensor data
     @Published var latestPointCloud: PointCloud?
+    @Published var latestDepthSample: DepthVisualizationSample?
     @Published var latestCameraImage: UIImage?
     @Published var latestIMU: IMUData?
     @Published var latestPose: PoseData?
@@ -72,6 +73,7 @@ class SensorTestViewModel: ObservableObject {
 
         // Clear data
         latestPointCloud = nil
+        latestDepthSample = nil
         latestCameraImage = nil
         latestIMU = nil
         latestPose = nil
@@ -96,6 +98,14 @@ extension SensorTestViewModel: ARKitServiceDelegate {
         DispatchQueue.main.async {
             if self.showLiDAR {
                 self.latestPointCloud = frame.pointCloud
+            }
+        }
+    }
+
+    func arKitService(_ service: ARKitService, didOutputDepthSample sample: DepthVisualizationSample) {
+        DispatchQueue.main.async {
+            if self.showLiDAR {
+                self.latestDepthSample = sample
             }
         }
     }

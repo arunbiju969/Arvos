@@ -226,6 +226,20 @@ class ARKitService: NSObject {
         let intrinsics = frame.camera.intrinsics
         let hasConfidence = confidenceMap != nil
 
+        // Emit depth visualization sample for real-time rendering
+        let depthSample = DepthVisualizationSample(
+            timestamp: timestamp,
+            depthMap: depthCopy,
+            confidenceMap: confidenceCopy,
+            intrinsics: intrinsics,
+            cameraTransform: cameraTransform
+        )
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.delegate?.arKitService(self, didOutputDepthSample: depthSample)
+        }
+
         depthProcessingQueue.async { [weak self] in
             guard let self else { return }
 
