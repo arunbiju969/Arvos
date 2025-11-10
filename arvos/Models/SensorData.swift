@@ -32,17 +32,8 @@ struct IMUData: SensorData {
     /// Linear acceleration in m/s² (x, y, z)
     let linearAcceleration: SIMD3<Double>
 
-    /// Magnetic field in microteslas (optional)
-    let magneticField: SIMD3<Double>?
-
-    /// Device attitude (optional)
-    let attitude: Attitude?
-
     /// Gravity vector in m/s² (for calibration reference)
     let gravity: SIMD3<Double>
-
-    /// Magnetic field accuracy (0=uncalibrated, 1=low, 2=medium, 3=high)
-    let magneticFieldAccuracy: Int
 
     init(timestamp: UInt64, motion: CMDeviceMotion) {
         self.timestampNs = timestamp
@@ -56,62 +47,20 @@ struct IMUData: SensorData {
             motion.userAcceleration.y,
             motion.userAcceleration.z
         )
-
-        // Gravity vector (calibration reference)
         self.gravity = SIMD3(
             motion.gravity.x,
             motion.gravity.y,
             motion.gravity.z
         )
-
-        // Magnetic field and accuracy
-        if motion.magneticField.accuracy != .uncalibrated {
-            self.magneticField = SIMD3(
-                motion.magneticField.field.x,
-                motion.magneticField.field.y,
-                motion.magneticField.field.z
-            )
-        } else {
-            self.magneticField = nil
-        }
-
-        switch motion.magneticField.accuracy {
-        case .uncalibrated:
-            self.magneticFieldAccuracy = 0
-        case .low:
-            self.magneticFieldAccuracy = 1
-        case .medium:
-            self.magneticFieldAccuracy = 2
-        case .high:
-            self.magneticFieldAccuracy = 3
-        @unknown default:
-            self.magneticFieldAccuracy = 0
-        }
-
-        self.attitude = Attitude(
-            roll: motion.attitude.roll,
-            pitch: motion.attitude.pitch,
-            yaw: motion.attitude.yaw
-        )
     }
 
     // Memberwise initializer for custom use
-    init(timestampNs: UInt64, angularVelocity: SIMD3<Double>, linearAcceleration: SIMD3<Double>, magneticField: SIMD3<Double>? = nil, attitude: Attitude? = nil, gravity: SIMD3<Double> = SIMD3(0, 0, -9.81), magneticFieldAccuracy: Int = 0) {
+    init(timestampNs: UInt64, angularVelocity: SIMD3<Double>, linearAcceleration: SIMD3<Double>, gravity: SIMD3<Double> = SIMD3(0, 0, -9.81)) {
         self.timestampNs = timestampNs
         self.angularVelocity = angularVelocity
         self.linearAcceleration = linearAcceleration
-        self.magneticField = magneticField
-        self.attitude = attitude
         self.gravity = gravity
-        self.magneticFieldAccuracy = magneticFieldAccuracy
     }
-}
-
-/// Device attitude (orientation)
-struct Attitude: Codable {
-    let roll: Double
-    let pitch: Double
-    let yaw: Double
 }
 
 // MARK: - GPS Data
