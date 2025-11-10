@@ -29,21 +29,29 @@ struct ParticleVertexOut {
 // MARK: - Unproject Depth to 3D Position
 
 /// Unprojects a 2D depth pixel to 3D camera space using camera intrinsics
-/// This is the core algorithm for depth-to-point-cloud conversion
+/// Based on Apple's ARKit sample: https://developer.apple.com/documentation/arkit/displaying-a-point-cloud-using-scene-depth
+/// Formula: position = inverse(K) * [x, y, 1] * depth
 float3 unprojectDepthSample(float2 pixelCoord,
                             float depth,
                             float3x3 inverseIntrinsics,
                             float2 depthResolution) {
-    // Use pixel coordinates directly for unprojection
-    float2 imageCoord = float2(pixelCoord.x, pixelCoord.y);
+    // Normalize to [0, 1] range
+    float2 normalizedCoord = pixelCoord / depthResolution;
 
-    // Unproject using inverse camera intrinsics
-    // Formula: position = inverse(K) * [x, y, 1] * depth
-    float3 homogeneous = float3(imageCoord, 1.0);
-    float3 cameraSpace = inverseIntrinsics * homogeneous;
+    // Convert to view space coordinates [-1, 1] with proper aspect
+    // Note: Y is flipped because image coordinates start at top-left
+    float2 viewCoord = float2(
+        (normalizedCoord.x * 2.0 - 1.0),
+        (1.0 - normalizedCoord.y * 2.0)  // Flip Y
+    );
 
-    // Scale by depth value
-    return cameraSpace * depth;
+    // Apply inverse intrinsics to get direction vector
+    // The intrinsics matrix already contains focal length and principal point
+    float3 direction = inverseIntrinsics * float3(pixelCoord.x, pixelCoord.y, 1.0);
+
+    // Scale direction by depth to get 3D position
+    // This converts from normalized direction to actual position in meters
+    return direction * depth;
 }
 
 // MARK: - Vertex Shader

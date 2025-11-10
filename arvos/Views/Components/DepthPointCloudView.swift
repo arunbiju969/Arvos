@@ -130,8 +130,9 @@ struct DepthPointCloudView: UIViewRepresentable {
             renderEncoder.setRenderPipelineState(pipelineState)
             renderEncoder.setDepthStencilState(depthState)
 
-            // Set up camera - use identity for now to see raw points
-            let modelMatrix = matrix_identity_float4x4 // No rotation
+            // Set up camera with slow rotation for 3D effect
+            rotation += 0.003 // Slow rotation
+            let modelMatrix = makeRotationMatrix(rotation)
             let viewMatrix = makeViewMatrix()
             let projectionMatrix = makeProjectionMatrix(aspectRatio: Float(view.bounds.width / view.bounds.height))
 
@@ -140,8 +141,8 @@ struct DepthPointCloudView: UIViewRepresentable {
                 projectionMatrix: projectionMatrix,
                 inverseIntrinsics: depthSample.intrinsics.inverse,
                 depthResolution: SIMD2<Float>(Float(depthTexture.width), Float(depthTexture.height)),
-                pointSize: 10.0, // Even larger points for visibility
-                confidenceThreshold: 0 // 0=low, 1=medium, 2=high (show all for now)
+                pointSize: 5.0, // Medium point size
+                confidenceThreshold: 1 // Filter low quality points
             )
 
             renderEncoder.setVertexBytes(&uniforms, length: MemoryLayout<DepthUniforms>.stride, index: 0)
@@ -244,10 +245,11 @@ struct DepthPointCloudView: UIViewRepresentable {
         }
 
         private func makeViewMatrix() -> simd_float4x4 {
-            // Camera positioned to view the point cloud from behind
-            let eye = SIMD3<Float>(0, 0, -2) // Behind the points
-            let center = SIMD3<Float>(0, 0, 0)
-            let up = SIMD3<Float>(0, -1, 0) // Flip Y for proper orientation
+            // Camera positioned to view the 3D scene
+            // Looking from slightly above and to the side for better depth perception
+            let eye = SIMD3<Float>(0, -0.5, -2.5) // Above and back
+            let center = SIMD3<Float>(0, 0, 1) // Look ahead into the scene
+            let up = SIMD3<Float>(0, -1, 0) // Up direction (inverted for ARKit coordinates)
 
             let z = normalize(eye - center)
             let x = normalize(cross(up, z))
