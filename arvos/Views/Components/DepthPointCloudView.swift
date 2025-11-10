@@ -95,12 +95,8 @@ struct DepthPointCloudView: UIViewRepresentable {
         // MARK: - Update Sample
 
         func updateDepthSample(_ sample: DepthVisualizationSample?) {
-            guard let sample = sample, let device = device else {
-                print("🔍 DepthPointCloudView: No sample or device (sample=\(sample != nil), device=\(device != nil))")
-                return
-            }
+            guard let sample = sample, let device = device else { return }
 
-            print("🔍 DepthPointCloudView: Updating with \(sample.width)×\(sample.height) depth sample")
             self.depthSample = sample
 
             // Create Metal textures from depth and confidence maps
@@ -170,8 +166,6 @@ struct DepthPointCloudView: UIViewRepresentable {
             let width = sample.width
             let height = sample.height
             vertexCount = width * height
-
-            print("🔍 DepthPointCloudView: Creating textures for \(width)×\(height) = \(vertexCount) vertices")
 
             // Create depth texture from CVPixelBuffer
             let depthBuffer = sample.depthMap

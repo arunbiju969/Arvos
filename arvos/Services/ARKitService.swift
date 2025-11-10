@@ -237,10 +237,6 @@ class ARKitService: NSObject {
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            // Debug: Log first few depth samples
-            if self.depthFrameCount <= 3 {
-                print("🔍 ARKitService: Emitting depth sample \(depthSample.width)×\(depthSample.height)")
-            }
             self.delegate?.arKitService(self, didOutputDepthSample: depthSample)
         }
 
