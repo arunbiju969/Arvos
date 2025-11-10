@@ -69,6 +69,10 @@ class SensorManager: ObservableObject {
         guard !isStreaming else { return }
 
         let config = currentMode.config
+
+        // Camera system selection:
+        // - Use ARKit camera when both camera AND depth are enabled (integrated depth+RGB)
+        // - Use AVFoundation camera for camera-only modes (better control, no ARKit overhead)
         usingARKitCamera = config.cameraEnabled && config.depthEnabled
 
         let needsCameraAccess = config.cameraEnabled || config.depthEnabled || config.poseEnabled
