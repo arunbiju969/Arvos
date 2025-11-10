@@ -229,57 +229,41 @@ struct StreamView: View {
         .padding()
     }
 
-    // MARK: - Live Data Display (Bento Box Style)
+    // MARK: - Live Data Display (Simplified for Performance)
 
     private var liveDataBentoBox: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 12) {
-                // Status Grid
-                LazyVGrid(columns: [
-                    GridItem(.flexible(), spacing: 12),
-                    GridItem(.flexible(), spacing: 12)
-                ], spacing: 12) {
-                    // FPS Card
+        VStack(spacing: 12) {
+            // Status Grid
+            HStack(spacing: 12) {
+                // FPS Card
+                BentoCard(
+                    icon: "waveform",
+                    label: "FPS",
+                    value: viewModel.fpsFormatted,
+                    color: .orange
+                )
+
+                // Recording Card
+                if viewModel.recordingDuration > 0 {
                     BentoCard(
-                        icon: "waveform",
-                        label: "FRAMES/SEC",
-                        value: viewModel.fpsFormatted,
-                        color: .orange
+                        icon: "record.circle",
+                        label: "REC",
+                        value: viewModel.recordingDurationFormatted,
+                        color: .red
                     )
-
-                    // Recording Card
-                    if viewModel.recordingDuration > 0 {
-                        BentoCard(
-                            icon: "record.circle",
-                            label: "RECORDING",
-                            value: viewModel.recordingDurationFormatted,
-                            color: .red
-                        )
-                    } else {
-                        BentoCard(
-                            icon: "checkmark.circle",
-                            label: "STATUS",
-                            value: "LIVE",
-                            color: .green
-                        )
-                    }
-                }
-
-                // Sensor Status Cards
-                if viewModel.sensorStatuses.imu == .active {
-                    IMUSensorCard()
-                }
-
-                if viewModel.sensorStatuses.depth == .active {
-                    DepthSensorCard()
-                }
-
-                if viewModel.sensorStatuses.pose == .active {
-                    PoseSensorCard()
+                } else {
+                    BentoCard(
+                        icon: "checkmark.circle",
+                        label: "LIVE",
+                        value: "✓",
+                        color: .green
+                    )
                 }
             }
-            .padding()
+
+            Spacer()
         }
+        .padding()
     }
 
     // MARK: - Center Content
@@ -574,19 +558,15 @@ struct BentoCard: View {
     let color: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(color)
-
-                Spacer()
-            }
+        VStack(alignment: .leading, spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(color)
 
             Spacer()
 
             Text(value)
-                .font(.system(size: 22, weight: .semibold))
+                .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.primary)
 
             Text(label)
@@ -594,134 +574,14 @@ struct BentoCard: View {
                 .foregroundColor(.secondary)
         }
         .padding(12)
-        .frame(height: 90)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
-        )
+        .frame(maxWidth: .infinity)
+        .frame(height: 80)
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
     }
 }
 
-struct IMUSensorCard: View {
-    @EnvironmentObject var viewModel: StreamingViewModel
-    @State private var imuHistory: [(timestamp: Date, accel: SIMD3<Double>, gyro: SIMD3<Double>)] = []
-    @State private var timer: Timer?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Image(systemName: "gyroscope")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.blue)
-
-                Text("IMU SENSOR")
-                    .font(.system(.caption).weight(.semibold))
-                    .foregroundColor(.primary)
-
-                Spacer()
-
-                Text("100Hz")
-                    .font(.system(.caption2))
-                    .foregroundColor(.secondary)
-            }
-
-            // Simple visualization - show text for now
-            // You can add Charts framework charts here later
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Accelerometer • Gyroscope • Magnetometer")
-                    .font(.system(.caption2))
-                    .foregroundColor(.secondary)
-
-                Text("Real-time motion tracking active")
-                    .font(.system(.caption2))
-                    .foregroundColor(.green)
-            }
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
-        )
-    }
-}
-
-struct DepthSensorCard: View {
-    @EnvironmentObject var viewModel: StreamingViewModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Image(systemName: "cube.fill")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.purple)
-
-                Text("LiDAR DEPTH")
-                    .font(.system(.caption).weight(.semibold))
-                    .foregroundColor(.primary)
-
-                Spacer()
-
-                Text("5 FPS")
-                    .font(.system(.caption2))
-                    .foregroundColor(.secondary)
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("3D Point Cloud • High Confidence")
-                    .font(.system(.caption2))
-                    .foregroundColor(.secondary)
-
-                Text("Streaming depth data")
-                    .font(.system(.caption2))
-                    .foregroundColor(.green)
-            }
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
-        )
-    }
-}
-
-struct PoseSensorCard: View {
-    @EnvironmentObject var viewModel: StreamingViewModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Image(systemName: "location.fill")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.green)
-
-                Text("6DOF POSE")
-                    .font(.system(.caption).weight(.semibold))
-                    .foregroundColor(.primary)
-
-                Spacer()
-
-                Text("30 Hz")
-                    .font(.system(.caption2))
-                    .foregroundColor(.secondary)
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("ARKit Visual-Inertial Odometry")
-                    .font(.system(.caption2))
-                    .foregroundColor(.secondary)
-
-                Text("Tracking normal")
-                    .font(.system(.caption2))
-                    .foregroundColor(.green)
-            }
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
-        )
-    }
-}
+// Removed IMUSensorCard, DepthSensorCard, PoseSensorCard to improve performance
 
 #Preview {
     StreamView()
