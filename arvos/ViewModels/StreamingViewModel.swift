@@ -34,6 +34,7 @@ class StreamingViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
     private var updateTimer: Timer?
+    private let updateQueue = DispatchQueue(label: "com.arvos.viewmodel.stats", qos: .utility)
 
     init() {
         setupBindings()
@@ -55,17 +56,34 @@ class StreamingViewModel: ObservableObject {
     }
 
     private func startUpdateTimer() {
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        // Reduced from 0.5s to 1.0s to halve UI update frequency
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.updateStatistics()
         }
     }
 
     private func updateStatistics() {
-        let stats = sensorManager.getStatistics()
-        currentFPS = stats.fps
-        sensorStatuses = stats.sensorStatuses
-        recordingDuration = stats.recordingDuration
-        recordingSize = stats.recordingSize
+        // Move stats calculation to background queue
+        updateQueue.async { [weak self] in
+            guard let self = self else { return }
+            let stats = self.sensorManager.getStatistics()
+
+            // Only update on main thread if values actually changed
+            DispatchQueue.main.async {
+                if abs(self.currentFPS - stats.fps) > 0.1 {
+                    self.currentFPS = stats.fps
+                }
+                if self.sensorStatuses != stats.sensorStatuses {
+                    self.sensorStatuses = stats.sensorStatuses
+                }
+                if abs(self.recordingDuration - stats.recordingDuration) > 0.5 {
+                    self.recordingDuration = stats.recordingDuration
+                }
+                if self.recordingSize != stats.recordingSize {
+                    self.recordingSize = stats.recordingSize
+                }
+            }
+        }
     }
 
     // MARK: - Actions

@@ -31,6 +31,9 @@ class SensorManager: ObservableObject {
     private let networkManager = NetworkManager.shared
     private let recordingManager = RecordingManager()
 
+    private var cameraServiceRunning = false
+    private var usingARKitCamera = false
+
     // Burst scan timer
     private var burstScanTimer: Timer?
     private var burstScanStartTime: Date?
@@ -66,8 +69,11 @@ class SensorManager: ObservableObject {
         guard !isStreaming else { return }
 
         let config = currentMode.config
+        usingARKitCamera = config.cameraEnabled && config.depthEnabled
 
-        if config.cameraEnabled {
+        let needsCameraAccess = config.cameraEnabled || config.depthEnabled || config.poseEnabled
+
+        if needsCameraAccess {
             let status = AVCaptureDevice.authorizationStatus(for: .video)
             switch status {
             case .authorized:
@@ -82,7 +88,12 @@ class SensorManager: ObservableObject {
                         if granted {
                             self.startStreaming()
                         } else {
-                            self.sensorStatuses.camera = .error
+                            if config.cameraEnabled {
+                                self.sensorStatuses.camera = .error
+                            }
+                            if config.depthEnabled {
+                                self.sensorStatuses.depth = .error
+                            }
                             self.networkManager.sendError(
                                 "camera_permission_denied",
                                 details: "Camera access denied by user"
@@ -92,7 +103,12 @@ class SensorManager: ObservableObject {
                 }
                 return
             default:
-                sensorStatuses.camera = .error
+                if config.cameraEnabled {
+                    sensorStatuses.camera = .error
+                }
+                if config.depthEnabled {
+                    sensorStatuses.depth = .error
+                }
                 networkManager.sendError(
                     "camera_permission_denied",
                     details: "Camera access denied. Enable camera in Settings."
@@ -104,9 +120,14 @@ class SensorManager: ObservableObject {
         do {
             // Configure and start camera
             if config.cameraEnabled {
-                try cameraService.configure(fps: config.cameraFPS)
-                cameraService.start()
-                sensorStatuses.camera = .active
+                if usingARKitCamera {
+                    sensorStatuses.camera = .active
+                } else if config.cameraFPS > 0 {
+                    try cameraService.configure(fps: config.cameraFPS)
+                    cameraService.start()
+                    cameraServiceRunning = true
+                    sensorStatuses.camera = .active
+                }
             }
 
             // Configure and start ARKit
@@ -119,6 +140,9 @@ class SensorManager: ObservableObject {
                 arKitService.start()
                 if config.depthEnabled {
                     sensorStatuses.depth = .active
+                    if usingARKitCamera {
+                        sensorStatuses.camera = .active
+                    }
                 }
                 if config.poseEnabled {
                     sensorStatuses.pose = .active
@@ -191,7 +215,11 @@ class SensorManager: ObservableObject {
         guard isStreaming else { return }
 
         // Stop all services
-        cameraService.stop()
+        if cameraServiceRunning {
+            cameraService.stop()
+            cameraServiceRunning = false
+        }
+        usingARKitCamera = false
         arKitService.stop()
         imuService.stop()
         gpsService.stop()
@@ -244,6 +272,7 @@ class SensorManager: ObservableObject {
     // MARK: - Dynamic Configuration
 
     func updateCameraFPS(_ fps: Int) {
+        guard !usingARKitCamera else { return }
         cameraService.updateFPS(fps)
     }
 
@@ -412,7 +441,7 @@ enum SensorStatus: String {
     case error = "Error"
 }
 
-struct SensorStatuses {
+struct SensorStatuses: Equatable {
     var camera: SensorStatus = .inactive
     var depth: SensorStatus = .inactive
     var pose: SensorStatus = .inactive
