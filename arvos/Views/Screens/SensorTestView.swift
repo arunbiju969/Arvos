@@ -12,6 +12,7 @@ import CoreMotion
 struct SensorTestView: View {
     @StateObject private var viewModel = SensorTestViewModel()
     @Environment(\.dismiss) var dismiss
+    @State private var useSimpleRenderer = false
 
     var body: some View {
         NavigationView {
@@ -108,12 +109,42 @@ struct SensorTestView: View {
                 }
             }
 
+            // Test renderer toggle
+            HStack {
+                Text("Renderer:")
+                    .font(.caption)
+                Picker("Renderer", selection: $useSimpleRenderer) {
+                    Text("Full").tag(false)
+                    Text("Test").tag(true)
+                }
+                .pickerStyle(SegmentedPickerStyle())
+            }
+            .padding(.horizontal)
+
             if let depthSample = viewModel.latestDepthSample {
-                DepthPointCloudView(depthSample: depthSample)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 500) // Taller for better visibility
-                    .background(Color.black)
-                    .cornerRadius(8)
+                if useSimpleRenderer {
+                    SimpleDepthView(depthSample: depthSample)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 500)
+                        .background(Color.black)
+                        .cornerRadius(8)
+                        .overlay(
+                            Text("Test: 3 colored dots\n(Red, Green, Blue)\nIf you see these, Metal works!")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(Color.black.opacity(0.7))
+                                .cornerRadius(4)
+                                .padding(8),
+                            alignment: .topLeading
+                        )
+                } else {
+                    DepthPointCloudView(depthSample: depthSample)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 500) // Taller for better visibility
+                        .background(Color.black)
+                        .cornerRadius(8)
+                }
             } else {
                 VStack(spacing: 12) {
                     ProgressView()
