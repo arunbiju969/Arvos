@@ -15,6 +15,7 @@ struct DepthUniforms {
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
     float3x3 inverseIntrinsics;
+    float4x4 localToWorld; // Camera transform from ARFrame
     float2 depthResolution;
     float pointSize;
     int confidenceThreshold; // 0=low, 1=medium, 2=high
@@ -94,7 +95,7 @@ vertex ParticleVertexOut depthPointCloudVertex(
         }
     }
 
-    // Unproject depth to 3D camera space
+    // Unproject depth to 3D camera-local space
     float3 localPosition = unprojectDepthSample(
         depthCoord,
         depth,
@@ -102,8 +103,10 @@ vertex ParticleVertexOut depthPointCloudVertex(
         uniforms.depthResolution
     );
 
-    // Transform to world space and then to clip space
-    float4 worldPosition = float4(localPosition, 1.0);
+    // Transform from camera-local to world space using ARFrame transform
+    float4 worldPosition = uniforms.localToWorld * float4(localPosition, 1.0);
+
+    // Then to clip space for rendering
     out.position = uniforms.projectionMatrix * uniforms.viewMatrix * worldPosition;
 
     // Color based on depth for visibility

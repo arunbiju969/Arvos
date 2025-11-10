@@ -140,6 +140,7 @@ struct DepthPointCloudView: UIViewRepresentable {
                 viewMatrix: viewMatrix * modelMatrix,
                 projectionMatrix: projectionMatrix,
                 inverseIntrinsics: depthSample.intrinsics.inverse,
+                localToWorld: depthSample.cameraTransform, // ARFrame camera transform
                 depthResolution: SIMD2<Float>(Float(depthTexture.width), Float(depthTexture.height)),
                 pointSize: 5.0, // Medium point size
                 confidenceThreshold: 1 // Filter low quality points
@@ -290,6 +291,7 @@ struct DepthUniforms {
     let viewMatrix: simd_float4x4
     let projectionMatrix: simd_float4x4
     let inverseIntrinsics: simd_float3x3
+    let localToWorld: simd_float4x4
     let depthResolution: SIMD2<Float>
     let pointSize: Float
     let confidenceThreshold: Int32
@@ -297,12 +299,14 @@ struct DepthUniforms {
     init(viewMatrix: simd_float4x4,
          projectionMatrix: simd_float4x4,
          inverseIntrinsics: simd_float3x3,
+         localToWorld: simd_float4x4,
          depthResolution: SIMD2<Float>,
          pointSize: Float,
          confidenceThreshold: Int) {
         self.viewMatrix = viewMatrix
         self.projectionMatrix = projectionMatrix
         self.inverseIntrinsics = inverseIntrinsics
+        self.localToWorld = localToWorld
         self.depthResolution = depthResolution
         self.pointSize = pointSize
         self.confidenceThreshold = Int32(confidenceThreshold)
