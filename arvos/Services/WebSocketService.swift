@@ -41,9 +41,10 @@ class WebSocketService: NSObject {
     private var reconnectAttempts = 0
     private var reconnectTimer: Timer?
 
-    // Message queue for offline buffering
+    // Small message queue for brief disconnections
+    // For streaming-first use case, we drop old messages instead of buffering extensively
     private var messageQueue: [Data] = []
-    private let maxQueueSize = 1000
+    private let maxQueueSize = 10
 
     // Statistics
     private var bytesSent: Int64 = 0
@@ -106,8 +107,12 @@ class WebSocketService: NSObject {
     /// Send binary message
     func send(data: Data, asText: Bool = false) {
         guard state == .connected else {
-            // Buffer message if offline
+            // Buffer message if offline (small queue for brief disconnections)
             if messageQueue.count < maxQueueSize {
+                messageQueue.append(data)
+            } else {
+                // Drop oldest message to make room (streaming-first: old data is stale)
+                messageQueue.removeFirst()
                 messageQueue.append(data)
             }
             return
