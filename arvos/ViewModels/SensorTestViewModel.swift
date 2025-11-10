@@ -103,8 +103,12 @@ extension SensorTestViewModel: ARKitServiceDelegate {
     }
 
     func arKitService(_ service: ARKitService, didOutputDepthSample sample: DepthVisualizationSample) {
+        // Debug: Log reception
+        print("🔍 SensorTestViewModel: Received depth sample \(sample.width)×\(sample.height), showLiDAR=\(self.showLiDAR)")
+
         DispatchQueue.main.async {
             if self.showLiDAR {
+                print("🔍 SensorTestViewModel: Updating latestDepthSample")
                 self.latestDepthSample = sample
             }
         }
