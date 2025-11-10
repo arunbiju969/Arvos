@@ -130,9 +130,8 @@ struct DepthPointCloudView: UIViewRepresentable {
             renderEncoder.setRenderPipelineState(pipelineState)
             renderEncoder.setDepthStencilState(depthState)
 
-            // Set up camera
-            rotation += 0.005
-            let modelMatrix = makeRotationMatrix(rotation)
+            // Set up camera - use identity for now to see raw points
+            let modelMatrix = matrix_identity_float4x4 // No rotation
             let viewMatrix = makeViewMatrix()
             let projectionMatrix = makeProjectionMatrix(aspectRatio: Float(view.bounds.width / view.bounds.height))
 
@@ -141,8 +140,8 @@ struct DepthPointCloudView: UIViewRepresentable {
                 projectionMatrix: projectionMatrix,
                 inverseIntrinsics: depthSample.intrinsics.inverse,
                 depthResolution: SIMD2<Float>(Float(depthTexture.width), Float(depthTexture.height)),
-                pointSize: 3.0,
-                confidenceThreshold: 1 // 0=low, 1=medium, 2=high (filter low confidence)
+                pointSize: 10.0, // Even larger points for visibility
+                confidenceThreshold: 0 // 0=low, 1=medium, 2=high (show all for now)
             )
 
             renderEncoder.setVertexBytes(&uniforms, length: MemoryLayout<DepthUniforms>.stride, index: 0)
@@ -245,9 +244,10 @@ struct DepthPointCloudView: UIViewRepresentable {
         }
 
         private func makeViewMatrix() -> simd_float4x4 {
-            let eye = SIMD3<Float>(0, 0, 3)
+            // Camera positioned to view the point cloud from behind
+            let eye = SIMD3<Float>(0, 0, -2) // Behind the points
             let center = SIMD3<Float>(0, 0, 0)
-            let up = SIMD3<Float>(0, 1, 0)
+            let up = SIMD3<Float>(0, -1, 0) // Flip Y for proper orientation
 
             let z = normalize(eye - center)
             let x = normalize(cross(up, z))

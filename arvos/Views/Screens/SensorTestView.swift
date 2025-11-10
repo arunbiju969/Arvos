@@ -110,7 +110,9 @@ struct SensorTestView: View {
 
             if let depthSample = viewModel.latestDepthSample {
                 DepthPointCloudView(depthSample: depthSample)
-                    .frame(height: 400)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 500) // Taller for better visibility
+                    .background(Color.black)
                     .cornerRadius(8)
             } else {
                 VStack(spacing: 12) {

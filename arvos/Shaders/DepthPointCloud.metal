@@ -98,16 +98,13 @@ vertex ParticleVertexOut depthPointCloudVertex(
     float4 worldPosition = float4(localPosition, 1.0);
     out.position = uniforms.projectionMatrix * uniforms.viewMatrix * worldPosition;
 
-    // Sample color from camera image
-    // Map depth coordinates to color image coordinates
-    float2 colorCoord = depthCoord / uniforms.depthResolution;
-    constexpr sampler colorSampler(coord::normalized, filter::linear);
-    float4 color = colorTexture.sample(colorSampler, colorCoord);
-    out.color = color.rgb;
+    // Color based on depth for visibility
+    // Close = red, medium = green, far = blue
+    float normalizedDepth = depth / 5.0; // Assume max depth ~5m
+    out.color = float3(1.0 - normalizedDepth, normalizedDepth * 0.5, normalizedDepth);
 
-    // Point size based on distance (perspective effect)
-    float distance = length(localPosition);
-    out.pointSize = uniforms.pointSize / max(distance * 0.1, 1.0);
+    // Fixed point size for now
+    out.pointSize = uniforms.pointSize;
 
     return out;
 }
