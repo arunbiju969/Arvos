@@ -28,6 +28,9 @@ class CameraService: NSObject {
     private var lastFrameTime: UInt64 = 0
     private var frameInterval: UInt64 = 0
 
+    // Cached CIContext - reuse instead of creating per frame
+    private let ciContext = CIContext(options: [.useSoftwareRenderer: false])
+
     // Preview layer for UI
     var previewLayer: AVCaptureVideoPreviewLayer?
 
@@ -206,10 +209,9 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             }
         }
 
-        // Convert to JPEG
+        // Convert to JPEG using cached context
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
-        let context = CIContext()
-        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return }
+        guard let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent) else { return }
         let uiImage = UIImage(cgImage: cgImage)
         guard let jpegData = uiImage.jpegData(compressionQuality: Constants.Camera.jpegQuality) else { return }
 
