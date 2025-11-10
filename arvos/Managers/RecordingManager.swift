@@ -22,6 +22,9 @@ class RecordingManager: ObservableObject {
     private var startTime: Date?
     private var timer: Timer?
 
+    // File I/O queue for async writes
+    private let fileIOQueue = DispatchQueue(label: "com.arvos.recording.fileio", qos: .utility)
+
     private var recordingsDirectory: URL {
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         return documents.appendingPathComponent(Constants.Recording.recordingsDirectory)
@@ -197,24 +200,32 @@ class RecordingManager: ObservableObject {
     func record(depthFrame: DepthFrame) {
         guard isRecording, let sessionId = sessionId else { return }
 
-        // Save point cloud as PLY file
+        // Save point cloud as PLY file asynchronously to prevent frame drops
         let plyData = depthFrame.pointCloud.toPLY()
         let filename = "pointcloud_\(depthFrame.timestamp).ply"
         let plyPath = recordingsDirectory.appendingPathComponent(sessionId).appendingPathComponent(filename)
 
-        do {
-            try plyData.write(to: plyPath)
-            pointCloudFiles.append(plyPath)
+        fileIOQueue.async { [weak self] in
+            guard let self = self else { return }
 
-            // Also record to MCAP (reference to PLY file)
-            if let channelId = depthChannelId, let writer = mcapWriter {
-                let reference = filename.data(using: .utf8) ?? Data()
-                try writer.writeMessage(channelId: channelId, timestamp: depthFrame.timestamp, data: reference)
+            do {
+                try plyData.write(to: plyPath)
+
+                // Update state on main queue
+                DispatchQueue.main.async {
+                    self.pointCloudFiles.append(plyPath)
+
+                    // Also record to MCAP (reference to PLY file)
+                    if let channelId = self.depthChannelId, let writer = self.mcapWriter {
+                        let reference = filename.data(using: .utf8) ?? Data()
+                        try? writer.writeMessage(channelId: channelId, timestamp: depthFrame.timestamp, data: reference)
+                    }
+
+                    self.sensorCounts.depthFrames += 1
+                }
+            } catch {
+                print("Failed to record depth frame: \(error)")
             }
-
-            sensorCounts.depthFrames += 1
-        } catch {
-            print("Failed to record depth frame: \(error)")
         }
     }
 
