@@ -299,3 +299,21 @@ struct PointCloud {
         return ply
     }
 }
+
+// MARK: - Depth Visualization Sample
+
+struct DepthVisualizationSample {
+    let timestamp: UInt64
+    let depthMap: CVPixelBuffer
+    let confidenceMap: CVPixelBuffer?
+    let intrinsics: simd_float3x3
+    let cameraTransform: simd_float4x4
+
+    var width: Int {
+        CVPixelBufferGetWidth(depthMap)
+    }
+
+    var height: Int {
+        CVPixelBufferGetHeight(depthMap)
+    }
+}

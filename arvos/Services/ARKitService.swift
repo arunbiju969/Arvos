@@ -14,6 +14,11 @@ protocol ARKitServiceDelegate: AnyObject {
     func arKitService(_ service: ARKitService, didCapture depth: DepthFrame)
     func arKitService(_ service: ARKitService, didCapture camera: CameraFrame)
     func arKitService(_ service: ARKitService, didEncounterError error: Error)
+    func arKitService(_ service: ARKitService, didOutputDepthSample sample: DepthVisualizationSample)
+}
+
+extension ARKitServiceDelegate {
+    func arKitService(_ service: ARKitService, didOutputDepthSample sample: DepthVisualizationSample) {}
 }
 
 class ARKitService: NSObject {
@@ -40,6 +45,9 @@ class ARKitService: NSObject {
     private var frameCount = 0
     private var cameraFrameCount = 0
     private var depthFrameCount = 0
+
+    private let depthProcessingQueue = DispatchQueue(label: "com.arvos.depthProcessing", qos: .userInitiated)
+    private var isProcessingDepth = false
 
     // Device capabilities
     let hasLiDAR: Bool
@@ -175,7 +183,6 @@ class ARKitService: NSObject {
         // Try to get depth data
         var depthMap: CVPixelBuffer?
         var confidenceMap: CVPixelBuffer?
-        var pointCloud: PointCloud?
 
         // LiDAR depth (preferred)
         if let sceneDepth = frame.sceneDepth {
@@ -185,8 +192,7 @@ class ARKitService: NSObject {
         // ARKit depth estimation (fallback)
         else if let estimatedDepth = frame.estimatedDepthData {
             depthMap = estimatedDepth
-        }
-        else {
+        } else {
             // Only print first few failures
             if depthFrameCount < 5 {
                 print("❌ No depth data available from ARFrame (tracking: \(frame.camera.trackingState))")
@@ -194,131 +200,189 @@ class ARKitService: NSObject {
             return
         }
 
-        // Convert depth map to point cloud
-        if let depthBuffer = depthMap {
-            pointCloud = createPointCloud(from: depthBuffer, camera: frame.camera, frame: frame, confidenceMap: confidenceMap)
-            depthFrameCount += 1
-            if depthFrameCount <= 3 || depthFrameCount % 10 == 0 {
-                print("✅ Depth frame #\(depthFrameCount): \(pointCloud?.points.count ?? 0) points")
-            }
+        guard let depthBuffer = depthMap else { return }
+        guard !isProcessingDepth else { return }
+        isProcessingDepth = true
+
+        guard let depthCopy = copyPixelBuffer(depthBuffer) else {
+            isProcessingDepth = false
+            return
         }
 
-        // Create depth frame
-        if let cloud = pointCloud {
-            let depthFrame = DepthFrame(
-                timestamp: timestamp,
-                pointCloud: cloud,
-                camera: frame.camera,
-                confidenceMap: confidenceMap  // Pass confidence to depth frame
+        // Skip the depth sample visualization to avoid ARFrame retention
+        // Just process the point cloud directly
+
+        let retainedDepth = depthCopy
+        let retainedConfidence: CVPixelBuffer? = {
+            if let confidenceMap, let copied = copyPixelBuffer(confidenceMap) {
+                return copied
+            }
+            return nil
+        }()
+        let cameraTransform = frame.camera.transform
+        let intrinsics = frame.camera.intrinsics
+        let hasConfidence = confidenceMap != nil
+
+        depthProcessingQueue.async { [weak self] in
+            guard let self else { return }
+
+            let cloud = self.createPointCloud(
+                from: retainedDepth,
+                cameraTransform: cameraTransform,
+                intrinsics: intrinsics,
+                confidenceMap: retainedConfidence
             )
-            delegate?.arKitService(self, didCapture: depthFrame)
+
+            DispatchQueue.main.async {
+                self.isProcessingDepth = false
+
+                let pointCount = cloud.points.count
+                if pointCount == 0 {
+                    if self.depthFrameCount < 5 {
+                        print("⚠️ Depth cloud empty (0 points)")
+                    }
+                    return
+                }
+
+                self.depthFrameCount += 1
+                if self.depthFrameCount <= 3 || self.depthFrameCount % 10 == 0 {
+                    print("✅ Depth frame #\(self.depthFrameCount): \(pointCount) points")
+                }
+
+                let depthFrame = DepthFrame(
+                    timestamp: timestamp,
+                    pointCloud: cloud,
+                    cameraTransform: cameraTransform,
+                    intrinsics: intrinsics,
+                    hasConfidenceData: hasConfidence
+                )
+                self.delegate?.arKitService(self, didCapture: depthFrame)
+            }
         }
     }
 
-    private func createPointCloud(from depthMap: CVPixelBuffer, camera: ARCamera, frame: ARFrame, confidenceMap: CVPixelBuffer?) -> PointCloud {
+    private func createPointCloud(from depthMap: CVPixelBuffer, cameraTransform: simd_float4x4, intrinsics: simd_float3x3, confidenceMap: CVPixelBuffer?) -> PointCloud {
         CVPixelBufferLockBaseAddress(depthMap, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(depthMap, .readOnly) }
 
         let width = CVPixelBufferGetWidth(depthMap)
         let height = CVPixelBufferGetHeight(depthMap)
-        let baseAddress = CVPixelBufferGetBaseAddress(depthMap)
 
-        guard let floatBuffer = baseAddress?.assumingMemoryBound(to: Float32.self) else {
+        guard let depthPointer = CVPixelBufferGetBaseAddress(depthMap)?.assumingMemoryBound(to: Float32.self) else {
             return PointCloud(timestamp: Constants.Time.now(), points: [], colors: nil, confidenceLevels: nil)
         }
 
-        // Lock confidence map if available
-        var confidenceBuffer: UnsafeMutablePointer<UInt8>?
-        if let confMap = confidenceMap {
-            CVPixelBufferLockBaseAddress(confMap, .readOnly)
-            confidenceBuffer = CVPixelBufferGetBaseAddress(confMap)?.assumingMemoryBound(to: UInt8.self)
+        // Confidence map
+        var confidencePointer: UnsafeMutablePointer<UInt8>?
+        if let conf = confidenceMap {
+            CVPixelBufferLockBaseAddress(conf, .readOnly)
+            confidencePointer = CVPixelBufferGetBaseAddress(conf)?.assumingMemoryBound(to: UInt8.self)
         }
         defer {
-            if let confMap = confidenceMap {
-                CVPixelBufferUnlockBaseAddress(confMap, .readOnly)
+            if let conf = confidenceMap {
+                CVPixelBufferUnlockBaseAddress(conf, .readOnly)
             }
         }
 
+        let fx = intrinsics[0][0]
+        let fy = intrinsics[1][1]
+        let cx = intrinsics[2][0]
+        let cy = intrinsics[2][1]
+
+        let rotation = simd_float3x3(rows: [
+            SIMD3<Float>(cameraTransform.columns.0.x, cameraTransform.columns.0.y, cameraTransform.columns.0.z),
+            SIMD3<Float>(cameraTransform.columns.1.x, cameraTransform.columns.1.y, cameraTransform.columns.1.z),
+            SIMD3<Float>(cameraTransform.columns.2.x, cameraTransform.columns.2.y, cameraTransform.columns.2.z)
+        ])
+        let translation = SIMD3<Float>(cameraTransform.columns.3.x, cameraTransform.columns.3.y, cameraTransform.columns.3.z)
+
         var points: [SIMD3<Float>] = []
-        var colors: [SIMD3<UInt8>] = []
+        points.reserveCapacity(Constants.Depth.maxPoints)
+
         var confidenceLevels: [UInt8] = []
+        confidenceLevels.reserveCapacity(Constants.Depth.maxPoints)
 
         // Downsample for performance
-        let step = Constants.Depth.downsampleFactor
+        let step = max(1, Constants.Depth.downsampleFactor)
 
         for y in stride(from: 0, to: height, by: step) {
             for x in stride(from: 0, to: width, by: step) {
-                let depthValue = floatBuffer[y * width + x]
+                let index = y * width + x
+                let depthValue = depthPointer[index]
 
-                // Filter by depth range
-                guard depthValue >= Constants.Depth.minDepth && depthValue <= Constants.Depth.maxDepth else {
+                guard depthValue.isFinite,
+                      depthValue >= Constants.Depth.minDepth,
+                      depthValue <= Constants.Depth.maxDepth else {
                     continue
                 }
 
-                // Filter by confidence if available (0=low, 1=medium, 2=high)
-                // Only keep medium (1) and high (2) confidence points
-                if let confBuf = confidenceBuffer {
-                    let confidence = confBuf[y * width + x]
-                    if confidence == 0 { // Skip low confidence points
+                if let confidencePointer {
+                    let confidence = confidencePointer[index]
+                    if confidence == 0 {
                         continue
                     }
                     confidenceLevels.append(confidence)
                 } else {
-                    confidenceLevels.append(2) // Assume high confidence if no map
+                    confidenceLevels.append(2)
                 }
 
-                // Unproject to 3D
-                let normalizedPoint = CGPoint(x: CGFloat(x) / CGFloat(width), y: CGFloat(y) / CGFloat(height))
-                guard let point = camera.unprojectPoint(
-                    normalizedPoint,
-                    ontoPlane: simd_float4x4(1),
-                    orientation: .portrait,
-                    viewportSize: CGSize(width: width, height: height)
-                ) else {
-                    continue
+                let xn = (Float(x) - cx) / fx
+                let yn = (Float(y) - cy) / fy
+
+                let cameraPoint = SIMD3<Float>(xn * depthValue, yn * depthValue, -depthValue)
+                let worldPoint = rotation * cameraPoint + translation
+                points.append(worldPoint)
+
+                if points.count >= Constants.Depth.maxPoints {
+                    break
                 }
-
-                // Apply depth
-                let direction = simd_normalize(point)
-                let depthPoint = direction * depthValue
-
-                points.append(depthPoint)
-
-                // Try to get color from camera image
-                let pixelBuffer = frame.capturedImage
-                let color = getColor(from: pixelBuffer, at: (x, y))
-                colors.append(color)
+            }
+            if points.count >= Constants.Depth.maxPoints {
+                break
             }
         }
 
         return PointCloud(
             timestamp: Constants.Time.now(),
             points: points,
-            colors: colors.isEmpty ? nil : colors,
+            colors: nil,
             confidenceLevels: confidenceLevels.isEmpty ? nil : confidenceLevels
         )
     }
 
-    private func getColor(from pixelBuffer: CVPixelBuffer, at point: (Int, Int)) -> SIMD3<UInt8> {
+    private func copyPixelBuffer(_ pixelBuffer: CVPixelBuffer) -> CVPixelBuffer? {
         CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
 
         let width = CVPixelBufferGetWidth(pixelBuffer)
-        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
-        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        let pixelFormat = CVPixelBufferGetPixelFormatType(pixelBuffer)
+        let sourceBytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
 
-        guard let buffer = baseAddress?.assumingMemoryBound(to: UInt8.self) else {
-            return SIMD3<UInt8>(128, 128, 128)
+        var copy: CVPixelBuffer?
+        let status = CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            width,
+            height,
+            pixelFormat,
+            nil,
+            &copy
+        )
+
+        guard status == kCVReturnSuccess, let copy else {
+            return nil
         }
 
-        let (x, y) = point
-        let offset = y * bytesPerRow + x * 4
+        CVPixelBufferLockBaseAddress(copy, [])
+        defer { CVPixelBufferUnlockBaseAddress(copy, []) }
 
-        let b = buffer[offset]
-        let g = buffer[offset + 1]
-        let r = buffer[offset + 2]
+        guard let sourceBase = CVPixelBufferGetBaseAddress(pixelBuffer),
+              let destinationBase = CVPixelBufferGetBaseAddress(copy) else {
+            return nil
+        }
 
-        return SIMD3<UInt8>(r, g, b)
+        memcpy(destinationBase, sourceBase, sourceBytesPerRow * height)
+        return copy
     }
 }
 
@@ -402,8 +466,9 @@ extension ARKitService: ARSessionDelegate {
 struct DepthFrame {
     let timestamp: UInt64
     let pointCloud: PointCloud
-    let camera: ARCamera
-    let confidenceMap: CVPixelBuffer?  // Depth confidence map (0=low, 1=medium, 2=high)
+    let cameraTransform: simd_float4x4
+    let intrinsics: simd_float3x3
+    let hasConfidenceData: Bool
 
     func metadata() -> DepthFrameMetadata {
         let plyData = pointCloud.toPLY()
@@ -419,7 +484,7 @@ struct DepthFrame {
             size: plyData.count,
             minDepth: minDepth,
             maxDepth: maxDepth,
-            hasConfidenceData: confidenceMap != nil
+            hasConfidenceData: hasConfidenceData
         )
     }
 }

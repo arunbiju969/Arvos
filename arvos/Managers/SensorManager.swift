@@ -13,10 +13,12 @@ import AVFoundation
 class SensorManager: ObservableObject {
     static let shared = SensorManager()
 
-    @Published private(set) var currentMode: StreamMode = .liveStream
+    @Published private(set) var currentMode: StreamMode = .fullSensor
     @Published private(set) var isStreaming = false
     @Published private(set) var currentFPS: Double = 0
     @Published private(set) var sensorStatuses: SensorStatuses = SensorStatuses()
+    @Published private(set) var latestDepthFrame: DepthFrame?
+    // Removed latestDepthSample to avoid ARFrame retention issues
 
     // Services
     private let cameraService = CameraService()
@@ -206,6 +208,7 @@ class SensorManager: ObservableObject {
 
         isStreaming = false
         sensorStatuses = SensorStatuses()
+        latestDepthFrame = nil
 
         networkManager.sendStatus("stopped")
     }
@@ -330,6 +333,15 @@ extension SensorManager: ARKitServiceDelegate {
         if recordingManager.isRecording {
             recordingManager.record(depthFrame: depth)
         }
+
+        DispatchQueue.main.async {
+            self.latestDepthFrame = depth
+        }
+    }
+
+    func arKitService(_ service: ARKitService, didOutputDepthSample sample: DepthVisualizationSample) {
+        // Don't store depth samples to avoid ARFrame retention
+        // The sample will be released immediately after this function returns
     }
 
     func arKitService(_ service: ARKitService, didCapture camera: CameraFrame) {

@@ -16,7 +16,7 @@ class StreamingViewModel: ObservableObject {
     private let recordingManager = RecordingManager()
 
     // Published properties
-    @Published var selectedMode: StreamMode = .liveStream
+    @Published var selectedMode: StreamMode = .fullSensor
     @Published var isStreaming = false
     @Published var isConnected = false
     @Published var connectionHost = ""
@@ -30,6 +30,7 @@ class StreamingViewModel: ObservableObject {
     @Published var showingQRScanner = false
     @Published var showingConnectionSheet = false
     @Published var showingSettings = false
+    // Removed LiDAR preview - it was causing ARFrame retention issues
 
     private var cancellables = Set<AnyCancellable>()
     private var updateTimer: Timer?
@@ -126,7 +127,7 @@ class StreamingViewModel: ObservableObject {
 
     func updateDataSources(camera: Bool, depth: Bool, imu: Bool, pose: Bool, gps: Bool) {
         // Create custom mode based on user selection
-        let customMode: StreamMode = .liveStream // Use as base
+        let customMode: StreamMode = .fullSensor // Use as base
         sensorManager.setMode(customMode)
 
         // Then dynamically enable/disable sensors
@@ -167,6 +168,9 @@ class StreamingViewModel: ObservableObject {
     func updatePoseHz(_ hz: Int) {
         sensorManager.updatePoseFPS(hz)
     }
+
+    // MARK: - LiDAR Preview Controls
+    // Removed - LiDAR preview was causing ARFrame retention issues and poor performance
 
     // MARK: - Formatting Helpers
 

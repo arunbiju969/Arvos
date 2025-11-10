@@ -17,6 +17,7 @@ class RecordingManager: ObservableObject {
     private var mcapWriter: MCAPWriter?
     private var videoRecorder: VideoRecorder?
     private var pointCloudFiles: [URL] = []
+    private var currentRecordingMode: StreamMode?
 
     private var startTime: Date?
     private var timer: Timer?
@@ -66,6 +67,7 @@ class RecordingManager: ObservableObject {
         // Generate session ID
         sessionId = UUID().uuidString
         startTime = Date()
+        currentRecordingMode = mode
         sensorCounts = SensorCounts()
 
         // Create session directory
@@ -223,7 +225,7 @@ class RecordingManager: ObservableObject {
 
         let metadata = SessionMetadata(
             sessionId: sessionId,
-            mode: .liveStream, // TODO: Pass actual mode
+            mode: currentRecordingMode ?? .fullSensor,
             startTime: startTime,
             endTime: Date(),
             duration: recordingDuration,
