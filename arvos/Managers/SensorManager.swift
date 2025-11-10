@@ -20,11 +20,11 @@ class SensorManager: ObservableObject {
     @Published private(set) var latestDepthFrame: DepthFrame?
     // Removed latestDepthSample to avoid ARFrame retention issues
 
-    // Services
-    private let cameraService = CameraService()
-    private let arKitService = ARKitService()
-    private let imuService = IMUService()
-    private let gpsService = GPSService()
+    // Services (exposed for sensor test view)
+    let cameraService = CameraService()
+    let arKitService = ARKitService()
+    let imuService = IMUService()
+    let gpsService = GPSService()
     private var awaitingCameraAuthorization = false
 
     // Managers
@@ -32,7 +32,7 @@ class SensorManager: ObservableObject {
     private let recordingManager = RecordingManager()
 
     private var cameraServiceRunning = false
-    private var usingARKitCamera = false
+    var usingARKitCamera = false // Exposed for sensor test view
 
     // Burst scan timer
     private var burstScanTimer: Timer?
