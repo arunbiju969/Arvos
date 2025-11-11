@@ -73,16 +73,17 @@ vertex ParticleVertexOut depthPointCloudVertex(
 
     uint x = vertexID % depthWidth;
     uint y = vertexID / depthWidth;
+    float2 pixelCoord = float2(x, y);
 
-    // Sample depth value
-    constexpr sampler depthSampler(coord::pixel, filter::nearest);
-    float2 depthCoord = float2(x, y);
-    float depth = depthTexture.sample(depthSampler, depthCoord).r;
+    // Sample depth value using NORMALIZED coordinates [0, 1]
+    constexpr sampler depthSampler(coord::normalized, filter::nearest);
+    float2 texCoord = pixelCoord / uniforms.depthResolution;
+    float depth = depthTexture.sample(depthSampler, texCoord).r;
 
     // Sample confidence (if available)
     uint confidence = 0;
     if (uniforms.confidenceThreshold >= 0) {
-        confidence = confidenceTexture.sample(depthSampler, depthCoord).r;
+        confidence = confidenceTexture.sample(depthSampler, texCoord).r;
 
         // Filter by confidence threshold
         // ARFrameDepthConfidence: 0=low, 1=medium, 2=high
@@ -97,7 +98,7 @@ vertex ParticleVertexOut depthPointCloudVertex(
 
     // Unproject depth to 3D camera-local space
     float3 localPosition = unprojectDepthSample(
-        depthCoord,
+        pixelCoord,
         depth,
         uniforms.inverseIntrinsics,
         uniforms.depthResolution
@@ -105,6 +106,9 @@ vertex ParticleVertexOut depthPointCloudVertex(
 
     // Transform from camera-local to world space using ARFrame transform
     float4 worldPosition = uniforms.localToWorld * float4(localPosition, 1.0);
+
+    // Perform homogeneous divide (critical for perspective correctness!)
+    worldPosition = worldPosition / worldPosition.w;
 
     // Then to clip space for rendering
     out.position = uniforms.projectionMatrix * uniforms.viewMatrix * worldPosition;
