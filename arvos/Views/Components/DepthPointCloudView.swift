@@ -179,15 +179,22 @@ struct DepthPointCloudView: UIViewRepresentable {
 
             struct PointCloudUniforms {
                 var viewProjectionMatrix: simd_float4x4
-                var cameraIntrinsics: simd_float3x3
+                var fx: Float
+                var fy: Float
+                var cx: Float
+                var cy: Float
                 var depthResolution: SIMD2<Float>
                 var pointSize: Float
                 var confidenceThreshold: Int32
             }
 
+            let K = depthSample.intrinsics
             var uniforms = PointCloudUniforms(
                 viewProjectionMatrix: viewProjectionMatrix,
-                cameraIntrinsics: depthSample.intrinsics,
+                fx: K[0][0],
+                fy: K[1][1],
+                cx: K[2][0],
+                cy: K[2][1],
                 depthResolution: SIMD2<Float>(Float(depthTexture.width), Float(depthTexture.height)),
                 pointSize: 8.0,
                 confidenceThreshold: 0
@@ -208,7 +215,7 @@ struct DepthPointCloudView: UIViewRepresentable {
                 print("🎨 Drawing \(vertexCount) points (current frame)")
                 print("   Depth texture: \(depthTexture.width)x\(depthTexture.height)")
                 print("   View size: \(view.bounds.size)")
-                print("   Camera intrinsics: fx=\(uniforms.cameraIntrinsics[0][0]), fy=\(uniforms.cameraIntrinsics[1][1])")
+                print("   Camera intrinsics: fx=\(uniforms.fx), fy=\(uniforms.fy), cx=\(uniforms.cx), cy=\(uniforms.cy)")
                 print("   Projection matrix valid: \(projectionMatrix != simd_float4x4())")
 
                 // Sample some depth values

@@ -10,7 +10,10 @@ using namespace metal;
 
 struct PointCloudUniforms {
     float4x4 viewProjectionMatrix;
-    float3x3 cameraIntrinsics;
+    float fx;
+    float fy;
+    float cx;
+    float cy;
     float2 depthResolution;
     float pointSize;
     int confidenceThreshold;
@@ -52,9 +55,8 @@ vertex PointVertexOut simplePointCloudVertex(
     }
 
     // Unproject to camera-local 3D coordinates (Apple's formula)
-    float3x3 K = uniforms.cameraIntrinsics;
-    float xrw = (float(pos.x) - K[2][0]) * depth / K[0][0];
-    float yrw = (float(pos.y) - K[2][1]) * depth / K[1][1];
+    float xrw = (float(pos.x) - uniforms.cx) * depth / uniforms.fx;
+    float yrw = (float(pos.y) - uniforms.cy) * depth / uniforms.fy;
     float4 cameraSpacePos = float4(xrw, yrw, depth, 1.0);
 
     // Transform to clip space
