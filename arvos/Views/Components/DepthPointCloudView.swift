@@ -49,10 +49,16 @@ struct DepthPointCloudView: UIViewRepresentable {
         private var commandQueue: MTLCommandQueue?
         private var pipelineState: MTLRenderPipelineState?
         private var depthState: MTLDepthStencilState?
+        private var computePipelineState: MTLComputePipelineState?
 
         private var depthSample: DepthVisualizationSample?
         private var depthTexture: MTLTexture?
         private var confidenceTexture: MTLTexture?
+
+        // Particle accumulation buffer
+        private var particleBuffer: MTLBuffer?
+        private var currentParticleIndex: Int = 0
+        private let maxParticles: Int = 500_000 // Accumulate up to 500k points
 
         private var rotation: Float = 0
         private var vertexCount: Int = 0
@@ -136,13 +142,13 @@ struct DepthPointCloudView: UIViewRepresentable {
             renderEncoder.setRenderPipelineState(pipelineState)
             renderEncoder.setDepthStencilState(depthState)
 
-            // Set up camera - NO rotation for now to debug
-            let modelMatrix = simd_float4x4(1.0) // Identity matrix - no rotation
-            let viewMatrix = makeViewMatrix()
+            // Set up camera with slow orbit rotation to view accumulated points
+            rotation += 0.005 // Slow rotation
+            let viewMatrix = makeOrbitViewMatrix(rotation: rotation, distance: 3.0)
             let projectionMatrix = makeProjectionMatrix(aspectRatio: Float(view.bounds.width / view.bounds.height))
 
             var uniforms = DepthUniforms(
-                viewMatrix: viewMatrix * modelMatrix,
+                viewMatrix: viewMatrix,
                 projectionMatrix: projectionMatrix,
                 inverseIntrinsics: depthSample.intrinsics.inverse,
                 localToWorld: depthSample.cameraTransform, // ARFrame camera transform
@@ -271,12 +277,15 @@ struct DepthPointCloudView: UIViewRepresentable {
             )
         }
 
-        private func makeViewMatrix() -> simd_float4x4 {
-            // Simple camera positioned to view the point cloud from behind
-            // Position camera back from origin to see points in front
-            let eye = SIMD3<Float>(0, 0, -1.5) // Back from origin
-            let center = SIMD3<Float>(0, 0, 0) // Look at origin
-            let up = SIMD3<Float>(0, -1, 0) // Up direction (inverted for ARKit coordinates)
+        private func makeOrbitViewMatrix(rotation: Float, distance: Float) -> simd_float4x4 {
+            // Orbital camera that rotates around the accumulated point cloud
+            let eye = SIMD3<Float>(
+                sinf(rotation) * distance,
+                0.0,
+                cosf(rotation) * distance
+            )
+            let center = SIMD3<Float>(0, 0, 0) // Look at world origin
+            let up = SIMD3<Float>(0, 1, 0) // Y-up for world space
 
             let z = normalize(eye - center)
             let x = normalize(cross(up, z))

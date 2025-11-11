@@ -104,9 +104,14 @@ vertex ParticleVertexOut depthPointCloudVertex(
         uniforms.depthResolution
     );
 
-    // Render in camera-local space (not world space)
-    // This shows the current depth frame as a stable image
-    out.position = uniforms.projectionMatrix * uniforms.viewMatrix * float4(localPosition, 1.0);
+    // Transform to world space for persistent visualization
+    float4 worldPosition = uniforms.localToWorld * float4(localPosition, 1.0);
+
+    // Perform homogeneous divide
+    worldPosition = worldPosition / worldPosition.w;
+
+    // Render in clip space
+    out.position = uniforms.projectionMatrix * uniforms.viewMatrix * worldPosition;
 
     // Color based on depth - simple gradient for clarity
     // Map depth 0-2m to visible colors
