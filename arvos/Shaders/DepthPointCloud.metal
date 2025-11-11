@@ -7,6 +7,7 @@
 //
 
 #include <metal_stdlib>
+#include "ParticleTypes.h"
 using namespace metal;
 
 // MARK: - Structs

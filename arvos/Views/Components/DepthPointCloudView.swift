@@ -75,10 +75,19 @@ struct DepthPointCloudView: UIViewRepresentable {
                 return
             }
 
-            // Create pipeline for depth point cloud
+            // Create compute pipeline for accumulation
+            do {
+                let computeFunction = library.makeFunction(name: "accumulateDepthPoints")
+                computePipelineState = try device.makeComputePipelineState(function: computeFunction!)
+                print("✅ Created compute pipeline for accumulation")
+            } catch {
+                print("❌ Failed to create compute pipeline: \(error)")
+            }
+
+            // Create render pipeline for particles
             let pipelineDescriptor = MTLRenderPipelineDescriptor()
-            pipelineDescriptor.vertexFunction = library.makeFunction(name: "depthPointCloudVertex")
-            pipelineDescriptor.fragmentFunction = library.makeFunction(name: "depthPointCloudFragment")
+            pipelineDescriptor.vertexFunction = library.makeFunction(name: "particleVertex")
+            pipelineDescriptor.fragmentFunction = library.makeFunction(name: "particleFragment")
             pipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
             pipelineDescriptor.colorAttachments[0].isBlendingEnabled = true
             pipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
@@ -87,6 +96,7 @@ struct DepthPointCloudView: UIViewRepresentable {
 
             do {
                 pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
+                print("✅ Created render pipeline for particles")
             } catch {
                 print("❌ Failed to create pipeline state: \(error)")
             }
@@ -96,6 +106,12 @@ struct DepthPointCloudView: UIViewRepresentable {
             depthDescriptor.depthCompareFunction = .less
             depthDescriptor.isDepthWriteEnabled = true
             depthState = device.makeDepthStencilState(descriptor: depthDescriptor)
+
+            // Create particle buffer
+            let particleSize = MemoryLayout<SIMD4<Float>>.stride * 2 // position(xyz+pad) + color(rgb+confidence)
+            let bufferSize = maxParticles * particleSize
+            particleBuffer = device.makeBuffer(length: bufferSize, options: .storageModeShared)
+            print("✅ Created particle buffer for \(maxParticles) particles (\(bufferSize / 1024 / 1024)MB)")
         }
 
         // MARK: - Update Sample
@@ -122,55 +138,101 @@ struct DepthPointCloudView: UIViewRepresentable {
         func draw(in view: MTKView) {
             guard let device = device,
                   let commandQueue = commandQueue,
+                  let computePipelineState = computePipelineState,
                   let pipelineState = pipelineState,
                   let depthState = depthState,
+                  let particleBuffer = particleBuffer,
                   let drawable = view.currentDrawable,
                   let descriptor = view.currentRenderPassDescriptor,
                   let depthSample = depthSample,
                   let depthTexture = depthTexture else {
-                print("❌ Draw guard failed: device=\(device != nil), pipeline=\(pipelineState != nil), depthSample=\(depthSample != nil), depthTexture=\(depthTexture != nil)")
                 return
             }
 
-            // Create command buffer
-            guard let commandBuffer = commandQueue.makeCommandBuffer(),
-                  let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else {
-                print("❌ Failed to create command buffer or encoder")
+            guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+                return
+            }
+
+            // STAGE 1: Accumulate depth points into particle buffer using compute shader
+            if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
+                computeEncoder.setComputePipelineState(computePipelineState)
+
+                // Accumulation uniforms
+                struct AccumulationUniforms {
+                    var cameraIntrinsicsInversed: simd_float3x3
+                    var localToWorld: simd_float4x4
+                    var depthResolution: SIMD2<Float>
+                    var pointCloudCurrentIndex: Int32
+                    var maxPoints: Int32
+                    var confidenceThreshold: Int32
+                }
+
+                var accUniforms = AccumulationUniforms(
+                    cameraIntrinsicsInversed: depthSample.intrinsics.inverse,
+                    localToWorld: depthSample.cameraTransform,
+                    depthResolution: SIMD2<Float>(Float(depthTexture.width), Float(depthTexture.height)),
+                    pointCloudCurrentIndex: Int32(currentParticleIndex),
+                    maxPoints: Int32(maxParticles),
+                    confidenceThreshold: 0
+                )
+
+                computeEncoder.setBytes(&accUniforms, length: MemoryLayout<AccumulationUniforms>.stride, index: 0)
+                computeEncoder.setBuffer(particleBuffer, offset: 0, index: 1)
+                computeEncoder.setTexture(depthTexture, index: 0)
+                if let confidenceTexture = confidenceTexture {
+                    computeEncoder.setTexture(confidenceTexture, index: 1)
+                }
+
+                let threadgroupSize = MTLSize(width: 16, height: 16, depth: 1)
+                let threadgroups = MTLSize(
+                    width: (Int(depthTexture.width) + 15) / 16,
+                    height: (Int(depthTexture.height) + 15) / 16,
+                    depth: 1
+                )
+                computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadgroupSize)
+                computeEncoder.endEncoding()
+
+                // Advance particle index
+                currentParticleIndex = (currentParticleIndex + Int(depthTexture.width * depthTexture.height)) % maxParticles
+            }
+
+            // STAGE 2: Render accumulated particles
+            guard let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else {
                 return
             }
 
             renderEncoder.setRenderPipelineState(pipelineState)
             renderEncoder.setDepthStencilState(depthState)
 
-            // Set up camera with slow orbit rotation to view accumulated points
-            rotation += 0.005 // Slow rotation
+            // Set up camera
+            rotation += 0.005
             let viewMatrix = makeOrbitViewMatrix(rotation: rotation, distance: 3.0)
             let projectionMatrix = makeProjectionMatrix(aspectRatio: Float(view.bounds.width / view.bounds.height))
+            let viewProjectionMatrix = projectionMatrix * viewMatrix
 
-            var uniforms = DepthUniforms(
-                viewMatrix: viewMatrix,
-                projectionMatrix: projectionMatrix,
-                inverseIntrinsics: depthSample.intrinsics.inverse,
-                localToWorld: depthSample.cameraTransform, // ARFrame camera transform
-                depthResolution: SIMD2<Float>(Float(depthTexture.width), Float(depthTexture.height)),
-                pointSize: 15.0, // Larger points for visibility (was 5.0)
-                confidenceThreshold: 0 // Show all points, even low confidence (was 1)
+            struct RenderUniforms {
+                var viewProjectionMatrix: simd_float4x4
+                var pointSize: Float
+                var confidenceThreshold: Int32
+            }
+
+            var renderUniforms = RenderUniforms(
+                viewProjectionMatrix: viewProjectionMatrix,
+                pointSize: 3.0,
+                confidenceThreshold: 0
             )
 
+            renderEncoder.setVertexBytes(&renderUniforms, length: MemoryLayout<RenderUniforms>.stride, index: 0)
+            renderEncoder.setVertexBuffer(particleBuffer, offset: 0, index: 1)
+
+            // Draw all accumulated particles
+            let particlesToDraw = min(currentParticleIndex + Int(depthTexture.width * depthTexture.height), maxParticles)
+            renderEncoder.drawPrimitives(type: .point, vertexStart: 0, vertexCount: particlesToDraw)
+
             frameCount += 1
-            if frameCount % 30 == 0 { // Log every 30 frames (~1 second)
-                print("🎨 Drawing \(vertexCount) points at frame \(frameCount)")
+            if frameCount % 30 == 0 {
+                print("🎨 Drawing \(particlesToDraw) accumulated particles at frame \(frameCount)")
             }
-
-            renderEncoder.setVertexBytes(&uniforms, length: MemoryLayout<DepthUniforms>.stride, index: 0)
-            renderEncoder.setVertexTexture(depthTexture, index: 0)
-
-            if let confidenceTexture = confidenceTexture {
-                renderEncoder.setVertexTexture(confidenceTexture, index: 1)
-            }
-
-            // Draw all depth pixels as points
-            renderEncoder.drawPrimitives(type: .point, vertexStart: 0, vertexCount: vertexCount)
 
             renderEncoder.endEncoding()
             commandBuffer.present(drawable)
