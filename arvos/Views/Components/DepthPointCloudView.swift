@@ -25,7 +25,7 @@ struct DepthPointCloudView: UIViewRepresentable {
         metalView.delegate = context.coordinator
         metalView.enableSetNeedsDisplay = false
         metalView.isPaused = false
-        metalView.preferredFramesPerSecond = 30
+        metalView.preferredFramesPerSecond = 20 // Reduced from 30 for performance
 
         if let device = metalView.device {
             context.coordinator.setupMetal(device: device, view: metalView)
@@ -58,7 +58,7 @@ struct DepthPointCloudView: UIViewRepresentable {
         // Particle accumulation buffer
         private var particleBuffer: MTLBuffer?
         private var currentParticleIndex: Int = 0
-        private let maxParticles: Int = 500_000 // Accumulate up to 500k points
+        private let maxParticles: Int = 100_000 // Reduced from 500k for performance
 
         // Camera movement tracking for 3D scanning
         private var lastCameraTransform: simd_float4x4?
@@ -198,17 +198,22 @@ struct DepthPointCloudView: UIViewRepresentable {
                     computeEncoder.setTexture(confidenceTexture, index: 1)
                 }
 
+                // Subsample by 2x in each dimension (4x total reduction)
+                let subsampledWidth = Int(depthTexture.width) / 2
+                let subsampledHeight = Int(depthTexture.height) / 2
+
                 let threadgroupSize = MTLSize(width: 16, height: 16, depth: 1)
                 let threadgroups = MTLSize(
-                    width: (Int(depthTexture.width) + 15) / 16,
-                    height: (Int(depthTexture.height) + 15) / 16,
+                    width: (subsampledWidth + 15) / 16,
+                    height: (subsampledHeight + 15) / 16,
                     depth: 1
                 )
                 computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadgroupSize)
                 computeEncoder.endEncoding()
 
-                // Advance particle index
-                currentParticleIndex = (currentParticleIndex + Int(depthTexture.width * depthTexture.height)) % maxParticles
+                // Advance particle index (subsampled count)
+                let pointsAdded = subsampledWidth * subsampledHeight
+                currentParticleIndex = (currentParticleIndex + pointsAdded) % maxParticles
 
                 if frameCount % 30 == 0 {
                     print("📸 Camera moved - accumulating points (total: \(min(currentParticleIndex, maxParticles)))")
@@ -245,12 +250,14 @@ struct DepthPointCloudView: UIViewRepresentable {
             renderEncoder.setVertexBuffer(particleBuffer, offset: 0, index: 1)
 
             // Draw all accumulated particles
-            let particlesToDraw = min(currentParticleIndex + Int(depthTexture.width * depthTexture.height), maxParticles)
-            renderEncoder.drawPrimitives(type: .point, vertexStart: 0, vertexCount: particlesToDraw)
+            let particlesToDraw = min(currentParticleIndex, maxParticles)
+            if particlesToDraw > 0 {
+                renderEncoder.drawPrimitives(type: .point, vertexStart: 0, vertexCount: particlesToDraw)
+            }
 
             frameCount += 1
             if frameCount % 30 == 0 {
-                print("🎨 Drawing \(particlesToDraw) accumulated particles at frame \(frameCount)")
+                print("🎨 Drawing \(particlesToDraw) accumulated particles")
             }
 
             renderEncoder.endEncoding()

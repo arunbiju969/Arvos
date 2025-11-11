@@ -35,19 +35,22 @@ kernel void accumulateDepthPoints(uint2 gid [[thread_position_in_grid]],
                                    texture2d<float, access::sample> depthTexture [[texture(0)]],
                                    texture2d<uint, access::sample> confidenceTexture [[texture(1)]]) {
 
+    // Subsample: Only process every 2nd pixel in each dimension (4x reduction)
+    const uint2 subsampledGid = gid * 2;
+
     // Calculate point index
     const uint width = uint(uniforms.depthResolution.x);
     const uint height = uint(uniforms.depthResolution.y);
 
-    if (gid.x >= width || gid.y >= height) {
+    if (subsampledGid.x >= width || subsampledGid.y >= height) {
         return;
     }
 
-    const uint linearIndex = gid.y * width + gid.x;
+    const uint linearIndex = gid.y * (width / 2) + gid.x;
     const uint particleIndex = (uniforms.pointCloudCurrentIndex + linearIndex) % uniforms.maxPoints;
 
-    // Sample depth
-    const float2 texCoord = float2(gid) / uniforms.depthResolution;
+    // Sample depth using subsampled coordinates
+    const float2 texCoord = float2(subsampledGid) / uniforms.depthResolution;
     const float depth = depthTexture.sample(textureSampler, texCoord).r;
 
     // Sample confidence
@@ -59,8 +62,8 @@ kernel void accumulateDepthPoints(uint2 gid [[thread_position_in_grid]],
         return;
     }
 
-    // Calculate world position
-    const float2 cameraPoint = float2(gid);
+    // Calculate world position using subsampled coordinates
+    const float2 cameraPoint = float2(subsampledGid);
     const float4 position = worldPoint(cameraPoint, depth, uniforms.cameraIntrinsicsInversed, uniforms.localToWorld);
 
     // Color based on depth
