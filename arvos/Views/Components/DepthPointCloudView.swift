@@ -228,9 +228,13 @@ struct DepthPointCloudView: UIViewRepresentable {
             renderEncoder.setRenderPipelineState(pipelineState)
             renderEncoder.setDepthStencilState(depthState)
 
-            // Set up camera
-            rotation += 0.005
-            let viewMatrix = makeOrbitViewMatrix(rotation: rotation, distance: 3.0)
+            // Use the CURRENT iPhone camera view - show depth from camera's perspective
+            // This creates a real-time LiDAR view like 360° scanners
+            let cameraTransform = depthSample.cameraTransform
+
+            // Invert camera transform to get view matrix (world to camera space)
+            let viewMatrix = cameraTransform.inverse
+
             let projectionMatrix = makeProjectionMatrix(aspectRatio: Float(view.bounds.width / view.bounds.height))
             let viewProjectionMatrix = projectionMatrix * viewMatrix
 
