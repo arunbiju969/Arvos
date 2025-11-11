@@ -148,8 +148,8 @@ struct DepthPointCloudView: UIViewRepresentable {
                 inverseIntrinsics: depthSample.intrinsics.inverse,
                 localToWorld: depthSample.cameraTransform, // ARFrame camera transform
                 depthResolution: SIMD2<Float>(Float(depthTexture.width), Float(depthTexture.height)),
-                pointSize: 5.0, // Medium point size
-                confidenceThreshold: 1 // Filter low quality points
+                pointSize: 15.0, // Larger points for visibility (was 5.0)
+                confidenceThreshold: 0 // Show all points, even low confidence (was 1)
             )
 
             frameCount += 1
@@ -273,10 +273,10 @@ struct DepthPointCloudView: UIViewRepresentable {
         }
 
         private func makeViewMatrix() -> simd_float4x4 {
-            // Camera positioned to view the 3D scene
-            // Looking from slightly above and to the side for better depth perception
-            let eye = SIMD3<Float>(0, -0.5, -2.5) // Above and back
-            let center = SIMD3<Float>(0, 0, 1) // Look ahead into the scene
+            // Simple camera positioned to view the point cloud from behind
+            // Position camera back from origin to see points in front
+            let eye = SIMD3<Float>(0, 0, -1.5) // Back from origin
+            let center = SIMD3<Float>(0, 0, 0) // Look at origin
             let up = SIMD3<Float>(0, -1, 0) // Up direction (inverted for ARKit coordinates)
 
             let z = normalize(eye - center)
@@ -292,9 +292,9 @@ struct DepthPointCloudView: UIViewRepresentable {
         }
 
         private func makeProjectionMatrix(aspectRatio: Float) -> simd_float4x4 {
-            let fov: Float = Float.pi / 3
-            let near: Float = 0.1
-            let far: Float = 100
+            let fov: Float = Float.pi / 2 // Wider field of view (90 degrees, was 60)
+            let near: Float = 0.01 // Very close near plane
+            let far: Float = 10 // Closer far plane for better depth precision
 
             let yScale = 1 / tanf(fov * 0.5)
             let xScale = yScale / aspectRatio
