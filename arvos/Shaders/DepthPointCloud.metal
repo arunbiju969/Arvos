@@ -113,10 +113,16 @@ vertex ParticleVertexOut depthPointCloudVertex(
     // Then to clip space for rendering
     out.position = uniforms.projectionMatrix * uniforms.viewMatrix * worldPosition;
 
-    // Color based on depth for visibility
-    // Close = red, medium = green, far = blue
-    float normalizedDepth = depth / 5.0; // Assume max depth ~5m
-    out.color = float3(1.0 - normalizedDepth, normalizedDepth * 0.5, normalizedDepth);
+    // Color based on depth with better gradient for typical indoor scenes (0-3m)
+    // Use a rainbow-like gradient: red -> yellow -> green -> cyan -> blue
+    float normalizedDepth = saturate(depth / 3.0); // 0-3 meters mapped to 0-1
+
+    // Create smooth rainbow gradient
+    float r = saturate(1.5 - abs(normalizedDepth * 3.0 - 1.5));
+    float g = saturate(1.5 - abs(normalizedDepth * 3.0 - 0.5));
+    float b = saturate(normalizedDepth * 1.5);
+
+    out.color = float3(r, g, b);
 
     // Fixed point size for now
     out.pointSize = uniforms.pointSize;
