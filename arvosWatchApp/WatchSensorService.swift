@@ -15,12 +15,10 @@ class WatchSensorService: ObservableObject {
     @Published private(set) var sampleCount: Int = 0
     @Published private(set) var latestAttitude: WatchAttitudeData?
     @Published private(set) var latestActivity: WatchMotionActivityData?
-    @Published private(set) var latestGesture: WatchGestureData?
     
     private let motionManager = CMMotionManager()
     private let activityManager = CMMotionActivityManager()
     private let connectivityService = WatchConnectivityService.shared
-    private let gestureAnalyzer = WatchGestureAnalyzer()
     
     private var updateTimer: Timer?
     private var sampleTimestamps: [TimeInterval] = []
@@ -240,13 +238,8 @@ class WatchSensorService: ObservableObject {
         let activityPacket = WatchSensorPacket.motionActivity(timestamp: timestamp, activity: activityData)
         connectivityService.send(packet: activityPacket)
         
-        let gesture = gestureAnalyzer.gesture(for: activityData)
-        let gesturePacket = WatchSensorPacket.gesture(timestamp: timestamp, gesture: gesture)
-        connectivityService.send(packet: gesturePacket)
-        
         DispatchQueue.main.async {
             self.latestActivity = activityData
-            self.latestGesture = gesture
         }
     }
     
@@ -265,39 +258,4 @@ class WatchSensorService: ObservableObject {
     }
 }
 
-// MARK: - Gesture Analyzer
-
-private struct WatchGestureAnalyzer {
-    func gesture(for activity: WatchMotionActivityData) -> WatchGestureData {
-        if activity.isRunning {
-            return WatchGestureData(label: "running", confidence: confidence(from: activity.confidence))
-        }
-        if activity.isWalking {
-            return WatchGestureData(label: "walking", confidence: confidence(from: activity.confidence))
-        }
-        if activity.isCycling {
-            return WatchGestureData(label: "cycling", confidence: confidence(from: activity.confidence))
-        }
-        if activity.isDriving {
-            return WatchGestureData(label: "vehicle", confidence: confidence(from: activity.confidence))
-        }
-        if activity.isStationary {
-            return WatchGestureData(label: "idle", confidence: confidence(from: activity.confidence))
-        }
-        return WatchGestureData(label: "unknown", confidence: confidence(from: activity.confidence))
-    }
-    
-    private func confidence(from raw: Int) -> Double {
-        switch raw {
-        case CMMotionActivityConfidence.low.rawValue:
-            return 0.33
-        case CMMotionActivityConfidence.medium.rawValue:
-            return 0.66
-        case CMMotionActivityConfidence.high.rawValue:
-            return 0.9
-        default:
-            return 0.5
-        }
-    }
-}
 

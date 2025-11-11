@@ -31,7 +31,6 @@ cd arvos-sdk/web-viewer
   - 50-100 Hz IMU (accelerometer + gyroscope + gravity)
   - Attitude (quaternion + pitch/roll/yaw)
   - Motion activity classifier (walking, running, cycling, vehicle, stationary)
-  - Gesture labels & confidence (derived from motion activity)
 
 **All sensors nanosecond-synchronized** for research-grade data.
 
@@ -91,7 +90,7 @@ python examples/01_quickstart.py
 - ✅ **Zero-Install Option** - Web viewer works everywhere
 - ✅ **Professional Tools** - CLI for batch export (KITTI, TUM, EuRoC)
 - ✅ **Open Formats** - PLY, CSV, ROS bags
-- ✅ **Apple Watch Companion** - Stream wearable IMU, pose, activity, and gesture data in sync with iPhone sensors
+- ✅ **Apple Watch Companion** - Stream wearable IMU, pose, and motion activity data in sync with iPhone sensors
 
 ---
 
@@ -122,7 +121,6 @@ Augment iPhone data with wearable motion sensing—perfect for robotics operator
 - 50 Hz wearable IMU with nanosecond timestamps
 - Attitude (quaternion & Euler angles)
 - Motion activity classification (running, walking, cycling, vehicle, stationary)
-- Gesture labels with confidence scores
 - Live UI on both watch and iPhone
 
 **Setup (once)**

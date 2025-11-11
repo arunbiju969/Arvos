@@ -34,7 +34,6 @@ class SensorTestViewModel: ObservableObject {
     @Published var latestWatchIMU: IMUData?
     @Published var latestWatchAttitude: WatchAttitudeData?
     @Published var latestWatchActivity: WatchMotionActivityData?
-    @Published var latestWatchGesture: WatchGestureData?
     @Published var watchConnected = false
     @Published var watchHz: Double = 0
 
@@ -82,16 +81,6 @@ class SensorTestViewModel: ObservableObject {
             }
             .store(in: &cancellables)
         
-        sensorManager.watchSensorManager.$latestGesture
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] gesture in
-                guard let self else { return }
-                self.latestWatchGesture = gesture
-                if gesture != nil && self.showWatch {
-                    self.recordSensorUpdate()
-                }
-            }
-            .store(in: &cancellables)
     }
 
     func toggleTesting() {
@@ -132,7 +121,6 @@ class SensorTestViewModel: ObservableObject {
         latestWatchIMU = nil
         latestWatchAttitude = nil
         latestWatchActivity = nil
-        latestWatchGesture = nil
         cameraResolution = nil
         lastSensorUpdate = nil
     }

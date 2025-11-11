@@ -75,15 +75,6 @@ struct WatchContentView: View {
                             .foregroundColor(.secondary)
                         }
                         
-                        if let gesture = sensorService.latestGesture {
-                            Divider()
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Gesture").font(.caption.bold())
-                                Text("\(gesture.label.capitalized) • \(String(format: "%.0f%%", gesture.confidence * 100))")
-                            }
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        }
                     }
                 }
             }

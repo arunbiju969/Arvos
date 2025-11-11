@@ -139,9 +139,6 @@ struct SettingsView: View {
                             WatchSettingsRow(title: "Confidence", value: activity.confidenceDescription)
                         }
                         
-                        if let gesture = watchManager.latestGesture {
-                            WatchSettingsRow(title: "Gesture", value: "\(gesture.label.capitalized) (\(String(format: "%.0f%%", gesture.confidence * 100)))")
-                        }
                     } else {
                         Text("Pair your Apple Watch and install the arvos Watch app to enable watch sensor streaming.")
                             .font(.caption)

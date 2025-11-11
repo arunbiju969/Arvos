@@ -21,7 +21,6 @@ class WatchSensorManager: ObservableObject {
     @Published private(set) var watchHz: Double = 0
     @Published private(set) var latestAttitude: WatchAttitudeData?
     @Published private(set) var latestActivity: WatchMotionActivityData?
-    @Published private(set) var latestGesture: WatchGestureData?
     
     weak var delegate: WatchSensorManagerDelegate?
     
@@ -184,12 +183,6 @@ extension WatchSensorManager: WatchConnectivityDelegate {
             guard let activity = packet.decodeMotionActivity() else { return }
             DispatchQueue.main.async {
                 self.latestActivity = activity
-            }
-            
-        case "watch_gesture":
-            guard let gesture = packet.decodeGesture() else { return }
-            DispatchQueue.main.async {
-                self.latestGesture = gesture
             }
             
         default:

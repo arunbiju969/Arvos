@@ -62,17 +62,6 @@ struct WatchSensorPacket: Codable {
         )
     }
     
-    /// Create a gesture packet
-    static func gesture(timestamp: UInt64, gesture: WatchGestureData) -> WatchSensorPacket {
-        let encoded = try! JSONEncoder().encode(gesture)
-        
-        return WatchSensorPacket(
-            timestampNs: timestamp,
-            sensorType: "watch_gesture",
-            data: encoded
-        )
-    }
-    
     /// Decode IMU data from packet
     func decodeIMU() -> WatchIMUData? {
         guard sensorType == "watch_imu" else { return nil }
@@ -89,10 +78,6 @@ struct WatchSensorPacket: Codable {
         return try? JSONDecoder().decode(WatchMotionActivityData.self, from: data)
     }
     
-    func decodeGesture() -> WatchGestureData? {
-        guard sensorType == "watch_gesture" else { return nil }
-        return try? JSONDecoder().decode(WatchGestureData.self, from: data)
-    }
 }
 
 /// Watch IMU sensor data
@@ -120,12 +105,6 @@ struct WatchMotionActivityData: Codable {
     let isStationary: Bool
     let isUnknown: Bool
     let confidence: Int
-}
-
-/// Gesture recognition result (derived from motion activity / heuristics)
-struct WatchGestureData: Codable {
-    let label: String
-    let confidence: Double
 }
 
 extension WatchMotionActivityData {

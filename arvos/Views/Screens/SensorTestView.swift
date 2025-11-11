@@ -491,16 +491,6 @@ struct SensorTestView: View {
                             metricRow(label: "State", value: activity.descriptionLabel.capitalized)
                             metricRow(label: "Confidence", value: activity.confidenceDescription)
                         }
-                        
-                        if let gesture = viewModel.latestWatchGesture {
-                            Divider()
-                            Text("Gesture")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
-                            metricRow(label: "Label", value: gesture.label.capitalized)
-                            metricRow(label: "Confidence", value: String(format: "%.0f%%", gesture.confidence * 100))
-                        }
                     }
                 } else {
                     VStack(spacing: 12) {
