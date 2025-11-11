@@ -1,8 +1,8 @@
 # ARVOS
 
-**Stream iPhone sensors to your computer for AR/robotics research.**
+**Stream iPhone + Apple Watch sensors to your computer for AR/robotics research.**
 
-Turn your iPhone into a professional research sensor platform with LiDAR, cameras, IMU, and ARKit pose tracking.
+Turn your iPhone (and optional Apple Watch) into a professional research sensor platform with LiDAR, cameras, IMU, ARKit pose tracking, wearable motion activity, and gestures.
 
 ---
 
@@ -27,6 +27,11 @@ cd arvos-sdk/web-viewer
 - **IMU**: 100-200 Hz accelerometer + gyroscope + gravity
 - **ARKit Pose**: 30-60 Hz 6DOF tracking with quality flags
 - **GPS**: 1 Hz location (outdoor)
+- **Apple Watch** *(optional)*:
+  - 50-100 Hz IMU (accelerometer + gyroscope + gravity)
+  - Attitude (quaternion + pitch/roll/yaw)
+  - Motion activity classifier (walking, running, cycling, vehicle, stationary)
+  - Gesture labels & confidence (derived from motion activity)
 
 **All sensors nanosecond-synchronized** for research-grade data.
 
@@ -86,6 +91,7 @@ python examples/01_quickstart.py
 - ✅ **Zero-Install Option** - Web viewer works everywhere
 - ✅ **Professional Tools** - CLI for batch export (KITTI, TUM, EuRoC)
 - ✅ **Open Formats** - PLY, CSV, ROS bags
+- ✅ **Apple Watch Companion** - Stream wearable IMU, pose, activity, and gesture data in sync with iPhone sensors
 
 ---
 
@@ -101,6 +107,35 @@ python examples/01_quickstart.py
 - Same WiFi network as iPhone
 - Firewall allows port 8765
 
+**Apple Watch (optional):**
+- Apple Watch Series 6 or newer (watchOS 9.0+)
+- Paired with the streaming iPhone
+- arvos watch companion app installed (see below)
+
+---
+
+## ⌚ Apple Watch Companion
+
+Augment iPhone data with wearable motion sensing—perfect for robotics operators, telepresence rigs, and human-in-the-loop research.
+
+**What you get**
+- 50 Hz wearable IMU with nanosecond timestamps
+- Attitude (quaternion & Euler angles)
+- Motion activity classification (running, walking, cycling, vehicle, stationary)
+- Gesture labels with confidence scores
+- Live UI on both watch and iPhone
+
+**Setup (once)**
+1. Follow [`WATCH_XCODE_SETUP.md`](WATCH_XCODE_SETUP.md) to add the watch target in Xcode
+2. Build & run the iOS app — the watch app installs automatically on the paired watch
+3. Toggle "Apple Watch" in **Sensor Test** to visualize wearable data
+4. Stream or record — watch packets flow through the existing WebSocket/MCAP pipeline
+
+**Deep dive docs**
+- [`WATCH_INTEGRATION.md`](WATCH_INTEGRATION.md) – architecture & transport details
+- [`WATCH_TESTING_GUIDE.md`](WATCH_TESTING_GUIDE.md) – validation checklist
+- [`WATCH_IMPLEMENTATION_SUMMARY.md`](WATCH_IMPLEMENTATION_SUMMARY.md)
+
 ---
 
 ## 📚 Documentation
@@ -108,6 +143,7 @@ python examples/01_quickstart.py
 - **Web Viewer**: [arvos-sdk/web-viewer/README.md](https://github.com/jaskirat1616/arvos-sdk/tree/main/web-viewer)
 - **Python SDK**: [arvos-sdk/README.md](https://github.com/jaskirat1616/arvos-sdk)
 - **Examples**: [arvos-sdk/examples/](https://github.com/jaskirat1616/arvos-sdk/tree/main/examples)
+- **Watch Companion Guides**: [`WATCH_INTEGRATION.md`](WATCH_INTEGRATION.md), [`WATCH_XCODE_SETUP.md`](WATCH_XCODE_SETUP.md), [`WATCH_TESTING_GUIDE.md`](WATCH_TESTING_GUIDE.md)
 - **CLI Tools**: [arvos-sdk/arvos/cli/](https://github.com/jaskirat1616/arvos-sdk/tree/main/arvos/cli)
 
 ---
