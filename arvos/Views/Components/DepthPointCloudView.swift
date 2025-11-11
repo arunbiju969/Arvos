@@ -147,6 +147,17 @@ struct DepthPointCloudView: UIViewRepresentable {
                   let descriptor = view.currentRenderPassDescriptor,
                   let depthSample = depthSample,
                   let depthTexture = depthTexture else {
+                if frameCount % 30 == 0 {
+                    print("❌ Draw guard failed:")
+                    print("   commandQueue: \(commandQueue != nil)")
+                    print("   pipelineState: \(pipelineState != nil)")
+                    print("   depthState: \(depthState != nil)")
+                    print("   drawable: \(view.currentDrawable != nil)")
+                    print("   descriptor: \(view.currentRenderPassDescriptor != nil)")
+                    print("   depthSample: \(depthSample != nil)")
+                    print("   depthTexture: \(depthTexture != nil)")
+                }
+                frameCount += 1
                 return
             }
 
@@ -195,6 +206,23 @@ struct DepthPointCloudView: UIViewRepresentable {
             frameCount += 1
             if frameCount % 30 == 0 {
                 print("🎨 Drawing \(vertexCount) points (current frame)")
+                print("   Depth texture: \(depthTexture.width)x\(depthTexture.height)")
+                print("   View size: \(view.bounds.size)")
+                print("   Camera intrinsics: fx=\(uniforms.cameraIntrinsics[0][0]), fy=\(uniforms.cameraIntrinsics[1][1])")
+                print("   Projection matrix valid: \(projectionMatrix != simd_float4x4())")
+
+                // Sample some depth values
+                let depthData = depthSample.depthMap
+                CVPixelBufferLockBaseAddress(depthData, .readOnly)
+                if let baseAddress = CVPixelBufferGetBaseAddress(depthData) {
+                    let depthPtr = baseAddress.assumingMemoryBound(to: Float.self)
+                    var validCount = 0
+                    for i in 0..<min(100, Int(depthTexture.width * depthTexture.height)) {
+                        if depthPtr[i] > 0 { validCount += 1 }
+                    }
+                    print("   Valid depth samples: \(validCount)/100")
+                }
+                CVPixelBufferUnlockBaseAddress(depthData, .readOnly)
             }
 
             renderEncoder.endEncoding()
