@@ -11,7 +11,7 @@ import SwiftUI
 
 class StreamingViewModel: ObservableObject {
     // Managers
-    private let sensorManager = SensorManager.shared
+     let sensorManager = SensorManager.shared
     private let networkManager = NetworkManager.shared
     private let recordingManager = RecordingManager()
 
