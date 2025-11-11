@@ -74,6 +74,8 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
                 poseEnabled: false,
                 poseHz: 0,
                 gpsEnabled: false,
+                watchEnabled: false,
+                watchHz: 0,
                 recordingEnabled: false,
                 autoDuration: nil
             )
@@ -89,6 +91,8 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
                 poseEnabled: false,
                 poseHz: 0,
                 gpsEnabled: false,
+                watchEnabled: false,
+                watchHz: 0,
                 recordingEnabled: false,
                 autoDuration: nil
             )
@@ -104,6 +108,8 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
                 poseEnabled: true,  // For pose context
                 poseHz: 10,
                 gpsEnabled: false,
+                watchEnabled: false,
+                watchHz: 0,
                 recordingEnabled: true,  // Auto-record scans
                 autoDuration: nil
             )
@@ -119,6 +125,8 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
                 poseEnabled: false,
                 poseHz: 0,
                 gpsEnabled: false,
+                watchEnabled: true,  // Enable watch IMU for dual-device tracking
+                watchHz: 50,
                 recordingEnabled: false,
                 autoDuration: nil
             )
@@ -134,6 +142,8 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
                 poseEnabled: true,
                 poseHz: 10,
                 gpsEnabled: true,
+                watchEnabled: false,
+                watchHz: 0,
                 recordingEnabled: false,
                 autoDuration: nil
             )
@@ -149,6 +159,8 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
                 poseEnabled: true,
                 poseHz: 60,
                 gpsEnabled: true,
+                watchEnabled: true,  // Include watch sensors in full mode
+                watchHz: 50,
                 recordingEnabled: true,
                 autoDuration: nil
             )
@@ -164,6 +176,8 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
                 poseEnabled: false,
                 poseHz: 0,
                 gpsEnabled: false,
+                watchEnabled: false,
+                watchHz: 0,
                 recordingEnabled: false,
                 autoDuration: nil
             )
@@ -182,6 +196,8 @@ struct ModeConfiguration: Codable {
     var poseEnabled: Bool
     var poseHz: Int
     var gpsEnabled: Bool
+    var watchEnabled: Bool
+    var watchHz: Int
     var recordingEnabled: Bool
     var autoDuration: TimeInterval? // Auto-stop duration in seconds
 }

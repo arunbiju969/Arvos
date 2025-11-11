@@ -15,7 +15,7 @@ struct SettingsView: View {
     @State private var poseHz: Double = 30
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section {
                     HStack {
@@ -99,6 +99,42 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("Motion Sensors")
+                }
+
+                Section {
+                    HStack {
+                        Text("Watch Connected")
+                        Spacer()
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(viewModel.sensorManager.watchSensorManager.isWatchConnected ? Color.green : Color.red)
+                                .frame(width: 8, height: 8)
+                            Text(viewModel.sensorManager.watchSensorManager.isWatchConnected ? "Yes" : "No")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    if viewModel.sensorManager.watchSensorManager.isWatchConnected {
+                        HStack {
+                            Text("Watch Sample Rate")
+                            Spacer()
+                            Text(String(format: "%.1f Hz", viewModel.sensorManager.watchSensorManager.watchHz))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        HStack {
+                            Text("Watch Samples")
+                            Spacer()
+                            Text("\(viewModel.sensorManager.watchSensorManager.watchSampleCount)")
+                                .foregroundColor(.secondary)
+                        }
+                    } else {
+                        Text("Pair your Apple Watch and install the arvos Watch app to enable watch sensor streaming.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } header: {
+                    Text("Apple Watch")
                 }
 
                 Section {

@@ -11,7 +11,7 @@ struct DebugView: View {
     @EnvironmentObject var viewModel: StreamingViewModel
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 Section("Sensor Status") {
                     StatusRow(label: "Camera", status: viewModel.sensorStatuses.camera)

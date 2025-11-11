@@ -21,37 +21,52 @@ struct MainTabView: View {
                 }
 
             // Sensor Test Tab
-            NavigationView {
-                VStack {
-                    Spacer()
+            NavigationStack {
+                GeometryReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            Image(systemName: "sensor.tag.radiowaves.forward.fill")
+                                .font(.system(size: 64))
+                                .foregroundColor(.blue)
 
-                    VStack(spacing: 20) {
-                        Image(systemName: "sensor.tag.radiowaves.forward.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(.blue)
+                            VStack(spacing: 8) {
+                                Text("Sensor Test Mode")
+                                    .font(.title2.bold())
 
-                        Text("Sensor Test Mode")
-                            .font(.title2.bold())
+                                Text("Inspect LiDAR, camera and IMU feeds before streaming.")
+                                    .font(.subheadline)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(.secondary)
+                            }
 
-                        Text("View all sensors in real-time")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-
-                        Button {
-                            showTestView = true
-                        } label: {
-                            Text("Start Testing")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.blue)
-                                .cornerRadius(12)
+                            Button {
+                                showTestView = true
+                            } label: {
+                                Label("Start Testing", systemImage: "play.circle.fill")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                            }
+                            .buttonStyle(
+                                PrimaryActionButtonStyle(isRunning: false)
+                            )
                         }
-                        .padding(.horizontal, 40)
+                        .padding(32)
+                        .frame(maxWidth: min(proxy.size.width * 0.6, 420))
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .fill(Color(.secondarySystemBackground))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .stroke(Color.primary.opacity(0.05), lineWidth: 1)
+                        )
+                        .padding(.horizontal, max((proxy.size.width - min(proxy.size.width * 0.6, 420)) / 2, 24))
+                        .padding(.vertical, max((proxy.size.height - 360) / 4, 32))
                     }
-
-                    Spacer()
+                    .background(Color(.systemGroupedBackground))
                 }
                 .navigationTitle("Test")
             }

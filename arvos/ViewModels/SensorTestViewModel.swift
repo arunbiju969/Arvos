@@ -22,6 +22,7 @@ class SensorTestViewModel: ObservableObject {
     @Published var showIMU = true
     @Published var showPose = true
     @Published var showGPS = true
+    @Published var showWatch = true
 
     // Latest sensor data
     @Published var latestPointCloud: PointCloud?
@@ -30,9 +31,13 @@ class SensorTestViewModel: ObservableObject {
     @Published var latestIMU: IMUData?
     @Published var latestPose: PoseData?
     @Published var latestGPS: GPSData?
+    @Published var latestWatchIMU: IMUData?
+    @Published var watchConnected = false
+    @Published var watchHz: Double = 0
 
     // Metadata
     @Published var cameraResolution: String?
+    @Published var lastSensorUpdate: Date?
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -44,6 +49,13 @@ class SensorTestViewModel: ObservableObject {
         // Observe sensor manager updates
         sensorManager.$isStreaming
             .assign(to: &$isRunning)
+        
+        // Observe watch connectivity
+        sensorManager.watchSensorManager.$isWatchConnected
+            .assign(to: &$watchConnected)
+        
+        sensorManager.watchSensorManager.$watchHz
+            .assign(to: &$watchHz)
     }
 
     func toggleTesting() {
@@ -63,9 +75,12 @@ class SensorTestViewModel: ObservableObject {
         sensorManager.cameraService.delegate = self
         sensorManager.imuService.delegate = self
         sensorManager.gpsService.delegate = self
+        sensorManager.watchSensorManager.delegate = self
 
         // Start streaming
         sensorManager.startStreaming()
+
+        lastSensorUpdate = nil
     }
 
     func stopTesting() {
@@ -78,7 +93,13 @@ class SensorTestViewModel: ObservableObject {
         latestIMU = nil
         latestPose = nil
         latestGPS = nil
+        latestWatchIMU = nil
         cameraResolution = nil
+        lastSensorUpdate = nil
+    }
+
+    private func recordSensorUpdate() {
+        lastSensorUpdate = Date()
     }
 }
 
@@ -90,6 +111,7 @@ extension SensorTestViewModel: ARKitServiceDelegate {
             if self.showCamera {
                 self.latestCameraImage = UIImage(data: frame.data)
                 self.cameraResolution = "\(frame.width)×\(frame.height)"
+                self.recordSensorUpdate()
             }
         }
     }
@@ -98,6 +120,7 @@ extension SensorTestViewModel: ARKitServiceDelegate {
         DispatchQueue.main.async {
             if self.showLiDAR {
                 self.latestPointCloud = frame.pointCloud
+                self.recordSensorUpdate()
             }
         }
     }
@@ -106,6 +129,7 @@ extension SensorTestViewModel: ARKitServiceDelegate {
         DispatchQueue.main.async {
             if self.showLiDAR {
                 self.latestDepthSample = sample
+                self.recordSensorUpdate()
             }
         }
     }
@@ -114,6 +138,7 @@ extension SensorTestViewModel: ARKitServiceDelegate {
         DispatchQueue.main.async {
             if self.showPose {
                 self.latestPose = pose
+                self.recordSensorUpdate()
             }
         }
     }
@@ -131,6 +156,7 @@ extension SensorTestViewModel: CameraServiceDelegate {
             if self.showCamera && !self.sensorManager.usingARKitCamera {
                 self.latestCameraImage = UIImage(data: frame.data)
                 self.cameraResolution = "\(frame.width)×\(frame.height)"
+                self.recordSensorUpdate()
             }
         }
     }
@@ -147,6 +173,7 @@ extension SensorTestViewModel: IMUServiceDelegate {
         DispatchQueue.main.async {
             if self.showIMU {
                 self.latestIMU = data
+                self.recordSensorUpdate()
             }
         }
     }
@@ -163,11 +190,25 @@ extension SensorTestViewModel: GPSServiceDelegate {
         DispatchQueue.main.async {
             if self.showGPS {
                 self.latestGPS = location
+                self.recordSensorUpdate()
             }
         }
     }
 
     func gpsService(_ service: GPSService, didEncounterError error: Error) {
         print("❌ GPS error: \(error)")
+    }
+}
+
+// MARK: - WatchSensorManagerDelegate
+
+extension SensorTestViewModel: WatchSensorManagerDelegate {
+    func watchSensorManager(_ manager: WatchSensorManager, didReceiveIMU data: IMUData) {
+        DispatchQueue.main.async {
+            if self.showWatch {
+                self.latestWatchIMU = data
+                self.recordSensorUpdate()
+            }
+        }
     }
 }

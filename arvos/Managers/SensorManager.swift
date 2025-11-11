@@ -25,6 +25,7 @@ class SensorManager: ObservableObject {
     let arKitService = ARKitService()
     let imuService = IMUService()
     let gpsService = GPSService()
+    let watchSensorManager = WatchSensorManager.shared
     private var awaitingCameraAuthorization = false
 
     // Managers
@@ -51,6 +52,7 @@ class SensorManager: ObservableObject {
         arKitService.delegate = self
         imuService.delegate = self
         gpsService.delegate = self
+        watchSensorManager.delegate = self
     }
 
     // MARK: - Mode Management
@@ -167,6 +169,17 @@ class SensorManager: ObservableObject {
                 sensorStatuses.gps = .active
             }
 
+            // Configure and start Watch sensors
+            if config.watchEnabled {
+                if watchSensorManager.isWatchConnected {
+                    watchSensorManager.startWatchStreaming(hz: config.watchHz)
+                    sensorStatuses.watch = .active
+                } else {
+                    print("⚠️ Watch sensors requested but watch not connected")
+                    sensorStatuses.watch = .inactive
+                }
+            }
+
             // Start recording if enabled
             if config.recordingEnabled {
                 try recordingManager.startRecording(mode: currentMode)
@@ -227,6 +240,11 @@ class SensorManager: ObservableObject {
         arKitService.stop()
         imuService.stop()
         gpsService.stop()
+        
+        // Stop watch sensors
+        if watchSensorManager.isWatchStreaming {
+            watchSensorManager.stopWatchStreaming()
+        }
 
         // Stop recording
         if recordingManager.isRecording {
@@ -437,6 +455,20 @@ extension SensorManager: GPSServiceDelegate {
     }
 }
 
+// MARK: - Watch Sensor Manager Delegate
+
+extension SensorManager: WatchSensorManagerDelegate {
+    func watchSensorManager(_ manager: WatchSensorManager, didReceiveIMU data: IMUData) {
+        // Stream to network
+        networkManager.stream(imuData: data)
+        
+        // Record if enabled
+        if recordingManager.isRecording {
+            recordingManager.record(imuData: data)
+        }
+    }
+}
+
 // MARK: - Sensor Status
 
 enum SensorStatus: String {
@@ -451,6 +483,7 @@ struct SensorStatuses: Equatable {
     var pose: SensorStatus = .inactive
     var imu: SensorStatus = .inactive
     var gps: SensorStatus = .inactive
+    var watch: SensorStatus = .inactive
 
     func merged(with other: SensorStatuses) -> SensorStatuses {
         return SensorStatuses(
@@ -458,7 +491,8 @@ struct SensorStatuses: Equatable {
             depth: self.depth == .error ? other.depth : self.depth,
             pose: self.pose == .error ? other.pose : self.pose,
             imu: self.imu == .error ? other.imu : self.imu,
-            gps: self.gps == .error ? other.gps : self.gps
+            gps: self.gps == .error ? other.gps : self.gps,
+            watch: self.watch == .error ? other.watch : self.watch
         )
     }
 }

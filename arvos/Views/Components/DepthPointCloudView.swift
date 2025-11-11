@@ -172,10 +172,32 @@ struct DepthPointCloudView: UIViewRepresentable {
             renderEncoder.setRenderPipelineState(pipelineState)
             renderEncoder.setDepthStencilState(depthState)
 
-            // Simple approach like Apple's sample: Identity view matrix (camera space)
-            let viewMatrix = simd_float4x4(1.0) // Identity - render in camera space
-            let projectionMatrix = depthSample.projectionMatrix
-            let viewProjectionMatrix = projectionMatrix * viewMatrix
+            // Create custom projection matrix for millimeter coordinates (like Apple's sample)
+            let aspect = Float(view.bounds.width / view.bounds.height)
+            let projectionMatrix = makePerspectiveMatrix(fovyRadians: Float.pi / 2.0,
+                                                         aspect: aspect,
+                                                         nearZ: 10.0,    // 10mm
+                                                         farZ: 8000.0)   // 8000mm (8m)
+
+            // Camera orientation: rotate because camera stream is rotated clockwise
+            var orientationMatrix = simd_float4x4(1.0)
+            orientationMatrix.columns.0 = [0, -1, 0, 0]
+            orientationMatrix.columns.1 = [-1, 0, 0, 0]
+            orientationMatrix.columns.2 = [0, 0, 1, 0]
+            orientationMatrix.columns.3 = [0, 0, 0, 1]
+
+            // Translation: Push point cloud away from camera to see depth (like Apple's sample)
+            var translationMatrix = simd_float4x4(1.0)
+            translationMatrix.columns.0 = [1, 0, 0, 0]
+            translationMatrix.columns.1 = [0, 1, 0, 0]
+            translationMatrix.columns.2 = [0, 0, 1, 0]
+            translationMatrix.columns.3 = [0, 0, -300, 1] // Move back 300mm to see depth
+
+            // Static tilt to see 3D structure better (no rotation)
+            let angle: Float = 0.2 // ~11 degrees tilt down
+            let rotationX = makeRotationMatrixX(angle)
+
+            let viewProjectionMatrix = projectionMatrix * rotationX * translationMatrix * orientationMatrix
 
             struct PointCloudUniforms {
                 var viewProjectionMatrix: simd_float4x4
@@ -202,7 +224,7 @@ struct DepthPointCloudView: UIViewRepresentable {
                 cx: K[2][0] / scaleRes.x,
                 cy: K[2][1] / scaleRes.y,
                 depthResolution: depthResolution,
-                pointSize: 8.0,
+                pointSize: 6.0, // Smaller points
                 confidenceThreshold: 0
             )
 
@@ -221,8 +243,8 @@ struct DepthPointCloudView: UIViewRepresentable {
                 print("🎨 Drawing \(vertexCount) points (current frame)")
                 print("   Depth texture: \(depthTexture.width)x\(depthTexture.height)")
                 print("   View size: \(view.bounds.size)")
+                print("   Aspect ratio: \(aspect)")
                 print("   Camera intrinsics: fx=\(uniforms.fx), fy=\(uniforms.fy), cx=\(uniforms.cx), cy=\(uniforms.cy)")
-                print("   Projection matrix valid: \(projectionMatrix != simd_float4x4())")
 
                 // Sample some depth values
                 let depthData = depthSample.depthMap
@@ -230,10 +252,17 @@ struct DepthPointCloudView: UIViewRepresentable {
                 if let baseAddress = CVPixelBufferGetBaseAddress(depthData) {
                     let depthPtr = baseAddress.assumingMemoryBound(to: Float.self)
                     var validCount = 0
+                    var minD: Float = 1000
+                    var maxD: Float = 0
                     for i in 0..<min(100, Int(depthTexture.width * depthTexture.height)) {
-                        if depthPtr[i] > 0 { validCount += 1 }
+                        let d = depthPtr[i] * 1000 // Convert to mm
+                        if d > 0 {
+                            validCount += 1
+                            minD = min(minD, d)
+                            maxD = max(maxD, d)
+                        }
                     }
-                    print("   Valid depth samples: \(validCount)/100")
+                    print("   Valid depth samples: \(validCount)/100, range: \(minD)mm - \(maxD)mm")
                 }
                 CVPixelBufferUnlockBaseAddress(depthData, .readOnly)
             }
@@ -281,18 +310,18 @@ struct DepthPointCloudView: UIViewRepresentable {
 
                 // DEBUG: Sample some depth values to verify they're reasonable
                 let depthPtr = baseAddress.assumingMemoryBound(to: Float.self)
-                var minDepth: Float = 100
+                var minDepth: Float = 100000
                 var maxDepth: Float = 0
                 var validPoints = 0
                 for i in 0..<min(100, width * height) {
-                    let depth = depthPtr[i]
+                    let depth = depthPtr[i] * 1000 // Convert to mm
                     if depth > 0 {
                         minDepth = min(minDepth, depth)
                         maxDepth = max(maxDepth, depth)
                         validPoints += 1
                     }
                 }
-                print("🔍 Depth range: \(minDepth)m to \(maxDepth)m, valid points in sample: \(validPoints)/100")
+                print("🔍 Depth range: \(minDepth)mm to \(maxDepth)mm, valid points in sample: \(validPoints)/100")
                 print("🔍 Camera intrinsics fx=\(sample.intrinsics[0][0]), fy=\(sample.intrinsics[1][1])")
             }
 
@@ -332,13 +361,39 @@ struct DepthPointCloudView: UIViewRepresentable {
 
         // MARK: - Matrix Math
 
+        private func makePerspectiveMatrix(fovyRadians: Float, aspect: Float, nearZ: Float, farZ: Float) -> simd_float4x4 {
+            let yProj: Float = 1.0 / tanf(fovyRadians * 0.5)
+            let xProj: Float = yProj / aspect
+            let zProj: Float = farZ / (farZ - nearZ)
+
+            return simd_float4x4(
+                SIMD4<Float>(xProj, 0, 0, 0),
+                SIMD4<Float>(0, yProj, 0, 0),
+                SIMD4<Float>(0, 0, zProj, 1.0),
+                SIMD4<Float>(0, 0, -zProj * nearZ, 0)
+            )
+        }
+
         private func makeRotationMatrix(_ angle: Float) -> simd_float4x4 {
+            // Rotation around Y axis
             let cos = cosf(angle)
             let sin = sinf(angle)
             return simd_float4x4(
                 SIMD4<Float>(cos, 0, sin, 0),
                 SIMD4<Float>(0, 1, 0, 0),
                 SIMD4<Float>(-sin, 0, cos, 0),
+                SIMD4<Float>(0, 0, 0, 1)
+            )
+        }
+
+        private func makeRotationMatrixX(_ angle: Float) -> simd_float4x4 {
+            // Rotation around X axis
+            let cos = cosf(angle)
+            let sin = sinf(angle)
+            return simd_float4x4(
+                SIMD4<Float>(1, 0, 0, 0),
+                SIMD4<Float>(0, cos, -sin, 0),
+                SIMD4<Float>(0, sin, cos, 0),
                 SIMD4<Float>(0, 0, 0, 1)
             )
         }

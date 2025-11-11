@@ -14,7 +14,7 @@ struct FilesView: View {
     @State private var selectedRecording: SessionMetadata?
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if recordings.isEmpty {
                     emptyState

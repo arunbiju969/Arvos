@@ -40,14 +40,22 @@ vertex PointVertexOut simplePointCloudVertex(
     pos.y = vertexID / width;
     pos.x = vertexID % width;
 
-    // Read depth (in meters)
-    float depth = depthTexture.read(pos).x;
+    // Subsample: Only render every 2nd pixel for point cloud look
+    if (pos.x % 2 != 0 || pos.y % 2 != 0) {
+        out.position = float4(0, 0, -1000, 1);
+        out.color = float4(0);
+        out.pointSize = 0;
+        return out;
+    }
+
+    // Read depth and convert to millimeters (like Apple's sample)
+    float depth = depthTexture.read(pos).x * 1000.0f;
 
     // Read confidence
     uint confidence = confidenceTexture.read(pos).r;
 
-    // Filter by confidence
-    if (int(confidence) < uniforms.confidenceThreshold) {
+    // Filter by confidence and invalid depth (< 1mm)
+    if (int(confidence) < uniforms.confidenceThreshold || depth < 1.0) {
         out.position = float4(0, 0, -1000, 1);
         out.color = float4(0);
         out.pointSize = 0;
@@ -62,8 +70,8 @@ vertex PointVertexOut simplePointCloudVertex(
     // Transform to clip space
     out.position = uniforms.viewProjectionMatrix * cameraSpacePos;
 
-    // Color based on depth
-    float normalizedDepth = saturate(depth / 3.0);
+    // Color based on depth (depth is in millimeters, so 3000mm = 3m max range)
+    float normalizedDepth = saturate(depth / 3000.0);
     float r = saturate(1.0 - normalizedDepth * 2.0);
     float g = saturate(1.0 - abs(normalizedDepth - 0.5) * 2.0);
     float b = saturate(normalizedDepth * 2.0 - 1.0);
@@ -86,5 +94,5 @@ fragment float4 simplePointCloudFragment(PointVertexOut in [[stage_in]],
         discard_fragment();
     }
 
-    return float4(in.color.rgb, alpha);
+    return float4(in.color.rgb, alpha * in.color.a);
 }
