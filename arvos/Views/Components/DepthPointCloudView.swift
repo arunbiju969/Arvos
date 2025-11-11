@@ -60,6 +60,10 @@ struct DepthPointCloudView: UIViewRepresentable {
         private var currentParticleIndex: Int = 0
         private let maxParticles: Int = 500_000 // Accumulate up to 500k points
 
+        // Camera movement tracking for 3D scanning
+        private var lastCameraTransform: simd_float4x4?
+        private let minMovementThreshold: Float = 0.05 // 5cm movement required
+
         private var rotation: Float = 0
         private var vertexCount: Int = 0
 
@@ -153,9 +157,20 @@ struct DepthPointCloudView: UIViewRepresentable {
                 return
             }
 
+            // Check if camera has moved enough to accumulate new points (3D scanning behavior)
+            let shouldAccumulate: Bool
+            if let lastTransform = lastCameraTransform {
+                let movement = distance(lastTransform.columns.3, depthSample.cameraTransform.columns.3)
+                shouldAccumulate = movement > minMovementThreshold
+            } else {
+                shouldAccumulate = true // First frame
+            }
+
             // STAGE 1: Accumulate depth points into particle buffer using compute shader
-            if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
+            if shouldAccumulate, let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
                 computeEncoder.setComputePipelineState(computePipelineState)
+
+                lastCameraTransform = depthSample.cameraTransform
 
                 // Accumulation uniforms
                 struct AccumulationUniforms {
@@ -194,6 +209,10 @@ struct DepthPointCloudView: UIViewRepresentable {
 
                 // Advance particle index
                 currentParticleIndex = (currentParticleIndex + Int(depthTexture.width * depthTexture.height)) % maxParticles
+
+                if frameCount % 30 == 0 {
+                    print("📸 Camera moved - accumulating points (total: \(min(currentParticleIndex, maxParticles)))")
+                }
             }
 
             // STAGE 2: Render accumulated particles
@@ -218,7 +237,7 @@ struct DepthPointCloudView: UIViewRepresentable {
 
             var renderUniforms = RenderUniforms(
                 viewProjectionMatrix: viewProjectionMatrix,
-                pointSize: 3.0,
+                pointSize: 5.0, // Larger for better visibility
                 confidenceThreshold: 0
             )
 
@@ -337,6 +356,15 @@ struct DepthPointCloudView: UIViewRepresentable {
                 SIMD4<Float>(-sin, 0, cos, 0),
                 SIMD4<Float>(0, 0, 0, 1)
             )
+        }
+
+        // MARK: - Helpers
+
+        private func distance(_ a: SIMD4<Float>, _ b: SIMD4<Float>) -> Float {
+            let dx = a.x - b.x
+            let dy = a.y - b.y
+            let dz = a.z - b.z
+            return sqrtf(dx*dx + dy*dy + dz*dz)
         }
 
         private func makeOrbitViewMatrix(rotation: Float, distance: Float) -> simd_float4x4 {
