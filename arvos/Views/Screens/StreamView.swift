@@ -80,6 +80,12 @@ struct StreamView: View {
 
                         Spacer()
 
+                        if !viewModel.isStreaming {
+                            modeSelector
+                                .padding(.horizontal)
+                                .padding(.bottom, 16)
+                        }
+
                         // Bottom Controls
                         bottomControls
                             .background(Color(.systemBackground))
@@ -180,11 +186,6 @@ struct StreamView: View {
 
     private var bottomControls: some View {
         VStack(spacing: 16) {
-            // Mode Selector (when not streaming)
-            if !viewModel.isStreaming {
-                modeSelector
-            }
-
             // Primary Actions: Connection + Start/Stop
             if !viewModel.isStreaming {
                 // Connection Button (emphasized as primary workflow)
