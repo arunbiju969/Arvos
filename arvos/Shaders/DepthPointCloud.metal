@@ -104,23 +104,18 @@ vertex ParticleVertexOut depthPointCloudVertex(
         uniforms.depthResolution
     );
 
-    // Transform from camera-local to world space using ARFrame transform
-    float4 worldPosition = uniforms.localToWorld * float4(localPosition, 1.0);
+    // Render in camera-local space (not world space)
+    // This shows the current depth frame as a stable image
+    out.position = uniforms.projectionMatrix * uniforms.viewMatrix * float4(localPosition, 1.0);
 
-    // Perform homogeneous divide (critical for perspective correctness!)
-    worldPosition = worldPosition / worldPosition.w;
+    // Color based on depth - simple gradient for clarity
+    // Map depth 0-2m to visible colors
+    float normalizedDepth = saturate(depth / 2.0);
 
-    // Then to clip space for rendering
-    out.position = uniforms.projectionMatrix * uniforms.viewMatrix * worldPosition;
-
-    // Color based on depth with better gradient for typical indoor scenes (0-3m)
-    // Use a rainbow-like gradient: red -> yellow -> green -> cyan -> blue
-    float normalizedDepth = saturate(depth / 3.0); // 0-3 meters mapped to 0-1
-
-    // Create smooth rainbow gradient
-    float r = saturate(1.5 - abs(normalizedDepth * 3.0 - 1.5));
-    float g = saturate(1.5 - abs(normalizedDepth * 3.0 - 0.5));
-    float b = saturate(normalizedDepth * 1.5);
+    // Red (close) -> Green (medium) -> Blue (far)
+    float r = saturate(1.0 - normalizedDepth * 2.0);
+    float g = saturate(1.0 - abs(normalizedDepth - 0.5) * 2.0);
+    float b = saturate(normalizedDepth * 2.0 - 1.0);
 
     out.color = float3(r, g, b);
 

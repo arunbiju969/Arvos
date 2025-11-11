@@ -136,9 +136,8 @@ struct DepthPointCloudView: UIViewRepresentable {
             renderEncoder.setRenderPipelineState(pipelineState)
             renderEncoder.setDepthStencilState(depthState)
 
-            // Set up camera with slow rotation for 3D effect
-            rotation += 0.003 // Slow rotation
-            let modelMatrix = makeRotationMatrix(rotation)
+            // Set up camera - NO rotation for now to debug
+            let modelMatrix = simd_float4x4(1.0) // Identity matrix - no rotation
             let viewMatrix = makeViewMatrix()
             let projectionMatrix = makeProjectionMatrix(aspectRatio: Float(view.bounds.width / view.bounds.height))
 
