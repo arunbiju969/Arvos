@@ -88,8 +88,7 @@ class WatchConnectivityService: NSObject, ObservableObject {
                 self.bufferPacket(packet)
             }
             
-            messagesSent += 1
-            bytesSent += Int64(encoded.count)
+            updateSendStatistics(messages: 1, bytes: Int64(encoded.count))
             
         } catch {
             print("❌ Failed to encode packet: \(error)")
@@ -148,8 +147,7 @@ class WatchConnectivityService: NSObject, ObservableObject {
             
             session.transferUserInfo(dict)
             
-            messagesSent += packetsToSend.count
-            bytesSent += Int64(encoded.count)
+            updateSendStatistics(messages: packetsToSend.count, bytes: Int64(encoded.count))
             
             print("📤 Flushed \(packetsToSend.count) buffered packets (\(encoded.count) bytes)")
             
@@ -197,9 +195,19 @@ class WatchConnectivityService: NSObject, ObservableObject {
     // MARK: - Statistics
     
     func resetStatistics() {
-        messagesSent = 0
-        messagesReceived = 0
-        bytesSent = 0
+        DispatchQueue.main.async {
+            self.messagesSent = 0
+            self.messagesReceived = 0
+            self.bytesSent = 0
+        }
+    }
+
+    private func updateSendStatistics(messages: Int = 0, bytes: Int64 = 0) {
+        guard messages != 0 || bytes != 0 else { return }
+        DispatchQueue.main.async {
+            self.messagesSent += messages
+            self.bytesSent += bytes
+        }
     }
 }
 

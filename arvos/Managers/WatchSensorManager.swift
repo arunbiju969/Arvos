@@ -122,9 +122,11 @@ class WatchSensorManager: ObservableObject {
     }
     
     func resetStatistics() {
-        watchSampleCount = 0
-        watchHz = 0
-        sampleTimestamps.removeAll()
+        DispatchQueue.main.async {
+            self.watchSampleCount = 0
+            self.watchHz = 0
+            self.sampleTimestamps.removeAll()
+        }
         connectivityService.resetStatistics()
     }
     
@@ -150,21 +152,23 @@ extension WatchSensorManager: WatchConnectivityDelegate {
         // Handle different packet types
         switch packet.sensorType {
         case "watch_imu":
-            if let watchIMU = packet.decodeIMU() {
-                // Convert to standard IMUData format
-                let imuData = IMUData(
-                    timestampNs: adjustedTimestamp,
-                    angularVelocity: watchIMU.angularVelocity,
-                    linearAcceleration: watchIMU.linearAcceleration,
-                    gravity: watchIMU.gravity
-                )
-                
-                // Update statistics
-                watchSampleCount += 1
-                updateFPS()
-                
-                // Notify delegate
-                delegate?.watchSensorManager(self, didReceiveIMU: imuData)
+            guard let watchIMU = packet.decodeIMU() else { return }
+            
+            // Convert to standard IMUData format
+            let imuData = IMUData(
+                timestampNs: adjustedTimestamp,
+                angularVelocity: watchIMU.angularVelocity,
+                linearAcceleration: watchIMU.linearAcceleration,
+                gravity: watchIMU.gravity
+            )
+            
+            // Forward to delegate immediately
+            delegate?.watchSensorManager(self, didReceiveIMU: imuData)
+            
+            // Update published stats on the main thread
+            DispatchQueue.main.async {
+                self.watchSampleCount += 1
+                self.updateFPS()
             }
             
         default:

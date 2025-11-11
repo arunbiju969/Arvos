@@ -7,7 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2A91EA782EC3DEC2000EBD56 /* arvosWatchApp Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 2A91EA6E2EC3DEC1000EBD56 /* arvosWatchApp Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2A91EA782EC3DEC2000EBD56 /* arvosWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 2A91EA6E2EC3DEC1000EBD56 /* arvosWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3FF2D11F2EC6F75B009B34B2 /* arvosWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D11A2EC6F75B009B34B2 /* arvosWatchApp.swift */; };
+		3FF2D1202EC6F75B009B34B2 /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D11B2EC6F75B009B34B2 /* WatchContentView.swift */; };
+		3FF2D1212EC6F75B009B34B2 /* WatchSensorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D11C2EC6F75B009B34B2 /* WatchSensorService.swift */; };
+		3FF2D1232EC6F75B009B34B2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3FF2D11D2EC6F75B009B34B2 /* Assets.xcassets */; };
+		3FF2D2012EC6FBF2009B34B2 /* WatchSensorPacket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D1FB2EC6FBF2009B34B2 /* WatchSensorPacket.swift */; };
+		3FF2D2022EC6FBF2009B34B2 /* WatchSensorPacket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D1FB2EC6FBF2009B34B2 /* WatchSensorPacket.swift */; };
+		3FF2D2032EC6FBF2009B34B2 /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D1FC2EC6FBF2009B34B2 /* WatchConnectivityService.swift */; };
+		3FF2D2042EC6FBF2009B34B2 /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D1FC2EC6FBF2009B34B2 /* WatchConnectivityService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -16,7 +24,7 @@
 			containerPortal = 2AB6540F2EBD65FC007FBEFB /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 2A91EA6D2EC3DEC1000EBD56;
-			remoteInfo = "arvosWatchApp Watch App";
+			remoteInfo = arvosWatchApp;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -35,16 +43,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		2A91EA6E2EC3DEC1000EBD56 /* arvosWatchApp Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "arvosWatchApp Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2A91EA6E2EC3DEC1000EBD56 /* arvosWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = arvosWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FF2D11A2EC6F75B009B34B2 /* arvosWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = arvosWatchApp.swift; sourceTree = "<group>"; };
+		3FF2D11B2EC6F75B009B34B2 /* WatchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchContentView.swift; sourceTree = "<group>"; };
+		3FF2D11C2EC6F75B009B34B2 /* WatchSensorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSensorService.swift; sourceTree = "<group>"; };
+		3FF2D11D2EC6F75B009B34B2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3FF2D11E2EC6F75B009B34B2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2AB654172EBD65FC007FBEFB /* arvos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = arvos.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FF2D1FB2EC6FBF2009B34B2 /* WatchSensorPacket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSensorPacket.swift; sourceTree = "<group>"; };
+		3FF2D1FC2EC6FBF2009B34B2 /* WatchConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		2A91EA6F2EC3DEC1000EBD56 /* arvosWatchApp Watch App */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "arvosWatchApp Watch App";
-			sourceTree = "<group>";
-		};
 		2AB654192EBD65FC007FBEFB /* arvos */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = arvos;
@@ -74,7 +84,8 @@
 			isa = PBXGroup;
 			children = (
 				2AB654192EBD65FC007FBEFB /* arvos */,
-				2A91EA6F2EC3DEC1000EBD56 /* arvosWatchApp Watch App */,
+				3FF2D1F72EC6FBF2009B34B2 /* Shared */,
+				3FF2D1192EC6F75B009B34B2 /* arvosWatchApp */,
 				2AB654182EBD65FC007FBEFB /* Products */,
 			);
 			sourceTree = "<group>";
@@ -83,17 +94,54 @@
 			isa = PBXGroup;
 			children = (
 				2AB654172EBD65FC007FBEFB /* arvos.app */,
-				2A91EA6E2EC3DEC1000EBD56 /* arvosWatchApp Watch App.app */,
+				2A91EA6E2EC3DEC1000EBD56 /* arvosWatchApp.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		3FF2D1192EC6F75B009B34B2 /* arvosWatchApp */ = {
+			isa = PBXGroup;
+			children = (
+				3FF2D11A2EC6F75B009B34B2 /* arvosWatchApp.swift */,
+				3FF2D11B2EC6F75B009B34B2 /* WatchContentView.swift */,
+				3FF2D11C2EC6F75B009B34B2 /* WatchSensorService.swift */,
+				3FF2D11D2EC6F75B009B34B2 /* Assets.xcassets */,
+				3FF2D11E2EC6F75B009B34B2 /* Info.plist */,
+			);
+			path = arvosWatchApp;
+			sourceTree = "<group>";
+		};
+		3FF2D1F72EC6FBF2009B34B2 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				3FF2D1F82EC6FBF2009B34B2 /* Models */,
+				3FF2D1FA2EC6FBF2009B34B2 /* Services */,
+			);
+			path = arvos/Shared;
+			sourceTree = "<group>";
+		};
+		3FF2D1F82EC6FBF2009B34B2 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3FF2D1FB2EC6FBF2009B34B2 /* WatchSensorPacket.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		3FF2D1FA2EC6FBF2009B34B2 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				3FF2D1FC2EC6FBF2009B34B2 /* WatchConnectivityService.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		2A91EA6D2EC3DEC1000EBD56 /* arvosWatchApp Watch App */ = {
+		2A91EA6D2EC3DEC1000EBD56 /* arvosWatchApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2A91EA792EC3DEC2000EBD56 /* Build configuration list for PBXNativeTarget "arvosWatchApp Watch App" */;
+			buildConfigurationList = 2A91EA792EC3DEC2000EBD56 /* Build configuration list for PBXNativeTarget "arvosWatchApp" */;
 			buildPhases = (
 				2A91EA6A2EC3DEC1000EBD56 /* Sources */,
 				2A91EA6B2EC3DEC1000EBD56 /* Frameworks */,
@@ -103,14 +151,11 @@
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				2A91EA6F2EC3DEC1000EBD56 /* arvosWatchApp Watch App */,
-			);
-			name = "arvosWatchApp Watch App";
+			name = arvosWatchApp;
 			packageProductDependencies = (
 			);
-			productName = "arvosWatchApp Watch App";
-			productReference = 2A91EA6E2EC3DEC1000EBD56 /* arvosWatchApp Watch App.app */;
+			productName = arvosWatchApp;
+			productReference = 2A91EA6E2EC3DEC1000EBD56 /* arvosWatchApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 		2AB654162EBD65FC007FBEFB /* arvos */ = {
@@ -170,7 +215,7 @@
 			projectRoot = "";
 			targets = (
 				2AB654162EBD65FC007FBEFB /* arvos */,
-				2A91EA6D2EC3DEC1000EBD56 /* arvosWatchApp Watch App */,
+				2A91EA6D2EC3DEC1000EBD56 /* arvosWatchApp */,
 			);
 		};
 /* End PBXProject section */
@@ -180,6 +225,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FF2D1232EC6F75B009B34B2 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -197,6 +243,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FF2D1212EC6F75B009B34B2 /* WatchSensorService.swift in Sources */,
+				3FF2D1202EC6F75B009B34B2 /* WatchContentView.swift in Sources */,
+				3FF2D11F2EC6F75B009B34B2 /* arvosWatchApp.swift in Sources */,
+				3FF2D2022EC6FBF2009B34B2 /* WatchSensorPacket.swift in Sources */,
+				3FF2D2042EC6FBF2009B34B2 /* WatchConnectivityService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -204,6 +255,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FF2D2032EC6FBF2009B34B2 /* WatchConnectivityService.swift in Sources */,
+				3FF2D2012EC6FBF2009B34B2 /* WatchSensorPacket.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -212,7 +265,7 @@
 /* Begin PBXTargetDependency section */
 		2A91EA772EC3DEC2000EBD56 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2A91EA6D2EC3DEC1000EBD56 /* arvosWatchApp Watch App */;
+			target = 2A91EA6D2EC3DEC1000EBD56 /* arvosWatchApp */;
 			targetProxy = 2A91EA762EC3DEC2000EBD56 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -227,17 +280,15 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 58WX73LXKV;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = arvosWatchApp;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = supesclub.com.arvos;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = arvosWatchApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = supesclub.com.arvos.watchkitapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = arvosWatchApp;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -247,7 +298,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+				WATCHOS_DEPLOYMENT_TARGET = 11.6;
 			};
 			name = Debug;
 		};
@@ -260,17 +311,15 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 58WX73LXKV;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = arvosWatchApp;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = supesclub.com.arvos;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = arvosWatchApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = supesclub.com.arvos.watchkitapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = arvosWatchApp;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -280,7 +329,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+				WATCHOS_DEPLOYMENT_TARGET = 11.6;
 			};
 			name = Release;
 		};
@@ -466,7 +515,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2A91EA792EC3DEC2000EBD56 /* Build configuration list for PBXNativeTarget "arvosWatchApp Watch App" */ = {
+		2A91EA792EC3DEC2000EBD56 /* Build configuration list for PBXNativeTarget "arvosWatchApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2A91EA7A2EC3DEC2000EBD56 /* Debug */,

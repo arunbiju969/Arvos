@@ -20,6 +20,8 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSMotionUsageDescription</key>
+	<string>arvos needs motion data to stream IMU sensor information.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -30,8 +32,6 @@
 	<key>WKCompanionAppBundleIdentifier</key>
 	<string>supesclub.com.arvos</string>
 	<key>WKWatchOnly</key>
-	<true/>
-	<key>NSMotionUsageDescription</key>
-	<string>arvos needs motion data to stream IMU sensor information.</string>
+	<false/>
 </dict>
 </plist>
