@@ -444,10 +444,10 @@ struct SensorTestView: View {
             },
             content: {
                 if viewModel.watchConnected {
-                    if let watchIMU = viewModel.latestWatchIMU {
-                        VStack(alignment: .leading, spacing: 10) {
-                            metricRow(label: "Sample Rate", value: String(format: "%.1f Hz", viewModel.watchHz))
-                            
+                    VStack(alignment: .leading, spacing: 10) {
+                        metricRow(label: "Sample Rate", value: String(format: "%.1f Hz", viewModel.watchHz))
+                        
+                        if let watchIMU = viewModel.latestWatchIMU {
                             Divider()
                             
                             Text("Angular Velocity (rad/s)")
@@ -467,9 +467,40 @@ struct SensorTestView: View {
                             metricRow(label: "X", value: String(format: "%.3f", watchIMU.linearAcceleration.x))
                             metricRow(label: "Y", value: String(format: "%.3f", watchIMU.linearAcceleration.y))
                             metricRow(label: "Z", value: String(format: "%.3f", watchIMU.linearAcceleration.z))
+                        } else {
+                            LoadingCard(message: "Waiting for IMU samples…", useDarkBackground: false)
                         }
-                    } else {
-                        LoadingCard(message: "Waiting for watch data…", useDarkBackground: false)
+                        
+                        if let attitude = viewModel.latestWatchAttitude {
+                            Divider()
+                            Text("Attitude")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                            metricRow(label: "Pitch", value: formatAngle(attitude.pitch))
+                            metricRow(label: "Roll", value: formatAngle(attitude.roll))
+                            metricRow(label: "Yaw", value: formatAngle(attitude.yaw))
+                        }
+                        
+                        if let activity = viewModel.latestWatchActivity {
+                            Divider()
+                            Text("Activity Classification")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                            metricRow(label: "State", value: activity.descriptionLabel.capitalized)
+                            metricRow(label: "Confidence", value: activity.confidenceDescription)
+                        }
+                        
+                        if let gesture = viewModel.latestWatchGesture {
+                            Divider()
+                            Text("Gesture")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                            metricRow(label: "Label", value: gesture.label.capitalized)
+                            metricRow(label: "Confidence", value: String(format: "%.0f%%", gesture.confidence * 100))
+                        }
                     }
                 } else {
                     VStack(spacing: 12) {
@@ -544,6 +575,11 @@ struct SensorTestView: View {
             Text(value)
                 .font(.system(.caption, design: .monospaced))
         }
+    }
+    
+    private func formatAngle(_ value: Double) -> String {
+        let degrees = value * 180 / .pi
+        return String(format: "%.1f°", degrees)
     }
 
     @ViewBuilder

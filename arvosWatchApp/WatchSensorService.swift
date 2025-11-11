@@ -13,9 +13,14 @@ class WatchSensorService: ObservableObject {
     @Published private(set) var isStreaming = false
     @Published private(set) var currentHz: Double = 0
     @Published private(set) var sampleCount: Int = 0
+    @Published private(set) var latestAttitude: WatchAttitudeData?
+    @Published private(set) var latestActivity: WatchMotionActivityData?
+    @Published private(set) var latestGesture: WatchGestureData?
     
     private let motionManager = CMMotionManager()
+    private let activityManager = CMMotionActivityManager()
     private let connectivityService = WatchConnectivityService.shared
+    private let gestureAnalyzer = WatchGestureAnalyzer()
     
     private var updateTimer: Timer?
     private var sampleTimestamps: [TimeInterval] = []
@@ -102,6 +107,15 @@ class WatchSensorService: ObservableObject {
             
             self.handleMotionUpdate(motion)
         }
+
+        if CMMotionActivityManager.isActivityAvailable() {
+            activityManager.startActivityUpdates(to: OperationQueue()) { [weak self] activity in
+                guard let self, let activity else { return }
+                self.handleActivityUpdate(activity)
+            }
+        } else {
+            print("ℹ️ Motion activity classification not available on this watch")
+        }
         
         isStreaming = true
         sampleCount = 0
@@ -114,6 +128,9 @@ class WatchSensorService: ObservableObject {
         guard isStreaming else { return }
         
         motionManager.stopDeviceMotionUpdates()
+        if CMMotionActivityManager.isActivityAvailable() {
+            activityManager.stopActivityUpdates()
+        }
         updateTimer?.invalidate()
         updateTimer = nil
         
@@ -171,10 +188,28 @@ class WatchSensorService: ObservableObject {
         // Send to phone
         connectivityService.send(packet: packet)
         
+        let attitude = motion.attitude
+        let quaternion = SIMD4<Double>(
+            attitude.quaternion.x,
+            attitude.quaternion.y,
+            attitude.quaternion.z,
+            attitude.quaternion.w
+        )
+        let attitudePacket = WatchSensorPacket.attitude(
+            timestamp: timestamp,
+            quaternion: quaternion,
+            pitch: attitude.pitch,
+            roll: attitude.roll,
+            yaw: attitude.yaw,
+            referenceFrame: "xArbitraryZVertical"
+        )
+        connectivityService.send(packet: attitudePacket)
+        
         // Update statistics
         DispatchQueue.main.async {
             self.sampleCount += 1
             self.updateFPS()
+            self.latestAttitude = attitudePacket.decodeAttitude()
         }
     }
     
@@ -189,6 +224,32 @@ class WatchSensorService: ObservableObject {
         currentHz = Double(sampleTimestamps.count) / fpsWindow
     }
     
+    private func handleActivityUpdate(_ activity: CMMotionActivity) {
+        let timestamp = UInt64(Date().timeIntervalSinceReferenceDate * 1_000_000_000)
+        
+        let activityData = WatchMotionActivityData(
+            isWalking: activity.walking,
+            isRunning: activity.running,
+            isCycling: activity.cycling,
+            isDriving: activity.automotive,
+            isStationary: activity.stationary,
+            isUnknown: activity.unknown,
+            confidence: activity.confidence.rawValue
+        )
+        
+        let activityPacket = WatchSensorPacket.motionActivity(timestamp: timestamp, activity: activityData)
+        connectivityService.send(packet: activityPacket)
+        
+        let gesture = gestureAnalyzer.gesture(for: activityData)
+        let gesturePacket = WatchSensorPacket.gesture(timestamp: timestamp, gesture: gesture)
+        connectivityService.send(packet: gesturePacket)
+        
+        DispatchQueue.main.async {
+            self.latestActivity = activityData
+            self.latestGesture = gesture
+        }
+    }
+    
     // MARK: - Future Extensions
     
     // Placeholder for heart rate monitoring
@@ -201,6 +262,42 @@ class WatchSensorService: ObservableObject {
     func startWorkoutSession() {
         // TODO: Implement workout session with metrics
         print("⚠️ Workout session not yet implemented")
+    }
+}
+
+// MARK: - Gesture Analyzer
+
+private struct WatchGestureAnalyzer {
+    func gesture(for activity: WatchMotionActivityData) -> WatchGestureData {
+        if activity.isRunning {
+            return WatchGestureData(label: "running", confidence: confidence(from: activity.confidence))
+        }
+        if activity.isWalking {
+            return WatchGestureData(label: "walking", confidence: confidence(from: activity.confidence))
+        }
+        if activity.isCycling {
+            return WatchGestureData(label: "cycling", confidence: confidence(from: activity.confidence))
+        }
+        if activity.isDriving {
+            return WatchGestureData(label: "vehicle", confidence: confidence(from: activity.confidence))
+        }
+        if activity.isStationary {
+            return WatchGestureData(label: "idle", confidence: confidence(from: activity.confidence))
+        }
+        return WatchGestureData(label: "unknown", confidence: confidence(from: activity.confidence))
+    }
+    
+    private func confidence(from raw: Int) -> Double {
+        switch raw {
+        case CMMotionActivityConfidence.low.rawValue:
+            return 0.33
+        case CMMotionActivityConfidence.medium.rawValue:
+            return 0.66
+        case CMMotionActivityConfidence.high.rawValue:
+            return 0.9
+        default:
+            return 0.5
+        }
     }
 }
 

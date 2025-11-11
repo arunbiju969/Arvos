@@ -102,31 +102,45 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    let watchManager = viewModel.sensorManager.watchSensorManager
                     HStack {
                         Text("Watch Connected")
                         Spacer()
                         HStack(spacing: 8) {
                             Circle()
-                                .fill(viewModel.sensorManager.watchSensorManager.isWatchConnected ? Color.green : Color.red)
+                                .fill(watchManager.isWatchConnected ? Color.green : Color.red)
                                 .frame(width: 8, height: 8)
-                            Text(viewModel.sensorManager.watchSensorManager.isWatchConnected ? "Yes" : "No")
+                            Text(watchManager.isWatchConnected ? "Yes" : "No")
                                 .foregroundColor(.secondary)
                         }
                     }
                     
-                    if viewModel.sensorManager.watchSensorManager.isWatchConnected {
+                    if watchManager.isWatchConnected {
                         HStack {
                             Text("Watch Sample Rate")
                             Spacer()
-                            Text(String(format: "%.1f Hz", viewModel.sensorManager.watchSensorManager.watchHz))
+                            Text(String(format: "%.1f Hz", watchManager.watchHz))
                                 .foregroundColor(.secondary)
                         }
                         
                         HStack {
                             Text("Watch Samples")
                             Spacer()
-                            Text("\(viewModel.sensorManager.watchSensorManager.watchSampleCount)")
+                            Text("\(watchManager.watchSampleCount)")
                                 .foregroundColor(.secondary)
+                        }
+                        
+                        if let attitude = watchManager.latestAttitude {
+                            WatchSettingsRow(title: "Pitch / Roll / Yaw", value: "\(formatAngle(attitude.pitch)) / \(formatAngle(attitude.roll)) / \(formatAngle(attitude.yaw))")
+                        }
+                        
+                        if let activity = watchManager.latestActivity {
+                            WatchSettingsRow(title: "Activity", value: activity.descriptionLabel.capitalized)
+                            WatchSettingsRow(title: "Confidence", value: activity.confidenceDescription)
+                        }
+                        
+                        if let gesture = watchManager.latestGesture {
+                            WatchSettingsRow(title: "Gesture", value: "\(gesture.label.capitalized) (\(String(format: "%.0f%%", gesture.confidence * 100)))")
                         }
                     } else {
                         Text("Pair your Apple Watch and install the arvos Watch app to enable watch sensor streaming.")
@@ -165,9 +179,28 @@ struct SettingsView: View {
             .navigationTitle("Settings")
         }
     }
+    
+    private func formatAngle(_ value: Double) -> String {
+        let degrees = value * 180 / .pi
+        return String(format: "%.1f°", degrees)
+    }
 }
 
 #Preview {
     SettingsView()
         .environmentObject(StreamingViewModel())
+}
+
+private struct WatchSettingsRow: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Text(value)
+                .foregroundColor(.secondary)
+        }
+    }
 }

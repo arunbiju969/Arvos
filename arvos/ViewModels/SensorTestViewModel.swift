@@ -32,6 +32,9 @@ class SensorTestViewModel: ObservableObject {
     @Published var latestPose: PoseData?
     @Published var latestGPS: GPSData?
     @Published var latestWatchIMU: IMUData?
+    @Published var latestWatchAttitude: WatchAttitudeData?
+    @Published var latestWatchActivity: WatchMotionActivityData?
+    @Published var latestWatchGesture: WatchGestureData?
     @Published var watchConnected = false
     @Published var watchHz: Double = 0
 
@@ -56,6 +59,39 @@ class SensorTestViewModel: ObservableObject {
         
         sensorManager.watchSensorManager.$watchHz
             .assign(to: &$watchHz)
+        
+        sensorManager.watchSensorManager.$latestAttitude
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] attitude in
+                guard let self else { return }
+                self.latestWatchAttitude = attitude
+                if attitude != nil && self.showWatch {
+                    self.recordSensorUpdate()
+                }
+            }
+            .store(in: &cancellables)
+        
+        sensorManager.watchSensorManager.$latestActivity
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] activity in
+                guard let self else { return }
+                self.latestWatchActivity = activity
+                if activity != nil && self.showWatch {
+                    self.recordSensorUpdate()
+                }
+            }
+            .store(in: &cancellables)
+        
+        sensorManager.watchSensorManager.$latestGesture
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] gesture in
+                guard let self else { return }
+                self.latestWatchGesture = gesture
+                if gesture != nil && self.showWatch {
+                    self.recordSensorUpdate()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     func toggleTesting() {
@@ -94,6 +130,9 @@ class SensorTestViewModel: ObservableObject {
         latestPose = nil
         latestGPS = nil
         latestWatchIMU = nil
+        latestWatchAttitude = nil
+        latestWatchActivity = nil
+        latestWatchGesture = nil
         cameraResolution = nil
         lastSensorUpdate = nil
     }
