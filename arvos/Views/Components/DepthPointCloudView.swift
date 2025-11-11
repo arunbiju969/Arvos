@@ -235,7 +235,8 @@ struct DepthPointCloudView: UIViewRepresentable {
             // Invert camera transform to get view matrix (world to camera space)
             let viewMatrix = cameraTransform.inverse
 
-            let projectionMatrix = makeProjectionMatrix(aspectRatio: Float(view.bounds.width / view.bounds.height))
+            // Use ARKit's camera projection matrix for correct perspective
+            let projectionMatrix = depthSample.projectionMatrix
             let viewProjectionMatrix = projectionMatrix * viewMatrix
 
             struct RenderUniforms {
@@ -262,6 +263,16 @@ struct DepthPointCloudView: UIViewRepresentable {
             frameCount += 1
             if frameCount % 30 == 0 {
                 print("🎨 Drawing \(particlesToDraw) accumulated particles")
+
+                // Debug: Check if points are in valid range
+                if particlesToDraw > 0 {
+                    let bufferPtr = particleBuffer.contents().assumingMemoryBound(to: SIMD4<Float>.self)
+                    let firstPoint = bufferPtr[0]
+                    let lastPoint = bufferPtr[particlesToDraw - 1]
+                    print("🔍 First particle position: \(firstPoint)")
+                    print("🔍 Last particle position: \(lastPoint)")
+                    print("🔍 Camera position: \(cameraTransform.columns.3)")
+                }
             }
 
             renderEncoder.endEncoding()

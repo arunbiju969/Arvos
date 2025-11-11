@@ -226,13 +226,18 @@ class ARKitService: NSObject {
         let intrinsics = frame.camera.intrinsics
         let hasConfidence = confidenceMap != nil
 
+        // Get ARKit camera projection matrix for correct perspective
+        let viewportSize = CGSize(width: 256, height: 192) // Depth resolution
+        let cameraProjection = frame.camera.projectionMatrix(for: .portrait, viewportSize: viewportSize, zNear: 0.001, zFar: 1000)
+
         // Emit depth visualization sample for real-time rendering
         let depthSample = DepthVisualizationSample(
             timestamp: timestamp,
             depthMap: depthCopy,
             confidenceMap: confidenceCopy,
             intrinsics: intrinsics,
-            cameraTransform: cameraTransform
+            cameraTransform: cameraTransform,
+            projectionMatrix: cameraProjection
         )
 
         DispatchQueue.main.async { [weak self] in

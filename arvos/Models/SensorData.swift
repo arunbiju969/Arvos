@@ -257,6 +257,7 @@ struct DepthVisualizationSample {
     let confidenceMap: CVPixelBuffer?
     let intrinsics: simd_float3x3
     let cameraTransform: simd_float4x4
+    let projectionMatrix: simd_float4x4 // ARKit camera projection matrix
 
     var width: Int {
         CVPixelBufferGetWidth(depthMap)
