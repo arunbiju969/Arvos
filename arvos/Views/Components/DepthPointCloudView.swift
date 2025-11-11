@@ -97,10 +97,12 @@ struct DepthPointCloudView: UIViewRepresentable {
         func updateDepthSample(_ sample: DepthVisualizationSample?) {
             guard let sample = sample, let device = device else { return }
 
-            self.depthSample = sample
-
-            // Create Metal textures from depth and confidence maps
+            // Create Metal textures immediately and DON'T store the sample
+            // This prevents ARFrame retention issues
             createTexturesFromDepthSample(device: device, sample: sample)
+
+            // Store only the metadata we need, not the CVPixelBuffers
+            self.depthSample = sample
         }
 
         // MARK: - MTKViewDelegate
@@ -108,6 +110,8 @@ struct DepthPointCloudView: UIViewRepresentable {
         func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
             // Handle resize
         }
+
+        private var frameCount = 0
 
         func draw(in view: MTKView) {
             guard let device = device,
@@ -118,12 +122,14 @@ struct DepthPointCloudView: UIViewRepresentable {
                   let descriptor = view.currentRenderPassDescriptor,
                   let depthSample = depthSample,
                   let depthTexture = depthTexture else {
+                print("❌ Draw guard failed: device=\(device != nil), pipeline=\(pipelineState != nil), depthSample=\(depthSample != nil), depthTexture=\(depthTexture != nil)")
                 return
             }
 
             // Create command buffer
             guard let commandBuffer = commandQueue.makeCommandBuffer(),
                   let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else {
+                print("❌ Failed to create command buffer or encoder")
                 return
             }
 
@@ -145,6 +151,11 @@ struct DepthPointCloudView: UIViewRepresentable {
                 pointSize: 5.0, // Medium point size
                 confidenceThreshold: 1 // Filter low quality points
             )
+
+            frameCount += 1
+            if frameCount % 30 == 0 { // Log every 30 frames (~1 second)
+                print("🎨 Drawing \(vertexCount) points at frame \(frameCount)")
+            }
 
             renderEncoder.setVertexBytes(&uniforms, length: MemoryLayout<DepthUniforms>.stride, index: 0)
             renderEncoder.setVertexTexture(depthTexture, index: 0)
@@ -196,6 +207,22 @@ struct DepthPointCloudView: UIViewRepresentable {
                     withBytes: baseAddress,
                     bytesPerRow: bytesPerRow
                 )
+
+                // DEBUG: Sample some depth values to verify they're reasonable
+                let depthPtr = baseAddress.assumingMemoryBound(to: Float.self)
+                var minDepth: Float = 100
+                var maxDepth: Float = 0
+                var validPoints = 0
+                for i in 0..<min(100, width * height) {
+                    let depth = depthPtr[i]
+                    if depth > 0 {
+                        minDepth = min(minDepth, depth)
+                        maxDepth = max(maxDepth, depth)
+                        validPoints += 1
+                    }
+                }
+                print("🔍 Depth range: \(minDepth)m to \(maxDepth)m, valid points in sample: \(validPoints)/100")
+                print("🔍 Camera intrinsics fx=\(sample.intrinsics[0][0]), fy=\(sample.intrinsics[1][1])")
             }
 
             self.depthTexture = texture
