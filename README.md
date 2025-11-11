@@ -133,6 +133,7 @@ Augment iPhone data with wearable motion sensing—perfect for robotics operator
 - [`WATCH_INTEGRATION.md`](WATCH_INTEGRATION.md) – architecture & transport details
 - [`WATCH_TESTING_GUIDE.md`](WATCH_TESTING_GUIDE.md) – validation checklist
 - [`WATCH_IMPLEMENTATION_SUMMARY.md`](WATCH_IMPLEMENTATION_SUMMARY.md)
+- Python example: [`examples/watch_watch_stream.py`](examples/watch_watch_stream.py)
 
 ---
 
