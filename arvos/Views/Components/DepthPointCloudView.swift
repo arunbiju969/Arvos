@@ -188,14 +188,20 @@ struct DepthPointCloudView: UIViewRepresentable {
                 var confidenceThreshold: Int32
             }
 
+            // Scale intrinsics from full camera resolution to depth resolution
+            // This is CRITICAL - Apple's sample does this too!
             let K = depthSample.intrinsics
+            let cameraResolution = SIMD2<Float>(1920, 1440) // Full camera resolution
+            let depthResolution = SIMD2<Float>(Float(depthTexture.width), Float(depthTexture.height))
+            let scaleRes = cameraResolution / depthResolution
+
             var uniforms = PointCloudUniforms(
                 viewProjectionMatrix: viewProjectionMatrix,
-                fx: K[0][0],
-                fy: K[1][1],
-                cx: K[2][0],
-                cy: K[2][1],
-                depthResolution: SIMD2<Float>(Float(depthTexture.width), Float(depthTexture.height)),
+                fx: K[0][0] / scaleRes.x,
+                fy: K[1][1] / scaleRes.y,
+                cx: K[2][0] / scaleRes.x,
+                cy: K[2][1] / scaleRes.y,
+                depthResolution: depthResolution,
                 pointSize: 8.0,
                 confidenceThreshold: 0
             )
