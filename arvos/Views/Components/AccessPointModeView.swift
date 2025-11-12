@@ -71,7 +71,7 @@ struct AccessPointModeView: View {
             .background(Color.green.opacity(0.1))
             .cornerRadius(12)
             
-            // Connection Details
+            // Hotspot Details & Instructions
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Text("Network Name:")
@@ -81,25 +81,36 @@ struct AccessPointModeView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                HStack {
-                    Text("iPhone IP:")
-                        .fontWeight(.medium)
-                    Spacer()
-                    Text(apService.hotspotIP)
-                        .foregroundColor(.secondary)
-                        .font(.system(.body, design: .monospaced))
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "desktopcomputer")
+                        .foregroundColor(.blue)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("On your computer")
+                            .font(.footnote)
+                            .fontWeight(.semibold)
+                        Text("1. Connect to '\(apService.hotspotSSID)' hotspot\n2. Run 'examples/direct_wifi_connection.py' from the SDK\n3. Use the QR code *from the computer* to connect")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
-                HStack {
-                    Text("Connection URL:")
-                        .fontWeight(.medium)
-                    Spacer()
-                    Text(apService.getHotspotConnectionURL())
-                        .foregroundColor(.secondary)
-                        .font(.system(.caption, design: .monospaced))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "iphone")
+                        .foregroundColor(.green)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("On this iPhone")
+                            .font(.footnote)
+                            .fontWeight(.semibold)
+                        Text("Tap \"Scan QR\" or manually enter the URL shown on your computer (usually ws://<computer-ip>:9090)")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
+                
+                Text("The iPhone connects to the server running on your computer. Use the address provided by the desktop script (not this iPhone's IP).")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
             }
             .padding()
             .background(Color(.systemGray6))
