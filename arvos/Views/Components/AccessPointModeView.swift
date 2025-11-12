@@ -117,20 +117,38 @@ struct AccessPointModeView: View {
             .cornerRadius(12)
             
             // QR Code
-            VStack(spacing: 12) {
-                Text("Scan to Connect")
-                    .font(.headline)
-                
-                QRCodeView(url: apService.getHotspotConnectionURL())
-                    .frame(width: 200, height: 200)
-                
-                Button(action: {
-                    UIPasteboard.general.string = apService.getHotspotConnectionURL()
-                }) {
-                    Label("Copy URL", systemImage: "doc.on.doc")
-                        .font(.subheadline)
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "terminal")
+                        .foregroundColor(.purple)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Desktop steps")
+                            .font(.headline)
+                        Text("1. On your Mac, open Terminal and run:\n   python3 examples/direct_wifi_connection.py\n2. A QR code will appear on the Mac – this is the one to scan from the iPhone.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
-                .buttonStyle(.bordered)
+                
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "hand.tap")
+                        .foregroundColor(.orange)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Connect from iPhone")
+                            .font(.headline)
+                        Text("• In the connection sheet, set Host to your Mac’s IP (shown in the Mac script) and Port to 9090, then tap CONNECT.\n• Or tap Scan QR and point the camera at the QR displayed on your Mac.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "shield.lefthalf.filled")
+                        .foregroundColor(.red)
+                    Text("If the Mac firewall is enabled, allow python3 (or your terminal) to accept incoming connections so the iPhone can reach the server.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
             }
             .padding()
             .background(Color(.systemBackground))
