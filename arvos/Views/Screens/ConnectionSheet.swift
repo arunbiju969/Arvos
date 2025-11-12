@@ -65,6 +65,37 @@ struct ConnectionSheet: View {
                     Text("Scan QR code from your server")
                 }
 
+                Section {
+                    NavigationLink {
+                        AccessPointModeView()
+                    } label: {
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: "wifi.router")
+                                .foregroundColor(.blue)
+                                .font(.title3)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Direct Wi-Fi")
+                                    .font(.system(.body).weight(.semibold))
+                                Text("Use iPhone Personal Hotspot for lowest latency streaming")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                } header: {
+                    Text("DIRECT CONNECTION")
+                } footer: {
+                    Text("Best for demos or field work when no Wi-Fi network is available.")
+                }
+
                 // Connection Status & Diagnostics
                 if viewModel.isConnected {
                     Section {
