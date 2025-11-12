@@ -8,15 +8,6 @@
 import Foundation
 import Combine
 
-// MARK: - Connection State
-
-enum ConnectionState: String {
-    case disconnected
-    case connecting
-    case connected
-    case error
-}
-
 // MARK: - Connection Configuration
 
 struct ConnectionConfig {
@@ -58,15 +49,38 @@ struct ConnectionConfig {
     }
 }
 
-// MARK: - Network Statistics
+// MARK: - Streaming Protocol Statistics
 
-struct NetworkStatistics {
+struct StreamingProtocolStatistics {
     let state: ConnectionState
     let bytesSent: Int64
     let messagesSent: Int64
     let queuedMessages: Int
     let reconnectAttempts: Int
     let protocolName: String
+    
+    init(state: ConnectionState,
+         bytesSent: Int64,
+         messagesSent: Int64,
+         queuedMessages: Int,
+         reconnectAttempts: Int,
+         protocolName: String) {
+        self.state = state
+        self.bytesSent = bytesSent
+        self.messagesSent = messagesSent
+        self.queuedMessages = queuedMessages
+        self.reconnectAttempts = reconnectAttempts
+        self.protocolName = protocolName
+    }
+    
+    init(networkStats: NetworkStatistics, protocolName: String) {
+        self.init(state: networkStats.state,
+                  bytesSent: networkStats.bytesSent,
+                  messagesSent: networkStats.messagesSent,
+                  queuedMessages: networkStats.queuedMessages,
+                  reconnectAttempts: networkStats.reconnectAttempts,
+                  protocolName: protocolName)
+    }
     
     var bandwidth: String {
         if bytesSent < 1024 {
@@ -112,7 +126,7 @@ protocol StreamingProtocol: AnyObject {
     func send(data: Data) throws
     
     /// Get current statistics
-    func getStatistics() -> NetworkStatistics
+    func getStatistics() -> StreamingProtocolStatistics
     
     /// Reset statistics counters
     func resetStatistics()

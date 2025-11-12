@@ -54,7 +54,7 @@ class NetworkManager: ObservableObject {
 
     @Published var selectedProtocol: ProtocolType = .websocket
     @Published private(set) var connectionState: ConnectionState = .disconnected
-    @Published private(set) var statistics: NetworkStatistics?
+    @Published private(set) var statistics: StreamingProtocolStatistics?
 
     // Protocol adapter (abstraction layer)
     private var adapter: StreamingProtocol?
@@ -326,16 +326,20 @@ class NetworkManager: ObservableObject {
             statistics = adapter.getStatistics()
         } else {
             // Legacy path
-        statistics = webSocketService.getStatistics()
+            let legacyStats = webSocketService.getStatistics()
+            statistics = StreamingProtocolStatistics(networkStats: legacyStats, protocolName: ProtocolType.websocket.rawValue)
         }
     }
-
+    
     func resetStatistics() {
         if let adapter = adapter {
             adapter.resetStatistics()
         } else {
             // Legacy path
-        webSocketService.resetStatistics()
+            webSocketService.resetStatistics()
+            let legacyStats = webSocketService.getStatistics()
+            statistics = StreamingProtocolStatistics(networkStats: legacyStats, protocolName: ProtocolType.websocket.rawValue)
+            return
         }
         updateStatistics()
     }
