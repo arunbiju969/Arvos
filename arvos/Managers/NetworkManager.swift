@@ -73,23 +73,23 @@ class NetworkManager: ObservableObject {
     func connect(host: String, port: Int? = nil) {
         let actualPort = port ?? selectedProtocol.defaultPort
         let config = ConnectionConfig(host: host, port: actualPort)
-        connect(protocol: selectedProtocol, config: config)
+        connect(protocolType: selectedProtocol, config: config)
     }
     
     /// Connect using specific protocol
-    func connect(protocol: ProtocolType, config: ConnectionConfig) {
-        selectedProtocol = protocol
+    func connect(protocolType: ProtocolType, config: ConnectionConfig) {
+        selectedProtocol = protocolType
         
         // Create appropriate adapter
-        adapter = createAdapter(for: protocol)
+        adapter = createAdapter(for: protocolType)
         
         // Connect using adapter
         Task {
             do {
                 try await adapter?.connect(config: config)
-                print("✅ Connected using \(protocol.rawValue)")
+                print("✅ Connected using \(protocolType.rawValue)")
             } catch {
-                print("❌ Failed to connect using \(protocol.rawValue): \(error)")
+                print("❌ Failed to connect using \(protocolType.rawValue): \(error)")
                 DispatchQueue.main.async {
                     self.connectionState = .error
                 }
@@ -113,7 +113,7 @@ class NetworkManager: ObservableObject {
             adapter.disconnect()
         } else {
             // Legacy path
-            webSocketService.disconnect()
+        webSocketService.disconnect()
         }
     }
     
@@ -181,7 +181,7 @@ class NetworkManager: ObservableObject {
                 try adapter.send(json: imuData)
             } else {
                 // Legacy path
-                try webSocketService.send(json: imuData)
+            try webSocketService.send(json: imuData)
             }
         } catch {
             print("Failed to stream IMU data: \(error)")
@@ -196,7 +196,7 @@ class NetworkManager: ObservableObject {
                 try adapter.send(json: gpsData)
             } else {
                 // Legacy path
-                try webSocketService.send(json: gpsData)
+            try webSocketService.send(json: gpsData)
             }
         } catch {
             print("❌ Failed to stream GPS data: \(error)")
@@ -210,7 +210,7 @@ class NetworkManager: ObservableObject {
                 try adapter.send(json: poseData)
             } else {
                 // Legacy path
-                try webSocketService.send(json: poseData)
+            try webSocketService.send(json: poseData)
             }
         } catch {
             print("Failed to stream pose data: \(error)")
@@ -233,7 +233,7 @@ class NetworkManager: ObservableObject {
                 try adapter.send(data: encoded)
             } else {
                 // Legacy path
-                webSocketService.send(data: encoded, asText: false)
+            webSocketService.send(data: encoded, asText: false)
             }
         } catch {
             print("❌ Failed to stream camera frame: \(error)")
@@ -255,7 +255,7 @@ class NetworkManager: ObservableObject {
                 try adapter.send(data: encoded)
             } else {
                 // Legacy path
-                webSocketService.send(data: encoded, asText: false)
+            webSocketService.send(data: encoded, asText: false)
             }
         } catch {
             print("Failed to stream depth frame: \(error)")
@@ -271,7 +271,7 @@ class NetworkManager: ObservableObject {
                 try adapter.send(json: config)
             } else {
                 // Legacy path
-                try webSocketService.send(json: config)
+            try webSocketService.send(json: config)
             }
         } catch {
             print("Failed to send mode config: \(error)")
@@ -292,7 +292,7 @@ class NetworkManager: ObservableObject {
                 try adapter.send(json: statusMsg)
             } else {
                 // Legacy path
-                try webSocketService.send(json: statusMsg)
+            try webSocketService.send(json: statusMsg)
             }
         } catch {
             print("Failed to send status: \(error)")
@@ -312,7 +312,7 @@ class NetworkManager: ObservableObject {
                 try adapter.send(json: errorMsg)
             } else {
                 // Legacy path
-                try webSocketService.send(json: errorMsg)
+            try webSocketService.send(json: errorMsg)
             }
         } catch {
             print("Failed to send error: \(error)")
@@ -326,7 +326,7 @@ class NetworkManager: ObservableObject {
             statistics = adapter.getStatistics()
         } else {
             // Legacy path
-            statistics = webSocketService.getStatistics()
+        statistics = webSocketService.getStatistics()
         }
     }
 
@@ -335,7 +335,7 @@ class NetworkManager: ObservableObject {
             adapter.resetStatistics()
         } else {
             // Legacy path
-            webSocketService.resetStatistics()
+        webSocketService.resetStatistics()
         }
         updateStatistics()
     }

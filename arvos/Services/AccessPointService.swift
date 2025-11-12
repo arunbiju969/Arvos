@@ -99,12 +99,12 @@ class AccessPointService: ObservableObject {
     
     // MARK: - Connection URLs
     
-    func getHotspotConnectionURL(protocol: String = "ws", port: Int = 9090) -> String {
-        return "\(protocol)://\(hotspotIP):\(port)"
+    func getHotspotConnectionURL(scheme: String = "ws", port: Int = 9090) -> String {
+        return "\(scheme)://\(hotspotIP):\(port)"
     }
     
-    func getQRCodeData(protocol: String = "ws", port: Int = 9090) -> String {
-        return getHotspotConnectionURL(protocol: protocol, port: port)
+    func getQRCodeData(scheme: String = "ws", port: Int = 9090) -> String {
+        return getHotspotConnectionURL(scheme: scheme, port: port)
     }
     
     // MARK: - Network Interface Discovery
