@@ -11,9 +11,55 @@ import Combine
 class NetworkManager: ObservableObject {
     static let shared = NetworkManager()
 
+    // MARK: - Protocol Type Selection
+    
+    enum ProtocolType: String, CaseIterable, Identifiable {
+        case websocket = "WebSocket"
+        case grpc = "gRPC"
+        case mqtt = "MQTT"
+        case quic = "QUIC/HTTP3"
+        case mcapStream = "MCAP Stream"
+        case http = "HTTP/REST"
+        
+        var id: String { self.rawValue }
+        
+        var defaultPort: Int {
+            switch self {
+            case .websocket: return 9090
+            case .grpc: return 50051
+            case .mqtt: return 1883
+            case .quic: return 4433
+            case .mcapStream: return 9090  // Uses WebSocket underneath
+            case .http: return 8080
+            }
+        }
+        
+        var description: String {
+            switch self {
+            case .websocket:
+                return "Standard WebSocket (default)"
+            case .grpc:
+                return "gRPC - High performance, research standard"
+            case .mqtt:
+                return "MQTT - IoT, multi-subscriber"
+            case .quic:
+                return "QUIC/HTTP3 - Low latency (iOS 15+)"
+            case .mcapStream:
+                return "MCAP Stream - Robotics research"
+            case .http:
+                return "HTTP/REST - Simple integration"
+            }
+        }
+    }
+
+    @Published var selectedProtocol: ProtocolType = .websocket
     @Published private(set) var connectionState: ConnectionState = .disconnected
     @Published private(set) var statistics: NetworkStatistics?
 
+    // Protocol adapter (abstraction layer)
+    private var adapter: StreamingProtocol?
+    
+    // Legacy WebSocket service (for backward compatibility)
     private let webSocketService = WebSocketService()
     private var cancellables = Set<AnyCancellable>()
 
@@ -23,7 +69,36 @@ class NetworkManager: ObservableObject {
 
     // MARK: - Connection
 
-    func connect(host: String, port: Int) {
+    /// Connect using currently selected protocol
+    func connect(host: String, port: Int? = nil) {
+        let actualPort = port ?? selectedProtocol.defaultPort
+        let config = ConnectionConfig(host: host, port: actualPort)
+        connect(protocol: selectedProtocol, config: config)
+    }
+    
+    /// Connect using specific protocol
+    func connect(protocol: ProtocolType, config: ConnectionConfig) {
+        selectedProtocol = protocol
+        
+        // Create appropriate adapter
+        adapter = createAdapter(for: protocol)
+        
+        // Connect using adapter
+        Task {
+            do {
+                try await adapter?.connect(config: config)
+                print("✅ Connected using \(protocol.rawValue)")
+            } catch {
+                print("❌ Failed to connect using \(protocol.rawValue): \(error)")
+                DispatchQueue.main.async {
+                    self.connectionState = .error
+                }
+            }
+        }
+    }
+    
+    /// Legacy WebSocket connection (backward compatibility)
+    func connectWebSocket(host: String, port: Int) {
         guard let url = URL(string: "ws://\(host):\(port)") else {
             print("Invalid WebSocket URL")
             return
@@ -34,7 +109,67 @@ class NetworkManager: ObservableObject {
     }
 
     func disconnect() {
-        webSocketService.disconnect()
+        if let adapter = adapter {
+            adapter.disconnect()
+        } else {
+            // Legacy path
+            webSocketService.disconnect()
+        }
+    }
+    
+    // MARK: - Protocol Adapter Factory
+    
+    private func createAdapter(for protocolType: ProtocolType) -> StreamingProtocol? {
+        switch protocolType {
+        case .websocket:
+            return createWebSocketAdapter()
+        case .grpc:
+            return createGRPCAdapter()
+        case .mqtt:
+            return createMQTTAdapter()
+        case .quic:
+            return createQUICAdapter()
+        case .mcapStream:
+            return createMCAPStreamAdapter()
+        case .http:
+            return createHTTPAdapter()
+        }
+    }
+    
+    private func createWebSocketAdapter() -> StreamingProtocol? {
+        // Will be implemented with WebSocketAdapter
+        print("⚠️ WebSocketAdapter not yet implemented, using legacy WebSocketService")
+        return nil
+    }
+    
+    private func createGRPCAdapter() -> StreamingProtocol? {
+        // Will be implemented in Phase 3
+        print("⚠️ GRPCAdapter not yet implemented")
+        return nil
+    }
+    
+    private func createMQTTAdapter() -> StreamingProtocol? {
+        // Will be implemented in Phase 4
+        print("⚠️ MQTTAdapter not yet implemented")
+        return nil
+    }
+    
+    private func createQUICAdapter() -> StreamingProtocol? {
+        // Will be implemented in Phase 7
+        print("⚠️ QUICAdapter not yet implemented")
+        return nil
+    }
+    
+    private func createMCAPStreamAdapter() -> StreamingProtocol? {
+        // Will be implemented in Phase 5
+        print("⚠️ MCAPStreamAdapter not yet implemented")
+        return nil
+    }
+    
+    private func createHTTPAdapter() -> StreamingProtocol? {
+        // Will be implemented in Phase 6
+        print("⚠️ HTTPAdapter not yet implemented")
+        return nil
     }
 
     // MARK: - Streaming
@@ -42,7 +177,12 @@ class NetworkManager: ObservableObject {
     /// Stream IMU data
     func stream(imuData: IMUData) {
         do {
-            try webSocketService.send(json: imuData)
+            if let adapter = adapter {
+                try adapter.send(json: imuData)
+            } else {
+                // Legacy path
+                try webSocketService.send(json: imuData)
+            }
         } catch {
             print("Failed to stream IMU data: \(error)")
         }
@@ -52,7 +192,12 @@ class NetworkManager: ObservableObject {
     func stream(gpsData: GPSData) {
         do {
             print("📤 Sending GPS: (\(gpsData.latitude), \(gpsData.longitude)), accuracy: ±\(gpsData.horizontalAccuracy)m")
-            try webSocketService.send(json: gpsData)
+            if let adapter = adapter {
+                try adapter.send(json: gpsData)
+            } else {
+                // Legacy path
+                try webSocketService.send(json: gpsData)
+            }
         } catch {
             print("❌ Failed to stream GPS data: \(error)")
         }
@@ -61,7 +206,12 @@ class NetworkManager: ObservableObject {
     /// Stream pose data
     func stream(poseData: PoseData) {
         do {
-            try webSocketService.send(json: poseData)
+            if let adapter = adapter {
+                try adapter.send(json: poseData)
+            } else {
+                // Legacy path
+                try webSocketService.send(json: poseData)
+            }
         } catch {
             print("Failed to stream pose data: \(error)")
         }
@@ -78,7 +228,13 @@ class NetworkManager: ObservableObject {
             let encoded = message.encode()
 
             print("📤 Sending camera frame: \(cameraFrame.data.count) bytes, encoded: \(encoded.count) bytes")
-            webSocketService.send(data: encoded, asText: false)
+            
+            if let adapter = adapter {
+                try adapter.send(data: encoded)
+            } else {
+                // Legacy path
+                webSocketService.send(data: encoded, asText: false)
+            }
         } catch {
             print("❌ Failed to stream camera frame: \(error)")
         }
@@ -95,7 +251,12 @@ class NetworkManager: ObservableObject {
             let message = BinaryMessage(header: header, data: plyData)
             let encoded = message.encode()
 
-            webSocketService.send(data: encoded, asText: false)
+            if let adapter = adapter {
+                try adapter.send(data: encoded)
+            } else {
+                // Legacy path
+                webSocketService.send(data: encoded, asText: false)
+            }
         } catch {
             print("Failed to stream depth frame: \(error)")
         }
@@ -106,7 +267,12 @@ class NetworkManager: ObservableObject {
         let config = ModeConfigMessage(mode: mode, timestamp: TimestampManager.shared.now())
 
         do {
-            try webSocketService.send(json: config)
+            if let adapter = adapter {
+                try adapter.send(json: config)
+            } else {
+                // Legacy path
+                try webSocketService.send(json: config)
+            }
         } catch {
             print("Failed to send mode config: \(error)")
         }
@@ -122,7 +288,12 @@ class NetworkManager: ObservableObject {
         )
 
         do {
-            try webSocketService.send(json: statusMsg)
+            if let adapter = adapter {
+                try adapter.send(json: statusMsg)
+            } else {
+                // Legacy path
+                try webSocketService.send(json: statusMsg)
+            }
         } catch {
             print("Failed to send status: \(error)")
         }
@@ -137,7 +308,12 @@ class NetworkManager: ObservableObject {
         )
 
         do {
-            try webSocketService.send(json: errorMsg)
+            if let adapter = adapter {
+                try adapter.send(json: errorMsg)
+            } else {
+                // Legacy path
+                try webSocketService.send(json: errorMsg)
+            }
         } catch {
             print("Failed to send error: \(error)")
         }
@@ -146,11 +322,21 @@ class NetworkManager: ObservableObject {
     // MARK: - Statistics
 
     func updateStatistics() {
-        statistics = webSocketService.getStatistics()
+        if let adapter = adapter {
+            statistics = adapter.getStatistics()
+        } else {
+            // Legacy path
+            statistics = webSocketService.getStatistics()
+        }
     }
 
     func resetStatistics() {
-        webSocketService.resetStatistics()
+        if let adapter = adapter {
+            adapter.resetStatistics()
+        } else {
+            // Legacy path
+            webSocketService.resetStatistics()
+        }
         updateStatistics()
     }
 }
