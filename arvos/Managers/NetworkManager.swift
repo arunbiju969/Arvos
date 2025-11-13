@@ -20,6 +20,7 @@ class NetworkManager: ObservableObject {
         case quic = "QUIC/HTTP3"
         case mcapStream = "MCAP Stream"
         case http = "HTTP/REST"
+        case ble = "Bluetooth LE"
         
         var id: String { self.rawValue }
         
@@ -29,8 +30,9 @@ class NetworkManager: ObservableObject {
             case .grpc: return 50051
             case .mqtt: return 1883
             case .quic: return 4433
-            case .mcapStream: return 9090  // Uses WebSocket underneath
+            case .mcapStream: return 17500
             case .http: return 8080
+            case .ble: return 0
             }
         }
         
@@ -48,6 +50,8 @@ class NetworkManager: ObservableObject {
                 return "MCAP Stream - Robotics research"
             case .http:
                 return "HTTP/REST - Simple integration"
+            case .ble:
+                return "Bluetooth LE - Low bandwidth, cable-free"
             }
         }
     }
@@ -58,7 +62,7 @@ class NetworkManager: ObservableObject {
 
     // Protocol adapter (abstraction layer)
     private var adapter: StreamingProtocol?
-    
+
     // Legacy WebSocket service (for backward compatibility)
     private let webSocketService = WebSocketService()
     private var cancellables = Set<AnyCancellable>()
@@ -71,8 +75,29 @@ class NetworkManager: ObservableObject {
 
     /// Connect using currently selected protocol
     func connect(host: String, port: Int? = nil) {
-        let actualPort = port ?? selectedProtocol.defaultPort
-        let config = ConnectionConfig(host: host, port: actualPort)
+        let config: ConnectionConfig
+        switch selectedProtocol {
+        case .http:
+            let actualPort = port ?? selectedProtocol.defaultPort
+            config = ConnectionConfig.http(host: host, port: actualPort)
+        case .ble:
+            config = ConnectionConfig.ble(deviceName: host)
+        case .websocket:
+            let actualPort = port ?? selectedProtocol.defaultPort
+            config = ConnectionConfig.websocket(host: host, port: actualPort)
+        case .grpc:
+            let actualPort = port ?? selectedProtocol.defaultPort
+            config = ConnectionConfig.grpc(host: host, port: actualPort)
+        case .mqtt:
+            let actualPort = port ?? selectedProtocol.defaultPort
+            config = ConnectionConfig.mqtt(host: host, port: actualPort)
+        case .quic:
+            let actualPort = port ?? selectedProtocol.defaultPort
+            config = ConnectionConfig.quic(host: host, port: actualPort)
+        case .mcapStream:
+            let actualPort = port ?? selectedProtocol.defaultPort
+            config = ConnectionConfig(host: host, port: actualPort)
+        }
         connect(protocolType: selectedProtocol, config: config)
     }
     
@@ -83,11 +108,30 @@ class NetworkManager: ObservableObject {
         // Create appropriate adapter
         adapter = createAdapter(for: protocolType)
         
-        // Connect using adapter
+        guard let adapter = adapter else {
+            if protocolType == .websocket {
+                print("ℹ️ Falling back to legacy WebSocketService for WebSocket connections")
+                connectWebSocket(host: config.host, port: config.port)
+            } else {
+                print("❌ \(protocolType.rawValue) adapter not yet implemented")
+                DispatchQueue.main.async {
+                    self.connectionState = .error
+                }
+            }
+            return
+        }
+        
+        DispatchQueue.main.async {
+            self.connectionState = .connecting
+        }
+        
         Task {
             do {
-                try await adapter?.connect(config: config)
+                try await adapter.connect(config: config)
                 print("✅ Connected using \(protocolType.rawValue)")
+                DispatchQueue.main.async {
+                    self.connectionState = .connected
+                }
             } catch {
                 print("❌ Failed to connect using \(protocolType.rawValue): \(error)")
                 DispatchQueue.main.async {
@@ -133,25 +177,32 @@ class NetworkManager: ObservableObject {
             return createMCAPStreamAdapter()
         case .http:
             return createHTTPAdapter()
+        case .ble:
+            return createBLEAdapter()
         }
     }
     
     private func createWebSocketAdapter() -> StreamingProtocol? {
-        // Will be implemented with WebSocketAdapter
-        print("⚠️ WebSocketAdapter not yet implemented, using legacy WebSocketService")
-        return nil
+        let adapter = WebSocketAdapter(service: webSocketService)
+        adapter.delegate = self
+        return adapter
     }
     
     private func createGRPCAdapter() -> StreamingProtocol? {
-        // Will be implemented in Phase 3
-        print("⚠️ GRPCAdapter not yet implemented")
-        return nil
+        if #available(iOS 18.0, *) {
+            let adapter = GRPCAdapter()
+            adapter.delegate = self
+            return adapter
+        } else {
+            print("⚠️ gRPC requires iOS 18+")
+            return nil
+        }
     }
     
     private func createMQTTAdapter() -> StreamingProtocol? {
-        // Will be implemented in Phase 4
-        print("⚠️ MQTTAdapter not yet implemented")
-        return nil
+        let adapter = MQTTAdapter()
+        adapter.delegate = self
+        return adapter
     }
     
     private func createQUICAdapter() -> StreamingProtocol? {
@@ -161,15 +212,21 @@ class NetworkManager: ObservableObject {
     }
     
     private func createMCAPStreamAdapter() -> StreamingProtocol? {
-        // Will be implemented in Phase 5
-        print("⚠️ MCAPStreamAdapter not yet implemented")
-        return nil
+        let adapter = MCAPAdapter()
+        adapter.delegate = self
+        return adapter
     }
     
     private func createHTTPAdapter() -> StreamingProtocol? {
-        // Will be implemented in Phase 6
-        print("⚠️ HTTPAdapter not yet implemented")
-        return nil
+        let adapter = HTTPAdapter()
+        adapter.delegate = self
+        return adapter
+    }
+
+    private func createBLEAdapter() -> StreamingProtocol? {
+        let adapter = BLEAdapter()
+        adapter.delegate = self
+        return adapter
     }
 
     // MARK: - Streaming
@@ -330,13 +387,13 @@ class NetworkManager: ObservableObject {
             statistics = StreamingProtocolStatistics(networkStats: legacyStats, protocolName: ProtocolType.websocket.rawValue)
         }
     }
-    
+
     func resetStatistics() {
         if let adapter = adapter {
             adapter.resetStatistics()
         } else {
             // Legacy path
-            webSocketService.resetStatistics()
+        webSocketService.resetStatistics()
             let legacyStats = webSocketService.getStatistics()
             statistics = StreamingProtocolStatistics(networkStats: legacyStats, protocolName: ProtocolType.websocket.rawValue)
             return
@@ -409,4 +466,26 @@ extension Notification.Name {
     static let startRecording = Notification.Name("startRecording")
     static let stopRecording = Notification.Name("stopRecording")
     static let changeMode = Notification.Name("changeMode")
+}
+
+// MARK: - StreamingProtocolDelegate
+
+extension NetworkManager: StreamingProtocolDelegate {
+    func streamingProtocol(_ adapter: StreamingProtocol, didChangeState state: ConnectionState) {
+        DispatchQueue.main.async {
+            self.connectionState = state
+        }
+    }
+
+    func streamingProtocol(_ adapter: StreamingProtocol, didReceiveMessage message: String) {
+        print("[\(adapter.protocolName)] message: \(message)")
+    }
+
+    func streamingProtocol(_ adapter: StreamingProtocol, didEncounterError error: Error) {
+        print("[\(adapter.protocolName)] error: \(error)")
+        DispatchQueue.main.async {
+            self.connectionState = .error
+        }
+        sendError("\(adapter.protocolName.lowercased())_error", details: error.localizedDescription)
+    }
 }
