@@ -14,18 +14,32 @@ struct ConnectionSheet: View {
     var body: some View {
         NavigationView {
             Form {
+                Section("PROTOCOL") {
+                    Picker("Protocol", selection: $viewModel.selectedProtocol) {
+                        ForEach(NetworkManager.ProtocolType.allCases) { protocolType in
+                            Text(protocolType.rawValue).tag(protocolType)
+                        }
+                    }
+
+                    Text(viewModel.selectedProtocol.description)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 4)
+                }
+
                 Section {
                     HStack {
                         Image(systemName: "network")
                             .foregroundColor(.primary)
                             .frame(width: 30)
 
-                        TextField("Host (e.g., 192.168.1.100)", text: $viewModel.connectionHost)
+                        TextField(viewModel.selectedProtocol == .ble ? "Peripheral Name" : "Host (e.g., 192.168.1.100)", text: $viewModel.connectionHost)
                             .textContentType(.URL)
                             .keyboardType(.URL)
                             .autocapitalization(.none)
                     }
 
+                    if viewModel.selectedProtocol != .ble {
                     HStack {
                         Image(systemName: "number")
                             .foregroundColor(.primary)
@@ -33,11 +47,12 @@ struct ConnectionSheet: View {
 
                         TextField("Port", text: $viewModel.connectionPort)
                             .keyboardType(.numberPad)
+                        }
                     }
                 } header: {
                     Text("SERVER DETAILS")
                 } footer: {
-                    Text("Enter the IP address and port of your server")
+                    Text(viewModel.selectedProtocol == .ble ? "Enter the advertised Bluetooth name (defaults to your device name)." : "Enter the IP address and port of your server")
                 }
 
                 Section {
@@ -63,37 +78,6 @@ struct ConnectionSheet: View {
                     Text("QUICK SETUP")
                 } footer: {
                     Text("Scan QR code from your server")
-                }
-
-                Section {
-                    NavigationLink {
-                        AccessPointModeView()
-                    } label: {
-                        HStack(alignment: .top, spacing: 12) {
-                            Image(systemName: "wifi.router")
-                                .foregroundColor(.blue)
-                                .font(.title3)
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Direct Wi-Fi")
-                                    .font(.system(.body).weight(.semibold))
-                                Text("Use iPhone Personal Hotspot for lowest latency streaming")
-                                    .font(.footnote)
-                                    .foregroundColor(.secondary)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                    }
-                } header: {
-                    Text("DIRECT CONNECTION")
-                } footer: {
-                    Text("Best for demos or field work when no Wi-Fi network is available.")
                 }
 
                 // Connection Status & Diagnostics
@@ -127,7 +111,7 @@ struct ConnectionSheet: View {
                             Spacer()
                         }
                     }
-                    .disabled(viewModel.connectionHost.isEmpty)
+                    .disabled(!viewModel.canAttemptConnection)
                 }
 
                 // Troubleshooting Tips

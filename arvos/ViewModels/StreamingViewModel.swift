@@ -8,6 +8,9 @@
 import Foundation
 import Combine
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 class StreamingViewModel: ObservableObject {
     // Managers
@@ -21,6 +24,13 @@ class StreamingViewModel: ObservableObject {
     @Published var isConnected = false
     @Published var connectionHost = ""
     @Published var connectionPort = "9090"
+    @Published var selectedProtocol: NetworkManager.ProtocolType = .websocket {
+        didSet {
+            guard oldValue != selectedProtocol else { return }
+            networkManager.selectedProtocol = selectedProtocol
+            applyDefaultsForProtocolChange(from: oldValue)
+        }
+    }
 
     @Published var currentFPS: Double = 0
     @Published var sensorStatuses: SensorStatuses = SensorStatuses()
@@ -38,6 +48,8 @@ class StreamingViewModel: ObservableObject {
 
     init() {
         setupBindings()
+        selectedProtocol = networkManager.selectedProtocol
+        applyDefaultsForProtocolChange(from: nil)
         startUpdateTimer()
     }
 
@@ -103,7 +115,8 @@ class StreamingViewModel: ObservableObject {
     }
 
     func startStreaming() {
-        guard !connectionHost.isEmpty else {
+        let requiresHost = selectedProtocol != .ble
+        if requiresHost && connectionHost.isEmpty {
             showingConnectionSheet = true
             return
         }
@@ -122,8 +135,16 @@ class StreamingViewModel: ObservableObject {
     }
 
     func connectToServer() {
-        guard !connectionHost.isEmpty, let port = Int(connectionPort) else { return }
+        switch selectedProtocol {
+        case .ble:
+            let name = connectionHost.isEmpty ? UIDevice.current.name : connectionHost
+            let config = ConnectionConfig.ble(deviceName: name)
+            networkManager.connect(protocolType: .ble, config: config)
+        default:
+            guard !connectionHost.isEmpty else { return }
+            let port = Int(connectionPort) ?? selectedProtocol.defaultPort
         networkManager.connect(host: connectionHost, port: port)
+        }
     }
 
     func disconnect() {
@@ -138,6 +159,28 @@ class StreamingViewModel: ObservableObject {
             connectionHost = host
             connectionPort = String(port)
             connectToServer()
+        }
+    }
+
+    var canAttemptConnection: Bool {
+        if selectedProtocol == .ble {
+            return true
+        }
+        return !connectionHost.isEmpty
+    }
+
+    private func applyDefaultsForProtocolChange(from oldValue: NetworkManager.ProtocolType?) {
+        switch selectedProtocol {
+        case .ble:
+            if connectionHost.isEmpty {
+                connectionHost = UIDevice.current.name
+            }
+            connectionPort = ""
+        default:
+            let defaultPort = "\(selectedProtocol.defaultPort)"
+            if connectionPort.isEmpty || oldValue == nil || connectionPort == "\(oldValue?.defaultPort ?? 0)" {
+                connectionPort = defaultPort
+            }
         }
     }
 

@@ -55,8 +55,70 @@ python examples/01_quickstart.py
 ### Connect iPhone
 1. Open **ARVOS** app
 2. Tap **"CONNECT TO SERVER"**
-3. Scan QR code (or enter IP manually)
-4. Tap **"START"** to stream
+3. Select your preferred protocol (see below)
+4. Scan QR code (or enter IP manually)
+5. Tap **"START"** to stream
+
+---
+
+## 🌐 Supported Streaming Protocols
+
+ARVOS supports **7 streaming protocols** to fit different use cases:
+
+| Protocol | Best For | Default Port | iOS Version | Status |
+|----------|----------|--------------|-------------|--------|
+| **WebSocket** | General purpose, default | 9090 | iOS 16+ | ✅ Complete |
+| **gRPC** | High performance, research | 50051 | iOS 18+ | ✅ Complete |
+| **MQTT** | IoT, multi-subscriber | 1883 | iOS 16+ | ✅ Complete |
+| **HTTP/REST** | Simple integration, webhooks | 8080 | iOS 16+ | ✅ Complete |
+| **Bluetooth LE** | Low bandwidth, cable-free | N/A | iOS 16+ | ✅ Complete |
+| **MCAP Stream** | Robotics research, Foxglove | 17500 | iOS 16+ | ✅ Complete |
+| **QUIC/HTTP3** | Ultra-low latency | 4433 | iOS 16+ | 🚧 Coming Soon |
+
+### Protocol Selection Guide
+
+**WebSocket** (Default)
+- ✅ Works everywhere
+- ✅ Bidirectional communication
+- ✅ Good for most use cases
+- Best for: General purpose streaming
+
+**gRPC**
+- ✅ Industry standard for research
+- ✅ Protocol Buffers (efficient)
+- ✅ Bidirectional streaming
+- ⚠️ Requires iOS 18+
+- Best for: High-performance research applications
+
+**MQTT**
+- ✅ Multi-subscriber support
+- ✅ IoT-friendly
+- ✅ Requires MQTT broker (Mosquitto)
+- Best for: IoT deployments, multiple receivers
+
+**HTTP/REST**
+- ✅ Simple POST requests
+- ✅ Easy webhook integration
+- ✅ Works with any HTTP client
+- Best for: Web integrations, simple scripts
+
+**Bluetooth LE**
+- ✅ No Wi-Fi needed
+- ✅ Low power
+- ⚠️ Low bandwidth (telemetry only, no video)
+- Best for: Cable-free telemetry, low-power scenarios
+
+**MCAP Stream**
+- ✅ Robotics standard format
+- ✅ Foxglove Studio compatible
+- ✅ Streaming MCAP files
+- Best for: Robotics research, Foxglove visualization
+
+**QUIC/HTTP3** (Coming Soon)
+- ✅ Ultra-low latency
+- ✅ Better performance on unstable networks
+- ✅ Built-in encryption
+- Best for: Real-time applications, mobile networks
 
 ---
 
@@ -84,6 +146,7 @@ python examples/01_quickstart.py
 
 ## 📦 Features
 
+- ✅ **7 Streaming Protocols** - WebSocket, gRPC, MQTT, HTTP, BLE, MCAP, QUIC/HTTP3
 - ✅ **7 Streaming Modes** - RGBD, Visual-Inertial, LiDAR, Full Sensor, etc.
 - ✅ **Research Metadata** - Depth confidence, IMU calibration, pose quality
 - ✅ **Local Recording** - MCAP format with H.264 video
@@ -98,13 +161,13 @@ python examples/01_quickstart.py
 
 **iPhone:**
 - iPhone 12 Pro or newer (for LiDAR)
-- iOS 17.0+
-- Same WiFi network as computer
+- iOS 16.0+ (iOS 18+ for gRPC)
+- Same WiFi network as computer (or Bluetooth for BLE)
 
 **Computer:**
 - Any OS with Python 3.8+ or modern browser
-- Same WiFi network as iPhone
-- Firewall allows port 8765
+- Same WiFi network as iPhone (for Wi-Fi protocols)
+- Firewall allows selected protocol port
 
 **Apple Watch (optional):**
 - Apple Watch Series 6 or newer (watchOS 9.0+)
@@ -146,6 +209,48 @@ Augment iPhone data with wearable motion sensing—perfect for robotics operator
 
 ---
 
+## 🔧 Protocol Setup Guides
+
+### WebSocket (Default)
+No setup required - works out of the box!
+
+### gRPC
+1. Run Python server: `python examples/grpc_stream_server.py`
+2. In iOS app, select "gRPC" protocol
+3. Enter server IP and port 50051
+4. Connect!
+
+### MQTT
+1. Install and start Mosquitto broker:
+   ```bash
+   brew install mosquitto
+   mosquitto -c mosquitto.conf
+   ```
+2. Run Python server: `python examples/mqtt_stream_server.py`
+3. In iOS app, select "MQTT" protocol
+4. Enter broker IP and port 1883
+5. Connect!
+
+### HTTP/REST
+1. Run Python server: `python examples/http_stream_server.py`
+2. In iOS app, select "HTTP/REST" protocol
+3. Enter server IP and port 8080
+4. Connect!
+
+### Bluetooth LE
+1. Run Python receiver: `python examples/ble_receiver.py`
+2. In iOS app, select "Bluetooth LE" protocol
+3. The app will automatically advertise
+4. Python script will discover and connect
+
+### MCAP Stream
+1. Run Python server: `python examples/mcap_stream_server.py`
+2. In iOS app, select "MCAP Stream" protocol
+3. Enter server IP and port 17500
+4. Connect and stream to MCAP file!
+
+---
+
 ## 🤝 Contributing
 
 Found a bug? Have a feature request? [Open an issue!](https://github.com/jaskirat1616/arvos/issues)
@@ -159,20 +264,6 @@ MIT License - Use freely in your research and projects
 ---
 
 **Made for the robotics and AR research community** ❤️
-
-Examples:
-- `basic_server.py` - Simple data receiver
-- `camera_viewer.py` - Live video display
-- `point_cloud_viewer.py` - 3D visualization
-- `ros2_bridge.py` - ROS 2 integration
-- `save_to_csv.py` - Data export
-
-## Data Format
-
-WebSocket on port 9090 (default):
-- JSON messages: IMU, GPS, Pose
-- Binary messages: Camera (JPEG), Depth (PLY)
-- Timestamps in nanoseconds
 
 ## Build
 

@@ -7,6 +7,9 @@
 
 import Foundation
 import Combine
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Connection Configuration
 
@@ -32,10 +35,19 @@ struct ConnectionConfig {
         return ConnectionConfig(host: host, port: port, useTLS: useTLS)
     }
     
-    static func mqtt(host: String, port: Int = 1883, brokerURL: String? = nil) -> ConnectionConfig {
+    static func mqtt(host: String, port: Int = 1883, brokerURL: String? = nil, clientId: String? = nil, topicTelemetry: String? = nil, topicBinary: String? = nil) -> ConnectionConfig {
         var params: [String: Any] = [:]
         if let broker = brokerURL {
             params["brokerURL"] = broker
+        }
+        if let clientId {
+            params["clientId"] = clientId
+        }
+        if let topicTelemetry {
+            params["topicTelemetry"] = topicTelemetry
+        }
+        if let topicBinary {
+            params["topicBinary"] = topicBinary
         }
         return ConnectionConfig(host: host, port: port, additionalParams: params)
     }
@@ -46,6 +58,20 @@ struct ConnectionConfig {
     
     static func quic(host: String, port: Int = 4433, useTLS: Bool = true) -> ConnectionConfig {
         return ConnectionConfig(host: host, port: port, useTLS: useTLS)
+    }
+    
+    static func mcap(host: String, port: Int = 17500) -> ConnectionConfig {
+        return ConnectionConfig(host: host, port: port)
+    }
+    
+    static func ble(deviceName: String? = nil) -> ConnectionConfig {
+        #if canImport(UIKit)
+        let fallback = UIDevice.current.name
+        #else
+        let fallback = "ARVOS BLE Device"
+        #endif
+        let name = (deviceName?.isEmpty == false) ? deviceName! : fallback
+        return ConnectionConfig(host: name, port: 0, additionalParams: ["deviceName": name])
     }
 }
 

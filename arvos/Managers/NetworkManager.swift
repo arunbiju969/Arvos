@@ -206,9 +206,14 @@ class NetworkManager: ObservableObject {
     }
     
     private func createQUICAdapter() -> StreamingProtocol? {
-        // Will be implemented in Phase 7
-        print("⚠️ QUICAdapter not yet implemented")
-        return nil
+        if #available(iOS 15.0, *) {
+            let adapter = QUICAdapter()
+            adapter.delegate = self
+            return adapter
+        } else {
+            print("⚠️ QUIC/HTTP3 requires iOS 15+")
+            return nil
+        }
     }
     
     private func createMCAPStreamAdapter() -> StreamingProtocol? {
