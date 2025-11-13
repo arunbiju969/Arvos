@@ -2,81 +2,96 @@
 //  WebSocketAdapter.swift
 //  arvos
 //
-//  Adapter that bridges the legacy WebSocketService into the
-//  new StreamingProtocol abstraction so the connection pipeline
-//  works for both existing and future transports.
+//  WebSocket adapter conforming to StreamingProtocol
 //
 
 import Foundation
 
-final class WebSocketAdapter: StreamingProtocol {
+final class WebSocketAdapter: NSObject, StreamingProtocol {
     weak var delegate: StreamingProtocolDelegate?
-
+    
     private let service: WebSocketService
-    private let protocolDisplayName = "WebSocket"
-
+    private(set) var state: ConnectionState = .disconnected {
+        didSet {
+            if oldValue != state {
+                delegate?.streamingProtocol(self, didChangeState: state)
+            }
+        }
+    }
+    
+    var protocolName: String { "WebSocket" }
+    
     init(service: WebSocketService) {
         self.service = service
+        super.init()
+        service.delegate = self
     }
-
-    var state: ConnectionState {
-        return service.state
-    }
-
-    var protocolName: String {
-        return protocolDisplayName
-    }
-
+    
     func connect(config: ConnectionConfig) async throws {
-        guard let url = makeURL(from: config) else {
-            throw StreamingProtocolError.invalidConfiguration("Invalid host/port: \(config.host):\(config.port)")
+        guard let url = URL(string: config.useTLS ? "wss://\(config.host):\(config.port)" : "ws://\(config.host):\(config.port)") else {
+            throw StreamingProtocolError.connectionFailed("Invalid URL")
         }
-
-        await MainActor.run {
-            service.connect(to: url)
-            service.startHeartbeat()
+        
+        state = .connecting
+        service.connect(to: url)
+        service.startHeartbeat()
+        
+        // Wait for connection
+        while state == .connecting {
+            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            if state == .connected {
+                return
+            }
+            if state == .error {
+                throw StreamingProtocolError.connectionFailed("Connection failed")
+            }
         }
     }
-
+    
     func disconnect() {
         service.disconnect()
+        state = .disconnected
     }
-
+    
     func send<T: Encodable>(json object: T) throws {
-        do {
-            try service.send(json: object)
-        } catch {
-            throw StreamingProtocolError.sendFailed(error.localizedDescription)
+        guard state == .connected else {
+            throw StreamingProtocolError.notConnected
         }
+        try service.send(json: object)
     }
-
+    
     func send(data: Data) throws {
+        guard state == .connected else {
+            throw StreamingProtocolError.notConnected
+        }
         service.send(data: data, asText: false)
     }
-
+    
     func getStatistics() -> StreamingProtocolStatistics {
         let stats = service.getStatistics()
-        return StreamingProtocolStatistics(networkStats: stats, protocolName: protocolDisplayName)
+        return StreamingProtocolStatistics(networkStats: stats, protocolName: protocolName)
     }
-
+    
     func resetStatistics() {
         service.resetStatistics()
     }
-
+    
     static func isAvailable() -> Bool {
         return true
     }
-
-    // MARK: - Helpers
-
-    private func makeURL(from config: ConnectionConfig) -> URL? {
-        var components = URLComponents()
-        components.scheme = config.useTLS ? "wss" : "ws"
-        components.host = config.host
-        components.port = config.port
-
-        return components.url
-    }
 }
 
+extension WebSocketAdapter: WebSocketServiceDelegate {
+    func webSocketService(_ service: WebSocketService, didChangeState state: ConnectionState) {
+        self.state = state
+    }
+    
+    func webSocketService(_ service: WebSocketService, didReceiveMessage message: String) {
+        delegate?.streamingProtocol(self, didReceiveMessage: message)
+    }
+    
+    func webSocketService(_ service: WebSocketService, didEncounterError error: Error) {
+        delegate?.streamingProtocol(self, didEncounterError: error)
+    }
+}
 

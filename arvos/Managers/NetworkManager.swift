@@ -190,7 +190,7 @@ class NetworkManager: ObservableObject {
     
     private func createGRPCAdapter() -> StreamingProtocol? {
         if #available(iOS 18.0, *) {
-            let adapter = GRPCAdapter()
+            let adapter: StreamingProtocol = GRPCAdapter()
             adapter.delegate = self
             return adapter
         } else {
@@ -207,7 +207,7 @@ class NetworkManager: ObservableObject {
     
     private func createQUICAdapter() -> StreamingProtocol? {
         if #available(iOS 15.0, *) {
-            let adapter = QUICAdapter()
+            let adapter: StreamingProtocol = QUICAdapter()
             adapter.delegate = self
             return adapter
         } else {

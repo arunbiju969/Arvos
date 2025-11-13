@@ -2,80 +2,84 @@
 //  StreamingProtocol.swift
 //  arvos
 //
-//  Protocol abstraction layer for multiple streaming methods
+//  Protocol abstraction layer for all streaming protocols
 //
 
 import Foundation
-import Combine
-#if canImport(UIKit)
-import UIKit
-#endif
+
+// MARK: - Streaming Protocol Interface
+
+protocol StreamingProtocol: AnyObject {
+    var protocolName: String { get }
+    var delegate: StreamingProtocolDelegate? { get set }
+    
+    func connect(config: ConnectionConfig) async throws
+    func disconnect()
+    func send<T: Encodable>(json object: T) throws
+    func send(data: Data) throws
+    func getStatistics() -> StreamingProtocolStatistics
+    func resetStatistics()
+    
+    static func isAvailable() -> Bool
+}
+
+// MARK: - Protocol Delegate
+
+protocol StreamingProtocolDelegate: AnyObject {
+    func streamingProtocol(_ adapter: StreamingProtocol, didChangeState state: ConnectionState)
+    func streamingProtocol(_ adapter: StreamingProtocol, didReceiveMessage message: String)
+    func streamingProtocol(_ adapter: StreamingProtocol, didEncounterError error: Error)
+}
 
 // MARK: - Connection Configuration
 
 struct ConnectionConfig {
-    var host: String
-    var port: Int
-    var useTLS: Bool = false
-    var additionalParams: [String: Any] = [:]
+    let host: String
+    let port: Int
+    let useTLS: Bool
     
-    init(host: String, port: Int, useTLS: Bool = false, additionalParams: [String: Any] = [:]) {
+    // Protocol-specific parameters
+    let deviceName: String? // For BLE
+    let clientId: String? // For MQTT
+    let topicTelemetry: String? // For MQTT
+    let topicBinary: String? // For MQTT
+    
+    init(host: String, port: Int, useTLS: Bool = false, deviceName: String? = nil, clientId: String? = nil, topicTelemetry: String? = nil, topicBinary: String? = nil) {
         self.host = host
         self.port = port
         self.useTLS = useTLS
-        self.additionalParams = additionalParams
+        self.deviceName = deviceName
+        self.clientId = clientId
+        self.topicTelemetry = topicTelemetry
+        self.topicBinary = topicBinary
     }
     
-    // Convenience initializers for specific protocols
-    static func websocket(host: String, port: Int = 9090) -> ConnectionConfig {
-        return ConnectionConfig(host: host, port: port)
-    }
-    
-    static func grpc(host: String, port: Int = 50051, useTLS: Bool = false) -> ConnectionConfig {
+    static func websocket(host: String, port: Int = 9090, useTLS: Bool = false) -> ConnectionConfig {
         return ConnectionConfig(host: host, port: port, useTLS: useTLS)
-    }
-    
-    static func mqtt(host: String, port: Int = 1883, brokerURL: String? = nil, clientId: String? = nil, topicTelemetry: String? = nil, topicBinary: String? = nil) -> ConnectionConfig {
-        var params: [String: Any] = [:]
-        if let broker = brokerURL {
-            params["brokerURL"] = broker
-        }
-        if let clientId {
-            params["clientId"] = clientId
-        }
-        if let topicTelemetry {
-            params["topicTelemetry"] = topicTelemetry
-        }
-        if let topicBinary {
-            params["topicBinary"] = topicBinary
-        }
-        return ConnectionConfig(host: host, port: port, additionalParams: params)
     }
     
     static func http(host: String, port: Int = 8080, useTLS: Bool = false) -> ConnectionConfig {
         return ConnectionConfig(host: host, port: port, useTLS: useTLS)
     }
     
+    static func grpc(host: String, port: Int = 50051, useTLS: Bool = false) -> ConnectionConfig {
+        return ConnectionConfig(host: host, port: port, useTLS: useTLS)
+    }
+    
+    static func mqtt(host: String, port: Int = 1883, useTLS: Bool = false, clientId: String? = nil, topicTelemetry: String? = nil, topicBinary: String? = nil) -> ConnectionConfig {
+        return ConnectionConfig(host: host, port: port, useTLS: useTLS, clientId: clientId, topicTelemetry: topicTelemetry, topicBinary: topicBinary)
+    }
+    
     static func quic(host: String, port: Int = 4433, useTLS: Bool = true) -> ConnectionConfig {
         return ConnectionConfig(host: host, port: port, useTLS: useTLS)
     }
     
-    static func mcap(host: String, port: Int = 17500) -> ConnectionConfig {
-        return ConnectionConfig(host: host, port: port)
-    }
-    
-    static func ble(deviceName: String? = nil) -> ConnectionConfig {
-        #if canImport(UIKit)
-        let fallback = UIDevice.current.name
-        #else
-        let fallback = "ARVOS BLE Device"
-        #endif
-        let name = (deviceName?.isEmpty == false) ? deviceName! : fallback
-        return ConnectionConfig(host: name, port: 0, additionalParams: ["deviceName": name])
+    static func ble(deviceName: String) -> ConnectionConfig {
+        return ConnectionConfig(host: deviceName, port: 0, useTLS: false, deviceName: deviceName)
     }
 }
 
-// MARK: - Streaming Protocol Statistics
+// MARK: - Protocol Statistics
 
 struct StreamingProtocolStatistics {
     let state: ConnectionState
@@ -85,12 +89,7 @@ struct StreamingProtocolStatistics {
     let reconnectAttempts: Int
     let protocolName: String
     
-    init(state: ConnectionState,
-         bytesSent: Int64,
-         messagesSent: Int64,
-         queuedMessages: Int,
-         reconnectAttempts: Int,
-         protocolName: String) {
+    init(state: ConnectionState, bytesSent: Int64, messagesSent: Int64, queuedMessages: Int, reconnectAttempts: Int, protocolName: String) {
         self.state = state
         self.bytesSent = bytesSent
         self.messagesSent = messagesSent
@@ -99,13 +98,14 @@ struct StreamingProtocolStatistics {
         self.protocolName = protocolName
     }
     
+    // Convenience initializer for converting from NetworkStatistics
     init(networkStats: NetworkStatistics, protocolName: String) {
-        self.init(state: networkStats.state,
-                  bytesSent: networkStats.bytesSent,
-                  messagesSent: networkStats.messagesSent,
-                  queuedMessages: networkStats.queuedMessages,
-                  reconnectAttempts: networkStats.reconnectAttempts,
-                  protocolName: protocolName)
+        self.state = networkStats.state
+        self.bytesSent = networkStats.bytesSent
+        self.messagesSent = networkStats.messagesSent
+        self.queuedMessages = networkStats.queuedMessages
+        self.reconnectAttempts = networkStats.reconnectAttempts
+        self.protocolName = protocolName
     }
     
     var bandwidth: String {
@@ -119,80 +119,24 @@ struct StreamingProtocolStatistics {
     }
 }
 
-// MARK: - Streaming Protocol Delegate
-
-protocol StreamingProtocolDelegate: AnyObject {
-    func streamingProtocol(_ protocol: StreamingProtocol, didChangeState state: ConnectionState)
-    func streamingProtocol(_ protocol: StreamingProtocol, didReceiveMessage message: String)
-    func streamingProtocol(_ protocol: StreamingProtocol, didEncounterError error: Error)
-}
-
-// MARK: - Streaming Protocol
-
-protocol StreamingProtocol: AnyObject {
-    /// Delegate for handling protocol events
-    var delegate: StreamingProtocolDelegate? { get set }
-    
-    /// Current connection state
-    var state: ConnectionState { get }
-    
-    /// Protocol name (for display/logging)
-    var protocolName: String { get }
-    
-    /// Connect to remote endpoint
-    func connect(config: ConnectionConfig) async throws
-    
-    /// Disconnect from remote endpoint
-    func disconnect()
-    
-    /// Send JSON-encoded message
-    func send<T: Encodable>(json object: T) throws
-    
-    /// Send raw binary data
-    func send(data: Data) throws
-    
-    /// Get current statistics
-    func getStatistics() -> StreamingProtocolStatistics
-    
-    /// Reset statistics counters
-    func resetStatistics()
-    
-    /// Check if protocol is available on this device
-    static func isAvailable() -> Bool
-}
-
-// MARK: - Default Implementations
-
-extension StreamingProtocol {
-    static func isAvailable() -> Bool {
-        return true // Most protocols available by default
-    }
-}
-
 // MARK: - Protocol Errors
 
 enum StreamingProtocolError: LocalizedError {
     case notConnected
-    case connectionFailed(String)
-    case sendFailed(String)
     case encodingFailed(String)
     case protocolNotSupported
-    case invalidConfiguration(String)
+    case connectionFailed(String)
     
     var errorDescription: String? {
         switch self {
         case .notConnected:
             return "Not connected to server"
-        case .connectionFailed(let reason):
-            return "Connection failed: \(reason)"
-        case .sendFailed(let reason):
-            return "Failed to send message: \(reason)"
         case .encodingFailed(let reason):
-            return "Failed to encode message: \(reason)"
+            return "Encoding failed: \(reason)"
         case .protocolNotSupported:
             return "Protocol not supported on this device"
-        case .invalidConfiguration(let reason):
-            return "Invalid configuration: \(reason)"
+        case .connectionFailed(let reason):
+            return "Connection failed: \(reason)"
         }
     }
 }

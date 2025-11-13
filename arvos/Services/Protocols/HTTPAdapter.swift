@@ -2,7 +2,7 @@
 //  HTTPAdapter.swift
 //  arvos
 //
-//  Implements the StreamingProtocol over simple HTTP POST requests.
+//  HTTP/REST adapter for streaming sensor data
 //
 
 import Foundation
@@ -18,8 +18,7 @@ final class HTTPAdapter: NSObject, StreamingProtocol {
         }
     }
     
-    private let protocolDisplayName = "HTTP"
-    private var session: URLSession?
+    private var urlSession: URLSession?
     private var baseURL: URL?
     
     private var bytesSent: Int64 = 0
@@ -27,88 +26,112 @@ final class HTTPAdapter: NSObject, StreamingProtocol {
     private var queuedMessages: Int = 0
     private var reconnectAttempts: Int = 0
     
-    private let workQueue = DispatchQueue(label: "com.arvos.http-adapter")
+    var protocolName: String { "HTTP/REST" }
     
-    var protocolName: String {
-        protocolDisplayName
+    override init() {
+        super.init()
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 10.0
+        urlSession = URLSession(configuration: configuration)
     }
     
     func connect(config: ConnectionConfig) async throws {
-        guard let baseURL = makeBaseURL(from: config) else {
-            throw StreamingProtocolError.invalidConfiguration("Invalid HTTP base URL for \(config.host):\(config.port)")
+        guard let url = URL(string: config.useTLS ? "https://\(config.host):\(config.port)" : "http://\(config.host):\(config.port)") else {
+            throw StreamingProtocolError.connectionFailed("Invalid URL")
         }
         
-        self.baseURL = baseURL
-        let configuration = URLSessionConfiguration.default
-        configuration.timeoutIntervalForRequest = 10
-        configuration.httpAdditionalHeaders = ["User-Agent": "arvos-ios-http-adapter"]
-        session = URLSession(configuration: configuration)
-        
-        // Perform a quick health check – if it fails we still attempt to operate but surface the error.
         state = .connecting
+        baseURL = url
+        
+        // Test connection with health check
         do {
-            try await performHealthCheck()
-            state = .connected
+            let healthURL = url.appendingPathComponent("/api/health")
+            let (_, response) = try await urlSession!.data(from: healthURL)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                state = .connected
+            } else {
+                state = .error
+                throw StreamingProtocolError.connectionFailed("Health check failed")
+            }
         } catch {
             state = .error
-            delegate?.streamingProtocol(self, didEncounterError: error)
             throw StreamingProtocolError.connectionFailed(error.localizedDescription)
         }
     }
     
     func disconnect() {
-        session?.invalidateAndCancel()
-        session = nil
         state = .disconnected
+        baseURL = nil
     }
     
     func send<T: Encodable>(json object: T) throws {
-        guard state == .connected else {
+        guard state == .connected, let baseURL = baseURL else {
             throw StreamingProtocolError.notConnected
         }
-        guard let session = session, let baseURL = baseURL else {
-            throw StreamingProtocolError.connectionFailed("HTTP session not initialized")
-        }
         
-        let body: Data
-        do {
-            body = try JSONEncoder().encode(object)
-        } catch {
-            throw StreamingProtocolError.encodingFailed(error.localizedDescription)
-        }
+        let data = try JSONEncoder().encode(object)
+        let url = baseURL.appendingPathComponent("/api/telemetry")
         
-        var request = URLRequest(url: baseURL.appendingPathComponent("telemetry"))
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = body
+        request.httpBody = data
         
-        enqueue(request: request, bodySize: body.count, via: session)
+        queuedMessages += 1
+        
+        Task {
+            do {
+                let (_, response) = try await urlSession!.data(for: request)
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                    self.bytesSent += Int64(data.count)
+                    self.messagesSent += 1
+                }
+                self.queuedMessages = max(0, self.queuedMessages - 1)
+            } catch {
+                self.queuedMessages = max(0, self.queuedMessages - 1)
+                self.delegate?.streamingProtocol(self, didEncounterError: error)
+            }
+        }
     }
     
     func send(data: Data) throws {
-        guard state == .connected else {
+        guard state == .connected, let baseURL = baseURL else {
             throw StreamingProtocolError.notConnected
         }
-        guard let session = session, let baseURL = baseURL else {
-            throw StreamingProtocolError.connectionFailed("HTTP session not initialized")
-        }
         
-        var request = URLRequest(url: baseURL.appendingPathComponent("binary"))
+        let url = baseURL.appendingPathComponent("/api/binary")
+        
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
         request.httpBody = data
         
-        enqueue(request: request, bodySize: data.count, via: session)
+        queuedMessages += 1
+        
+        Task {
+            do {
+                let (_, response) = try await urlSession!.data(for: request)
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                    self.bytesSent += Int64(data.count)
+                    self.messagesSent += 1
+                }
+                self.queuedMessages = max(0, self.queuedMessages - 1)
+            } catch {
+                self.queuedMessages = max(0, self.queuedMessages - 1)
+                self.delegate?.streamingProtocol(self, didEncounterError: error)
+            }
+        }
     }
     
     func getStatistics() -> StreamingProtocolStatistics {
-        StreamingProtocolStatistics(
+        return StreamingProtocolStatistics(
             state: state,
             bytesSent: bytesSent,
             messagesSent: messagesSent,
             queuedMessages: queuedMessages,
             reconnectAttempts: reconnectAttempts,
-            protocolName: protocolDisplayName
+            protocolName: protocolName
         )
     }
     
@@ -120,61 +143,7 @@ final class HTTPAdapter: NSObject, StreamingProtocol {
     }
     
     static func isAvailable() -> Bool {
-        true
-    }
-    
-    // MARK: - Helpers
-    
-    private func makeBaseURL(from config: ConnectionConfig) -> URL? {
-        var components = URLComponents()
-        components.scheme = config.useTLS ? "https" : "http"
-        components.host = config.host
-        components.port = config.port
-        components.path = "/api"
-        return components.url
-    }
-    
-    private func performHealthCheck() async throws {
-        guard let session = session, let baseURL = baseURL else {
-            throw StreamingProtocolError.connectionFailed("Session not initialized")
-        }
-        
-        var request = URLRequest(url: baseURL.appendingPathComponent("health"))
-        request.httpMethod = "GET"
-        request.timeoutInterval = 5
-        
-        _ = try await session.data(for: request)
-    }
-    
-    private func enqueue(request: URLRequest, bodySize: Int, via session: URLSession) {
-        workQueue.async { [weak self] in
-            guard let self = self else { return }
-            self.queuedMessages += 1
-            let task = session.dataTask(with: request) { _, response, error in
-                self.workQueue.async {
-                    self.queuedMessages = max(0, self.queuedMessages - 1)
-                    
-                    if let error = error {
-                        self.delegate?.streamingProtocol(self, didEncounterError: error)
-                        return
-                    }
-                    
-                    if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-                        let err = StreamingProtocolError.sendFailed("HTTP \(httpResponse.statusCode)")
-                        self.delegate?.streamingProtocol(self, didEncounterError: err)
-                        return
-                    }
-                    
-                    self.bytesSent += Int64(bodySize)
-                    self.messagesSent += 1
-                    if self.state != .connected {
-                        self.state = .connected
-                    }
-                }
-            }
-            task.resume()
-        }
+        return true
     }
 }
-
 
