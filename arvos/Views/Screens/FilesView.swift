@@ -108,7 +108,7 @@ struct RecordingRow: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: recording.mode.icon)
-                    .foregroundColor(.blue)
+                    .foregroundColor(Theme.accent)
 
                 Text(recording.mode.rawValue)
                     .font(.headline)

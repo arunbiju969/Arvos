@@ -141,7 +141,7 @@ struct StreamView: View {
                 // Connection Status
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(viewModel.isConnected ? Color.orange : Color.secondary.opacity(0.3))
+                        .fill(viewModel.isConnected ? Theme.accent : Color.secondary.opacity(0.3))
                         .frame(width: 6, height: 6)
                         .accessibilityHidden(true)
 
@@ -202,7 +202,7 @@ struct StreamView: View {
         VStack(spacing: 16) {
             // Primary Actions: Connection + Start/Stop
             if !viewModel.isStreaming {
-                // Connection Button (emphasized as primary workflow)
+                // Connection Button (glassy)
                 Button {
                     viewModel.showingConnectionSheet = true
                 } label: {
@@ -216,18 +216,11 @@ struct StreamView: View {
                     .foregroundColor(viewModel.isConnected ? .green : .primary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(viewModel.isConnected ? Color.green.opacity(0.15) : Color(.systemGray5))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(viewModel.isConnected ? Color.green.opacity(0.3) : Color.clear, lineWidth: 1)
-                    )
                 }
+                .buttonStyle(GlassButtonStyle())
             }
 
-            // Start/Stop Button (prominent when ready)
+            // Start/Stop Button (purple glass or red)
             Button {
                 viewModel.toggleStreaming()
             } label: {
@@ -238,14 +231,11 @@ struct StreamView: View {
                     Text(viewModel.isStreaming ? "STOP STREAMING" : "START STREAMING")
                         .font(.system(.subheadline).weight(.semibold))
                 }
-                .foregroundColor(viewModel.isStreaming ? Color(.systemBackground) : .primary)
+                .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(viewModel.isStreaming ? Color.red : Color.blue)
-                )
             }
+            .buttonStyle(PurpleGlassButtonStyle(isDestructive: viewModel.isStreaming))
             .disabled(!viewModel.isStreaming && !viewModel.isConnected)
             .opacity((!viewModel.isStreaming && !viewModel.isConnected) ? 0.5 : 1.0)
         }
@@ -263,7 +253,7 @@ struct StreamView: View {
                     icon: "waveform",
                     label: "FPS",
                     value: viewModel.fpsFormatted,
-                    color: .orange
+                    color: Theme.accent
                 )
 
                 // Recording Card
@@ -279,7 +269,7 @@ struct StreamView: View {
                         icon: "checkmark.circle",
                         label: "LIVE",
                         value: "✓",
-                        color: .green
+                        color: Theme.accent
                     )
                 }
             }
@@ -381,8 +371,12 @@ struct SensorBadge: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(.systemGray5))
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(.thinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                )
         )
     }
 }
@@ -399,18 +393,18 @@ struct ModeCard: View {
             VStack(spacing: 6) {
                 Image(systemName: mode.icon)
                     .font(.system(size: 16, weight: .regular))
-                    .foregroundColor(isSelected ? Color(.systemBackground) : .primary)
+                    .foregroundColor(isSelected ? .white : .primary)
                     .frame(height: 20)
 
                 Text(mode.rawValue.uppercased())
                     .font(.system(.caption2).weight(.semibold))
-                    .foregroundColor(isSelected ? Color(.systemBackground) : .primary)
+                    .foregroundColor(isSelected ? .white : .primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
 
                 Text(mode.description)
                     .font(.system(.caption2))
-                    .foregroundColor(isSelected ? Color(.systemBackground).opacity(0.8) : .secondary)
+                    .foregroundColor(isSelected ? Color.white.opacity(0.8) : .secondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
@@ -420,8 +414,27 @@ struct ModeCard: View {
             .padding(.vertical, 12)
             .padding(.horizontal, 8)
             .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(isSelected ? Color.primary : Color(.systemGray6))
+                ZStack {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Theme.purpleGradient)
+                    } else {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    }
+
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(
+                            isSelected ? Color.white.opacity(0.3) : Color.white.opacity(0.2),
+                            lineWidth: 1
+                        )
+                }
+                .shadow(
+                    color: isSelected ? Theme.accent.opacity(0.3) : Color.black.opacity(0.05),
+                    radius: isSelected ? 8 : 4,
+                    x: 0,
+                    y: isSelected ? 4 : 2
+                )
             )
         }
     }
@@ -556,7 +569,7 @@ struct DataSourceToggle: View {
                 }
             }
         }
-        .tint(.orange)
+        .tint(Theme.accent)
     }
 }
 
@@ -599,8 +612,22 @@ struct BentoCard: View {
         .padding(12)
         .frame(maxWidth: .infinity)
         .frame(height: 80)
-        .background(Color(.systemGray6))
-        .cornerRadius(8)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.3), Color.white.opacity(0.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                )
+                .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
+        )
     }
 }
 

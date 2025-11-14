@@ -30,7 +30,7 @@ struct MainTabView: View {
                         VStack(spacing: 24) {
                             Image(systemName: "sensor.tag.radiowaves.forward.fill")
                                 .font(.system(size: 64))
-                                .foregroundColor(.blue)
+                                .foregroundColor(Theme.accent)
 
                             VStack(spacing: 8) {
                                 Text("Sensor Test Mode")

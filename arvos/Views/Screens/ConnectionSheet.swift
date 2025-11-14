@@ -166,7 +166,7 @@ struct TroubleshootTip: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 14))
-                .foregroundColor(.blue)
+                .foregroundColor(Theme.accent)
                 .frame(width: 20)
 
             VStack(alignment: .leading, spacing: 2) {
