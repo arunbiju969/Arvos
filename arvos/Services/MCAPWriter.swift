@@ -11,6 +11,7 @@ import Foundation
 class MCAPWriter {
     private let fileHandle: FileHandle
     private let filePath: URL
+    private let lock = NSLock()
 
     private var channels: [UInt16: Channel] = [:]
     private var nextChannelId: UInt16 = 1
@@ -38,7 +39,12 @@ class MCAPWriter {
         self.fileHandle = handle
 
         // Write MCAP header
-        try writeHeader()
+        do {
+            try writeHeader()
+        } catch {
+            try? handle.close()
+            throw error
+        }
     }
 
     // MARK: - Header
@@ -59,6 +65,9 @@ class MCAPWriter {
     // MARK: - Channels
 
     func addChannel(topic: String, messageEncoding: String = "application/json", schema: String? = nil) -> UInt16 {
+        lock.lock()
+        defer { lock.unlock() }
+
         let channelId = nextChannelId
         nextChannelId += 1
 
@@ -79,7 +88,11 @@ class MCAPWriter {
         channelData.append(string: messageEncoding)
         channelData.append(map: [:]) // metadata
 
-        try? writeRecord(opcode: 0x02, data: channelData)
+        do {
+            try writeRecord(opcode: 0x02, data: channelData)
+        } catch {
+            print("⚠️ Failed to write channel record: \(error)")
+        }
 
         return channelId
     }
@@ -87,6 +100,9 @@ class MCAPWriter {
     // MARK: - Messages
 
     func writeMessage(channelId: UInt16, timestamp: UInt64, data: Data) throws {
+        lock.lock()
+        defer { lock.unlock() }
+
         guard channels[channelId] != nil else {
             throw MCAPError.invalidChannel
         }

@@ -51,7 +51,39 @@ class ARKitService: NSObject {
 
     private let depthProcessingQueue = DispatchQueue(label: "com.arvos.depthProcessing", qos: .userInitiated)
     private let cameraProcessingQueue = DispatchQueue(label: "com.arvos.cameraProcessing", qos: .userInitiated)
-    private var isProcessingDepth = false
+    private let processingLock = NSLock()
+    private var _isProcessingDepth = false
+    private var _isProcessingCamera = false
+
+    private var isProcessingDepth: Bool {
+        get {
+            processingLock.lock()
+            defer { processingLock.unlock() }
+            return _isProcessingDepth
+        }
+        set {
+            processingLock.lock()
+            defer { processingLock.unlock() }
+            _isProcessingDepth = newValue
+        }
+    }
+
+    private var isProcessingCamera: Bool {
+        get {
+            processingLock.lock()
+            defer { processingLock.unlock() }
+            return _isProcessingCamera
+        }
+        set {
+            processingLock.lock()
+            defer { processingLock.unlock() }
+            _isProcessingCamera = newValue
+        }
+    }
+
+    // Frame drop counters for monitoring
+    private var droppedDepthFrames = 0
+    private var droppedCameraFrames = 0
 
     private let cameraContext = CIContext(options: [.useSoftwareRenderer: false])
 
@@ -207,7 +239,13 @@ class ARKitService: NSObject {
         }
 
         guard let depthBuffer = depthMap else { return }
-        guard !isProcessingDepth else { return }
+        guard !isProcessingDepth else {
+            droppedDepthFrames += 1
+            if droppedDepthFrames % 10 == 0 {
+                print("⚠️ Dropped \(droppedDepthFrames) depth frames due to processing backlog")
+            }
+            return
+        }
         isProcessingDepth = true
 
         // Copy pixel buffers for async processing
@@ -330,6 +368,8 @@ class ARKitService: NSObject {
         for y in stride(from: 0, to: height, by: step) {
             for x in stride(from: 0, to: width, by: step) {
                 let index = y * width + x
+                // Bounds check to prevent buffer overrun
+                guard index < (width * height) else { continue }
                 let depthValue = depthPointer[index]
 
                 guard depthValue.isFinite,
@@ -442,6 +482,16 @@ extension ARKitService: ARSessionDelegate {
     }
 
     private func processCameraFrame(_ frame: ARFrame, timestamp: UInt64) {
+        // Skip if still processing previous frame to prevent ARFrame retention
+        guard !isProcessingCamera else {
+            droppedCameraFrames += 1
+            if droppedCameraFrames % 10 == 0 {
+                print("⚠️ Dropped \(droppedCameraFrames) camera frames due to processing backlog")
+            }
+            return
+        }
+        isProcessingCamera = true
+
         let pixelBuffer = frame.capturedImage
 
         let width = CVPixelBufferGetWidth(pixelBuffer)
@@ -449,7 +499,10 @@ extension ARKitService: ARSessionDelegate {
         let intrinsicsMatrix = frame.camera.intrinsics
 
         // Copy buffer for async processing
-        guard let bufferCopy = copyPixelBuffer(pixelBuffer) else { return }
+        guard let bufferCopy = copyPixelBuffer(pixelBuffer) else {
+            isProcessingCamera = false
+            return
+        }
         let frameIntrinsics = CameraIntrinsics(intrinsics: intrinsicsMatrix)
 
         cameraProcessingQueue.async { [weak self] in
@@ -457,6 +510,9 @@ extension ARKitService: ARSessionDelegate {
                 guard let self else { return }
 
                 guard let jpegData = self.encodeJPEG(from: bufferCopy, quality: self.arkitJPEGQuality) else {
+                    DispatchQueue.main.async {
+                        self.isProcessingCamera = false
+                    }
                     return
                 }
 
@@ -475,6 +531,7 @@ extension ARKitService: ARSessionDelegate {
 
                 DispatchQueue.main.async {
                     self.delegate?.arKitService(self, didCapture: cameraFrame)
+                    self.isProcessingCamera = false
                 }
             }
         }
