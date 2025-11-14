@@ -12,6 +12,8 @@ struct FilesView: View {
     @State private var recordings: [SessionMetadata] = []
     @State private var showingDeleteAlert = false
     @State private var selectedRecording: SessionMetadata?
+    @State private var showingShareSheet = false
+    @State private var shareItems: [URL] = []
 
     var body: some View {
         NavigationStack {
@@ -31,14 +33,24 @@ struct FilesView: View {
                 }
             }
             .alert("Delete Recording", isPresented: $showingDeleteAlert) {
-                Button("Cancel", role: .cancel) {}
+                Button("Cancel", role: .cancel) {
+                    selectedRecording = nil
+                }
                 Button("Delete", role: .destructive) {
                     if let recording = selectedRecording {
                         deleteRecording(recording)
+                        selectedRecording = nil
                     }
                 }
             } message: {
-                Text("Are you sure you want to delete this recording? This action cannot be undone.")
+                if let recording = selectedRecording {
+                    Text("Are you sure you want to delete \"\(recording.mode.rawValue)\" from \(formatDate(recording.startTime))? This action cannot be undone.")
+                } else {
+                    Text("Are you sure you want to delete this recording? This action cannot be undone.")
+                }
+            }
+            .sheet(isPresented: $showingShareSheet) {
+                ShareSheet(items: shareItems)
             }
             .onAppear {
                 loadRecordings()
@@ -70,15 +82,20 @@ struct FilesView: View {
     private var recordingsList: some View {
         List {
             ForEach(recordings, id: \.sessionId) { recording in
-                RecordingRow(recording: recording)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            selectedRecording = recording
-                            showingDeleteAlert = true
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
+                Button {
+                    shareRecording(recording)
+                } label: {
+                    RecordingRow(recording: recording)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        selectedRecording = recording
+                        showingDeleteAlert = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
                     }
+                }
             }
         }
     }
@@ -94,9 +111,45 @@ struct FilesView: View {
             try recordingManager.deleteRecording(sessionId: recording.sessionId)
             loadRecordings()
         } catch {
-            print("Failed to delete recording: \(error)")
+            print("❌ Failed to delete recording: \(error)")
+            // Could show an error alert here
         }
     }
+    
+    private func shareRecording(_ recording: SessionMetadata) {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let recordingsDir = documents.appendingPathComponent(Constants.Recording.recordingsDirectory)
+        let sessionDir = recordingsDir.appendingPathComponent(recording.sessionId)
+        
+        // Get all files in the session directory
+        do {
+            let files = try FileManager.default.contentsOfDirectory(at: sessionDir, includingPropertiesForKeys: nil)
+            shareItems = files
+            showingShareSheet = true
+        } catch {
+            print("❌ Failed to get files for sharing: \(error)")
+        }
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+}
+
+// MARK: - Share Sheet
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [URL]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Recording Row
