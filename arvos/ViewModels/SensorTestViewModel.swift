@@ -8,6 +8,8 @@
 import SwiftUI
 import Combine
 import CoreLocation
+import ARKit
+import simd
 
 class SensorTestViewModel: ObservableObject {
     // Managers
