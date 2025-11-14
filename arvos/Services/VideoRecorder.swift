@@ -52,17 +52,20 @@ class VideoRecorder {
             kCVPixelBufferHeightKey as String: height
         ]
 
+        guard let videoInput = videoInput else {
+            throw VideoRecorderError.cannotAddInput
+        }
+
         pixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(
-            assetWriterInput: videoInput!,
+            assetWriterInput: videoInput,
             sourcePixelBufferAttributes: sourcePixelBufferAttributes
         )
 
         // Add input to writer
-        if let input = videoInput, assetWriter!.canAdd(input) {
-            assetWriter?.add(input)
-        } else {
+        guard let writer = assetWriter, writer.canAdd(videoInput) else {
             throw VideoRecorderError.cannotAddInput
         }
+        writer.add(videoInput)
     }
 
     // MARK: - Recording Control
@@ -127,7 +130,10 @@ class VideoRecorder {
         let presentationTime = CMTimeMultiply(frameDuration, multiplier: Int32(frameCount))
 
         // Append pixel buffer
-        if !pixelBufferAdaptor!.append(pixelBuffer, withPresentationTime: presentationTime) {
+        guard let adaptor = pixelBufferAdaptor else {
+            throw VideoRecorderError.cannotCreatePixelBuffer
+        }
+        if !adaptor.append(pixelBuffer, withPresentationTime: presentationTime) {
             if let error = assetWriter?.error {
                 throw error
             }

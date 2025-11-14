@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import Network
 
 protocol WebSocketServiceDelegate: AnyObject {
     func webSocketService(_ service: WebSocketService, didChangeState state: ConnectionState)
@@ -46,9 +47,18 @@ class WebSocketService: NSObject {
     private var messageQueue: [Data] = []
     private let maxQueueSize = 10
 
+    // Network path monitor for detecting connection changes
+    private var pathMonitor: NWPathMonitor?
+    private let monitorQueue = DispatchQueue(label: "com.arvos.networkMonitor")
+    private var isNetworkAvailable = true
+
+    // Heartbeat
+    private var heartbeatTimer: Timer?
+
     // Statistics
     private var bytesSent: Int64 = 0
     private var messagesSent: Int64 = 0
+    private var droppedMessages: Int64 = 0
 
     override init() {
         super.init()
@@ -56,6 +66,31 @@ class WebSocketService: NSObject {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = Constants.Network.connectionTimeout
         urlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
+
+        setupNetworkMonitoring()
+    }
+
+    private func setupNetworkMonitoring() {
+        pathMonitor = NWPathMonitor()
+        pathMonitor?.pathUpdateHandler = { [weak self] path in
+            guard let self = self else { return }
+            let wasAvailable = self.isNetworkAvailable
+            self.isNetworkAvailable = path.status == .satisfied
+
+            if !wasAvailable && self.isNetworkAvailable {
+                print("📡 Network connection restored")
+                // Network came back - attempt reconnection immediately if we should reconnect
+                if self.shouldReconnect && self.state != .connected {
+                    DispatchQueue.main.async {
+                        self.reconnectAttempts = 0 // Reset attempts on network restoration
+                        self.attemptConnection()
+                    }
+                }
+            } else if wasAvailable && !self.isNetworkAvailable {
+                print("📡 Network connection lost")
+            }
+        }
+        pathMonitor?.start(queue: monitorQueue)
     }
 
     // MARK: - Connection
@@ -88,6 +123,10 @@ class WebSocketService: NSObject {
         shouldReconnect = false
         reconnectTimer?.invalidate()
         reconnectTimer = nil
+        heartbeatTimer?.invalidate()
+        heartbeatTimer = nil
+        pathMonitor?.cancel()
+        pathMonitor = nil
 
         webSocket?.cancel(with: .goingAway, reason: nil)
         webSocket = nil
@@ -114,6 +153,10 @@ class WebSocketService: NSObject {
                 // Drop oldest message to make room (streaming-first: old data is stale)
                 messageQueue.removeFirst()
                 messageQueue.append(data)
+                droppedMessages += 1
+                if droppedMessages % 50 == 0 {
+                    print("⚠️ Dropped \(droppedMessages) messages due to network backlog")
+                }
             }
             return
         }
@@ -121,12 +164,13 @@ class WebSocketService: NSObject {
         let message: URLSessionWebSocketTask.Message = asText ? .string(String(data: data, encoding: .utf8) ?? "") : .data(data)
 
         webSocket?.send(message) { [weak self] error in
+            guard let self = self else { return }
             if let error = error {
-                self?.delegate?.webSocketService(self!, didEncounterError: error)
-                self?.handleConnectionError()
+                self.delegate?.webSocketService(self, didEncounterError: error)
+                self.handleConnectionError()
             } else {
-                self?.bytesSent += Int64(data.count)
-                self?.messagesSent += 1
+                self.bytesSent += Int64(data.count)
+                self.messagesSent += 1
             }
         }
     }
@@ -190,13 +234,25 @@ class WebSocketService: NSObject {
     private func handleConnectionError() {
         state = .error
 
+        // Don't retry if network is down
+        guard isNetworkAvailable else {
+            print("⚠️ Network unavailable, waiting for network restoration")
+            return
+        }
+
         guard shouldReconnect, reconnectAttempts < Constants.Network.maxReconnectAttempts else {
+            print("❌ Max reconnection attempts reached (\(reconnectAttempts))")
             state = .disconnected
             return
         }
 
         reconnectAttempts += 1
-        let delay = Constants.Network.reconnectDelay * pow(2.0, Double(reconnectAttempts - 1)) // Exponential backoff
+        // Improved exponential backoff with jitter: min(initial * 2^attempt, max) + jitter
+        let baseDelay = min(Constants.Network.reconnectDelay * pow(2.0, Double(reconnectAttempts - 1)), 30.0)
+        let jitter = Double.random(in: 0...1.0) // Add jitter to avoid thundering herd
+        let delay = baseDelay + jitter
+
+        print("🔄 Reconnection attempt \(reconnectAttempts)/\(Constants.Network.maxReconnectAttempts) in \(String(format: "%.1f", delay))s")
 
         reconnectTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
             self?.attemptConnection()
@@ -206,7 +262,9 @@ class WebSocketService: NSObject {
     // MARK: - Heartbeat
 
     func startHeartbeat() {
-        Timer.scheduledTimer(withTimeInterval: Constants.Network.heartbeatInterval, repeats: true) { [weak self] _ in
+        stopHeartbeat()
+        // Run heartbeat on main thread for reliability
+        heartbeatTimer = Timer.scheduledTimer(withTimeInterval: Constants.Network.heartbeatInterval, repeats: true) { [weak self] _ in
             guard let self = self, self.state == .connected else { return }
 
             let ping = StatusMessage(
@@ -216,6 +274,15 @@ class WebSocketService: NSObject {
 
             try? self.send(json: ping)
         }
+        // Add to run loop to ensure it fires even during UI updates
+        if let timer = heartbeatTimer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
+    }
+
+    func stopHeartbeat() {
+        heartbeatTimer?.invalidate()
+        heartbeatTimer = nil
     }
 
     // MARK: - Statistics
@@ -226,13 +293,15 @@ class WebSocketService: NSObject {
             bytesSent: bytesSent,
             messagesSent: messagesSent,
             queuedMessages: messageQueue.count,
-            reconnectAttempts: reconnectAttempts
+            reconnectAttempts: reconnectAttempts,
+            droppedMessages: droppedMessages
         )
     }
 
     func resetStatistics() {
         bytesSent = 0
         messagesSent = 0
+        droppedMessages = 0
     }
 }
 
@@ -260,6 +329,7 @@ struct NetworkStatistics {
     let messagesSent: Int64
     let queuedMessages: Int
     let reconnectAttempts: Int
+    let droppedMessages: Int64
 
     var bandwidth: String {
         if bytesSent < 1024 {

@@ -49,9 +49,13 @@ final class QUICAdapter: NSObject, StreamingProtocol {
         
         // Test connection
         do {
+            guard let session = urlSession else {
+                state = .error
+                throw StreamingProtocolError.connectionFailed("URL session not initialized")
+            }
             let healthURL = url.appendingPathComponent("/api/health")
-            let (_, response) = try await urlSession!.data(from: healthURL)
-            
+            let (_, response) = try await session.data(from: healthURL)
+
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
                 state = .connected
             } else {
@@ -73,20 +77,21 @@ final class QUICAdapter: NSObject, StreamingProtocol {
         guard state == .connected, let baseURL = baseURL else {
             throw StreamingProtocolError.notConnected
         }
-        
+
         let data = try JSONEncoder().encode(object)
         let url = baseURL.appendingPathComponent("/api/telemetry")
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = data
-        
+
         queuedMessages += 1
-        
-        Task {
+
+        Task { [weak self] in
+            guard let self = self, let session = self.urlSession else { return }
             do {
-                let (_, response) = try await urlSession!.data(for: request)
+                let (_, response) = try await session.data(for: request)
                 if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
                     self.bytesSent += Int64(data.count)
                     self.messagesSent += 1
@@ -98,24 +103,25 @@ final class QUICAdapter: NSObject, StreamingProtocol {
             }
         }
     }
-    
+
     func send(data: Data) throws {
         guard state == .connected, let baseURL = baseURL else {
             throw StreamingProtocolError.notConnected
         }
-        
+
         let url = baseURL.appendingPathComponent("/api/binary")
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
         request.httpBody = data
-        
+
         queuedMessages += 1
-        
-        Task {
+
+        Task { [weak self] in
+            guard let self = self, let session = self.urlSession else { return }
             do {
-                let (_, response) = try await urlSession!.data(for: request)
+                let (_, response) = try await session.data(for: request)
                 if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
                     self.bytesSent += Int64(data.count)
                     self.messagesSent += 1
