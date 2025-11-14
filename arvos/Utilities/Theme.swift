@@ -8,29 +8,19 @@
 import SwiftUI
 
 struct Theme {
-    // MARK: - Colors
+    // MARK: - Colors (Apple-like, minimal)
 
-    /// Primary purple accent color
-    static let accent = Color(red: 0.58, green: 0.4, blue: 0.85) // #9466D9
+    /// System accent color (uses iOS default blue)
+    static let accent = Color.accentColor
 
-    /// Lighter purple for backgrounds
-    static var accentLight: Color {
-        Color(red: 0.58, green: 0.4, blue: 0.85).opacity(0.2)
+    /// Subtle gray for backgrounds
+    static var subtleGray: Color {
+        Color(.systemGray6)
     }
 
-    /// Darker purple for pressed states
-    static let accentDark = Color(red: 0.48, green: 0.3, blue: 0.75)
-
-    /// Gradient purple
-    static var purpleGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 0.58, green: 0.4, blue: 0.85),
-                Color(red: 0.68, green: 0.5, blue: 0.95)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+    /// Card background
+    static var cardBackground: Color {
+        Color(.secondarySystemBackground)
     }
 
     // MARK: - Glass Materials
@@ -133,36 +123,18 @@ struct GlassButtonStyle: ButtonStyle {
     }
 }
 
-struct PurpleGlassButtonStyle: ButtonStyle {
+struct PrimaryButtonStyle: ButtonStyle {
     var isDestructive: Bool = false
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .background(
-                ZStack {
-                    if isDestructive {
-                        LinearGradient(
-                            colors: [Color.red.opacity(0.8), Color.red.opacity(0.6)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    } else {
-                        // Black button for START STREAMING
-                        Color.black.opacity(configuration.isPressed ? 0.9 : 1.0)
-                    }
-
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                }
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(isDestructive ? Color.red : Color.primary)
+                    .opacity(configuration.isPressed ? 0.8 : 1.0)
             )
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .shadow(
-                color: (isDestructive ? Color.red : Color.black).opacity(0.3),
-                radius: configuration.isPressed ? 5 : 10,
-                x: 0,
-                y: configuration.isPressed ? 2 : 5
-            )
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 

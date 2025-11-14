@@ -141,12 +141,12 @@ struct StreamView: View {
                 // Connection Status
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(viewModel.isConnected ? Theme.accent : Color.secondary.opacity(0.3))
+                        .fill(viewModel.isConnected ? Color.green : Color.secondary.opacity(0.3))
                         .frame(width: 6, height: 6)
                         .accessibilityHidden(true)
 
-                    Text(viewModel.isConnected ? "CONNECTED" : "DISCONNECTED")
-                        .font(.system(.caption2).weight(.medium))
+                    Text(viewModel.isConnected ? "Connected" : "Not Connected")
+                        .font(.caption)
                         .foregroundColor(.secondary)
                 }
                 .accessibilityElement(children: .combine)
@@ -220,22 +220,17 @@ struct StreamView: View {
                 .buttonStyle(GlassButtonStyle())
             }
 
-            // Start/Stop Button (purple glass or red)
+            // Start/Stop Button
             Button {
                 viewModel.toggleStreaming()
             } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: viewModel.isStreaming ? "stop.fill" : "play.fill")
-                        .font(.system(size: 14, weight: .medium))
-
-                    Text(viewModel.isStreaming ? "STOP STREAMING" : "START STREAMING")
-                        .font(.system(.subheadline).weight(.semibold))
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
+                Text(viewModel.isStreaming ? "Stop Streaming" : "Start Streaming")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
             }
-            .buttonStyle(PurpleGlassButtonStyle(isDestructive: viewModel.isStreaming))
+            .buttonStyle(PrimaryButtonStyle(isDestructive: viewModel.isStreaming))
             .disabled(!viewModel.isStreaming && !viewModel.isConnected)
             .opacity((!viewModel.isStreaming && !viewModel.isConnected) ? 0.5 : 1.0)
         }
@@ -253,7 +248,7 @@ struct StreamView: View {
                     icon: "waveform",
                     label: "FPS",
                     value: viewModel.fpsFormatted,
-                    color: Theme.accent
+                    color: .blue
                 )
 
                 // Recording Card
@@ -269,7 +264,7 @@ struct StreamView: View {
                         icon: "checkmark.circle",
                         label: "LIVE",
                         value: "✓",
-                        color: Theme.accent
+                        color: .green
                     )
                 }
             }
@@ -372,11 +367,7 @@ struct SensorBadge: View {
         .padding(.vertical, 4)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(.thinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
-                )
+                .fill(Color(.tertiarySystemBackground))
         )
     }
 }
@@ -414,27 +405,8 @@ struct ModeCard: View {
             .padding(.vertical, 12)
             .padding(.horizontal, 8)
             .background(
-                ZStack {
-                    if isSelected {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color.black)
-                    } else {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(.ultraThinMaterial)
-                    }
-
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(
-                            isSelected ? Color.white.opacity(0.3) : Color.white.opacity(0.2),
-                            lineWidth: 1
-                        )
-                }
-                .shadow(
-                    color: isSelected ? Color.black.opacity(0.3) : Color.black.opacity(0.05),
-                    radius: isSelected ? 8 : 4,
-                    x: 0,
-                    y: isSelected ? 4 : 2
-                )
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(isSelected ? Color.primary : Color(.secondarySystemBackground))
             )
         }
     }
@@ -613,20 +585,8 @@ struct BentoCard: View {
         .frame(maxWidth: .infinity)
         .frame(height: 80)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(
-                            LinearGradient(
-                                colors: [Color.white.opacity(0.3), Color.white.opacity(0.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                )
-                .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
         )
     }
 }
