@@ -301,12 +301,12 @@ struct SensorTestView: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(maxWidth: .infinity)
                         .frame(height: 220)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
                         )
-                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 8)
+                        
                 } else {
                     LoadingCard(message: "Waiting for camera frame…")
                         .frame(height: 220)
@@ -734,7 +734,7 @@ struct LoadingCard: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                 .fill(useDarkBackground ? Color.black : Color.primary.opacity(0.04))
             VStack(spacing: 12) {
                 ProgressView()
@@ -791,10 +791,10 @@ struct SensorDataBox<Content: View>: View {
         }
         .padding(10)
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: Theme.cornerRadius)
                 .fill(Color.black.opacity(0.7))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
                         .strokeBorder(color.opacity(0.3), lineWidth: 1)
                 )
         )
@@ -847,7 +847,7 @@ struct PrimaryActionButtonStyle: ButtonStyle {
             )
             .clipShape(Capsule())
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .shadow(color: Color.accentColor.opacity(0.25), radius: 12, x: 0, y: 8)
+            
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
@@ -864,7 +864,7 @@ extension View {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(Color.primary.opacity(0.05), lineWidth: 1)
             )
-            .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 8)
+            
     }
 }
 
