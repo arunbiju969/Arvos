@@ -417,7 +417,7 @@ struct ModeCard: View {
                 ZStack {
                     if isSelected {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Theme.purpleGradient)
+                            .fill(Color.black)
                     } else {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .fill(.ultraThinMaterial)
@@ -430,7 +430,7 @@ struct ModeCard: View {
                         )
                 }
                 .shadow(
-                    color: isSelected ? Theme.accent.opacity(0.3) : Color.black.opacity(0.05),
+                    color: isSelected ? Color.black.opacity(0.3) : Color.black.opacity(0.05),
                     radius: isSelected ? 8 : 4,
                     x: 0,
                     y: isSelected ? 4 : 2

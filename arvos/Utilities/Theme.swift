@@ -147,7 +147,8 @@ struct PurpleGlassButtonStyle: ButtonStyle {
                             endPoint: .bottomTrailing
                         )
                     } else {
-                        Theme.purpleGradient.opacity(configuration.isPressed ? 0.9 : 1.0)
+                        // Black button for START STREAMING
+                        Color.black.opacity(configuration.isPressed ? 0.9 : 1.0)
                     }
 
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -156,7 +157,7 @@ struct PurpleGlassButtonStyle: ButtonStyle {
             )
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .shadow(
-                color: (isDestructive ? Color.red : Theme.accent).opacity(0.3),
+                color: (isDestructive ? Color.red : Color.black).opacity(0.3),
                 radius: configuration.isPressed ? 5 : 10,
                 x: 0,
                 y: configuration.isPressed ? 2 : 5
