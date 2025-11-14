@@ -85,9 +85,9 @@ struct ConnectionSheet: View {
                     Section {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
+                                .foregroundColor(.primary)
                             Text("Connected")
-                                .foregroundColor(.green)
+                                .foregroundColor(.primary)
                             Spacer()
                             Button("Disconnect") {
                                 viewModel.disconnect()

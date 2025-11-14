@@ -141,7 +141,7 @@ struct StreamView: View {
                 // Connection Status
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(viewModel.isConnected ? Color.green : Color.secondary.opacity(0.3))
+                        .fill(viewModel.isConnected ? Color.primary : Color.secondary.opacity(0.3))
                         .frame(width: 6, height: 6)
                         .accessibilityHidden(true)
 
@@ -208,7 +208,7 @@ struct StreamView: View {
                 } label: {
                     Text(viewModel.isConnected ? "Connected" : "Connect to Server")
                         .font(.headline)
-                        .foregroundColor(viewModel.isConnected ? .green : .primary)
+                        .foregroundColor(.primary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
                         .background(
@@ -246,7 +246,7 @@ struct StreamView: View {
                     icon: "waveform",
                     label: "FPS",
                     value: viewModel.fpsFormatted,
-                    color: .blue
+                    color: .primary
                 )
 
                 // Recording Card
@@ -262,7 +262,7 @@ struct StreamView: View {
                         icon: "checkmark.circle",
                         label: "LIVE",
                         value: "✓",
-                        color: .green
+                        color: .primary
                     )
                 }
             }
