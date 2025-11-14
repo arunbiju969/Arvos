@@ -14,11 +14,14 @@ struct MainTabView: View {
     var body: some View {
         TabView {
             // Stream Tab
-            StreamView()
-                .environmentObject(viewModel)
-                .tabItem {
-                    Label("Stream", systemImage: "video.circle.fill")
-                }
+            NavigationStack {
+                StreamView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .environmentObject(viewModel)
+            }
+            .tabItem {
+                Label("Stream", systemImage: "video.circle.fill")
+            }
 
             // Sensor Test Tab
             NavigationStack {
@@ -77,24 +80,17 @@ struct MainTabView: View {
                 SensorTestView()
             }
 
-            // Settings Tab
-            SettingsView()
-                .environmentObject(viewModel)
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
-                }
-
             // Files Tab
             FilesView()
                 .tabItem {
                     Label("Files", systemImage: "folder.fill")
                 }
 
-            // Debug Tab
-            DebugView()
+            // Settings Tab (includes diagnostics)
+            SettingsView()
                 .environmentObject(viewModel)
                 .tabItem {
-                    Label("Debug", systemImage: "ant.fill")
+                    Label("Settings", systemImage: "gearshape.fill")
                 }
         }
     }

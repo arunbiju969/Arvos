@@ -2,7 +2,7 @@
 //  SettingsView.swift
 //  arvos
 //
-//  Settings and configuration
+//  Merged Settings and Diagnostics view
 //
 
 import SwiftUI
@@ -14,9 +14,17 @@ struct SettingsView: View {
     @State private var depthFPS: Double = 10
     @State private var poseHz: Double = 30
 
+    // Collapsible sections
+    @State private var showPerformance = false
+    @State private var showSensorStatus = false
+    @State private var showConnection = false
+    @State private var showModeConfig = false
+
     var body: some View {
         NavigationStack {
             Form {
+                // MARK: - Sensor Configuration
+
                 Section {
                     HStack {
                         Text("Camera FPS")
@@ -101,6 +109,111 @@ struct SettingsView: View {
                     Text("Motion Sensors")
                 }
 
+                // MARK: - Diagnostics (Collapsible)
+
+                Section {
+                    DisclosureGroup("Performance Metrics", isExpanded: $showPerformance) {
+                        HStack {
+                            Text("FPS")
+                            Spacer()
+                            Text(viewModel.fpsFormatted)
+                                .foregroundColor(.secondary)
+                        }
+
+                        HStack {
+                            Text("Recording Duration")
+                            Spacer()
+                            Text(viewModel.recordingDurationFormatted)
+                                .foregroundColor(.secondary)
+                        }
+
+                        HStack {
+                            Text("Recording Size")
+                            Spacer()
+                            Text(viewModel.recordingSizeFormatted)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Diagnostics")
+                }
+
+                Section {
+                    DisclosureGroup("Sensor Status", isExpanded: $showSensorStatus) {
+                        StatusRow(label: "Camera", status: viewModel.sensorStatuses.camera)
+                        StatusRow(label: "Depth", status: viewModel.sensorStatuses.depth)
+                        StatusRow(label: "IMU", status: viewModel.sensorStatuses.imu)
+                        StatusRow(label: "Pose", status: viewModel.sensorStatuses.pose)
+                        StatusRow(label: "GPS", status: viewModel.sensorStatuses.gps)
+                    }
+                }
+
+                Section {
+                    DisclosureGroup("Connection Info", isExpanded: $showConnection) {
+                        HStack {
+                            Text("Status")
+                            Spacer()
+                            Text(viewModel.isConnected ? "Connected" : "Disconnected")
+                                .foregroundColor(viewModel.isConnected ? .green : .red)
+                        }
+
+                        HStack {
+                            Text("Host")
+                            Spacer()
+                            Text(viewModel.connectionHost.isEmpty ? "Not set" : viewModel.connectionHost)
+                                .foregroundColor(.secondary)
+                        }
+
+                        HStack {
+                            Text("Port")
+                            Spacer()
+                            Text(viewModel.connectionPort)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                Section {
+                    DisclosureGroup("Mode Configuration", isExpanded: $showModeConfig) {
+                        HStack {
+                            Text("Current Mode")
+                            Spacer()
+                            Text(viewModel.selectedMode.rawValue)
+                                .foregroundColor(.secondary)
+                        }
+
+                        HStack {
+                            Text("Camera Enabled")
+                            Spacer()
+                            Text(viewModel.selectedMode.config.cameraEnabled ? "Yes" : "No")
+                                .foregroundColor(.secondary)
+                        }
+
+                        HStack {
+                            Text("Depth Enabled")
+                            Spacer()
+                            Text(viewModel.selectedMode.config.depthEnabled ? "Yes" : "No")
+                                .foregroundColor(.secondary)
+                        }
+
+                        HStack {
+                            Text("IMU Enabled")
+                            Spacer()
+                            Text(viewModel.selectedMode.config.imuEnabled ? "Yes" : "No")
+                                .foregroundColor(.secondary)
+                        }
+
+                        HStack {
+                            Text("Recording Enabled")
+                            Spacer()
+                            Text(viewModel.selectedMode.config.recordingEnabled ? "Yes" : "No")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                // MARK: - Apple Watch
+
                 Section {
                     let watchManager = viewModel.sensorManager.watchSensorManager
                     HStack {
@@ -114,7 +227,7 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
-                    
+
                     if watchManager.isWatchConnected {
                         HStack {
                             Text("Watch Sample Rate")
@@ -122,23 +235,23 @@ struct SettingsView: View {
                             Text(String(format: "%.1f Hz", watchManager.watchHz))
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         HStack {
                             Text("Watch Samples")
                             Spacer()
                             Text("\(watchManager.watchSampleCount)")
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         if let attitude = watchManager.latestAttitude {
                             WatchSettingsRow(title: "Pitch / Roll / Yaw", value: "\(formatAngle(attitude.pitch)) / \(formatAngle(attitude.roll)) / \(formatAngle(attitude.yaw))")
                         }
-                        
+
                         if let activity = watchManager.latestActivity {
                             WatchSettingsRow(title: "Activity", value: activity.descriptionLabel.capitalized)
                             WatchSettingsRow(title: "Confidence", value: activity.confidenceDescription)
                         }
-                        
+
                     } else {
                         Text("Pair your Apple Watch and install the arvos Watch app to enable watch sensor streaming.")
                             .font(.caption)
@@ -147,6 +260,8 @@ struct SettingsView: View {
                 } header: {
                     Text("Apple Watch")
                 }
+
+                // MARK: - About
 
                 Section {
                     HStack {
@@ -164,6 +279,13 @@ struct SettingsView: View {
                     }
 
                     HStack {
+                        Text("Device Name")
+                        Spacer()
+                        Text(UIDevice.current.name)
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack {
                         Text("App Version")
                         Spacer()
                         Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
@@ -176,22 +298,52 @@ struct SettingsView: View {
             .navigationTitle("Settings")
         }
     }
-    
+
     private func formatAngle(_ value: Double) -> String {
         let degrees = value * 180 / .pi
         return String(format: "%.1f°", degrees)
     }
 }
 
-#Preview {
-    SettingsView()
-        .environmentObject(StreamingViewModel())
+// MARK: - Supporting Views
+
+struct StatusRow: View {
+    let label: String
+    let status: SensorStatus
+
+    var body: some View {
+        HStack {
+            Text(label)
+
+            Spacer()
+
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(statusColor)
+                    .frame(width: 8, height: 8)
+
+                Text(status.rawValue)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+
+    private var statusColor: Color {
+        switch status {
+        case .inactive:
+            return .gray
+        case .active:
+            return .green
+        case .error:
+            return .red
+        }
+    }
 }
 
 private struct WatchSettingsRow: View {
     let title: String
     let value: String
-    
+
     var body: some View {
         HStack {
             Text(title)
@@ -200,4 +352,9 @@ private struct WatchSettingsRow: View {
                 .foregroundColor(.secondary)
         }
     }
+}
+
+#Preview {
+    SettingsView()
+        .environmentObject(StreamingViewModel())
 }
