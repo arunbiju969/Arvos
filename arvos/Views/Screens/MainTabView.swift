@@ -25,53 +25,52 @@ struct MainTabView: View {
 
             // Sensor Test Tab
             NavigationStack {
-                GeometryReader { proxy in
-                    ScrollView {
-                        VStack(spacing: 24) {
-                            Image(systemName: "sensor.tag.radiowaves.forward.fill")
-                                .font(.system(size: 64))
-                                .foregroundColor(Theme.accent)
+                ZStack {
+                    Color(.systemBackground)
+                        .ignoresSafeArea()
 
-                            VStack(spacing: 8) {
-                                Text("Sensor Test Mode")
-                                    .font(.title2.bold())
+                    VStack(spacing: 32) {
+                        Spacer()
 
-                                Text("Inspect LiDAR, camera and IMU feeds before streaming.")
-                                    .font(.subheadline)
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(.secondary)
+                        VStack(spacing: 16) {
+                            Text("Sensor Test")
+                                .font(.system(size: 32, weight: .bold))
+
+                            Text("Inspect LiDAR, camera and IMU feeds")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+
+                        // Start Test Button
+                        Button {
+                            showTestView = true
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "play.fill")
+                                    .font(.system(size: 14, weight: .medium))
+
+                                Text("START TEST")
+                                    .font(.system(.subheadline).weight(.semibold))
                             }
-
-                            Button {
-                                showTestView = true
-                            } label: {
-                                Label("Start Testing", systemImage: "play.circle.fill")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                            }
-                            .buttonStyle(
-                                PrimaryActionButtonStyle(isRunning: false)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(
+                                ZStack {
+                                    Color.black
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                }
+                                .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
                             )
                         }
-                        .padding(32)
-                        .frame(maxWidth: min(proxy.size.width * 0.6, 420))
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                .fill(Color(.secondarySystemBackground))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                .stroke(Color.primary.opacity(0.05), lineWidth: 1)
-                        )
-                        .padding(.horizontal, max((proxy.size.width - min(proxy.size.width * 0.6, 420)) / 2, 24))
-                        .padding(.vertical, max((proxy.size.height - 360) / 4, 32))
+                        .padding(.horizontal, 40)
+
+                        Spacer()
                     }
-                    .background(Color(.systemGroupedBackground))
                 }
                 .navigationTitle("Test")
+                .navigationBarTitleDisplayMode(.inline)
             }
             .tabItem {
                 Label("Test", systemImage: "waveform.path.ecg")
