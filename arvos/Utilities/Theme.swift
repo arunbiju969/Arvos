@@ -7,27 +7,31 @@
 
 import SwiftUI
 
-enum Theme {
+struct Theme {
     // MARK: - Colors
 
     /// Primary purple accent color
     static let accent = Color(red: 0.58, green: 0.4, blue: 0.85) // #9466D9
 
     /// Lighter purple for backgrounds
-    static let accentLight = Color(red: 0.58, green: 0.4, blue: 0.85).opacity(0.2)
+    static var accentLight: Color {
+        Color(red: 0.58, green: 0.4, blue: 0.85).opacity(0.2)
+    }
 
     /// Darker purple for pressed states
     static let accentDark = Color(red: 0.48, green: 0.3, blue: 0.75)
 
     /// Gradient purple
-    static let purpleGradient = LinearGradient(
-        colors: [
-            Color(red: 0.58, green: 0.4, blue: 0.85),
-            Color(red: 0.68, green: 0.5, blue: 0.95)
-        ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
+    static var purpleGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.58, green: 0.4, blue: 0.85),
+                Color(red: 0.68, green: 0.5, blue: 0.95)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
 
     // MARK: - Glass Materials
 
@@ -80,8 +84,13 @@ enum Theme {
 
     // MARK: - Shadows
 
-    static let softShadow = Color.black.opacity(0.1)
-    static let mediumShadow = Color.black.opacity(0.15)
+    static var softShadow: Color {
+        Color.black.opacity(0.1)
+    }
+
+    static var mediumShadow: Color {
+        Color.black.opacity(0.15)
+    }
 
     // MARK: - Corner Radius
 
