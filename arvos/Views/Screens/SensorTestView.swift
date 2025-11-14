@@ -11,86 +11,161 @@ import CoreMotion
 
 struct SensorTestView: View {
     @StateObject private var viewModel = SensorTestViewModel()
-    @Environment(\.dismiss) var dismiss
     @State private var useSimpleRenderer = false
     @State private var isFullscreen = false
-    
+
     var body: some View {
-        GeometryReader { proxy in
-            let isWide = proxy.size.width >= 900
-            let gridColumns = Array(repeating: GridItem(.flexible(), spacing: 24, alignment: .top), count: isWide ? 2 : 1)
-
-            ZStack(alignment: .top) {
-                Color(.systemGroupedBackground)
-                    .ignoresSafeArea()
-
-                NavigationStack {
-                    ScrollView {
-                        LazyVGrid(columns: gridColumns, spacing: 24) {
-                            statusHeader
-                                .gridCellColumns(isWide ? 2 : 1)
-
-                            controlSection
-
-                            if viewModel.showLiDAR {
-                                lidarSection
-                                    .gridCellColumns(isWide ? 2 : 1)
-                            }
-
-                            if viewModel.showCamera {
-                                cameraSection
-                            }
-
-                            if viewModel.showIMU {
-                                imuSection
-                            }
-
-                            if viewModel.showPose {
-                                poseSection
-                            }
-
-                            if viewModel.showGPS {
-                                gpsSection
-                            }
-
-                            if viewModel.showWatch {
-                                watchSection
-                            }
-                        }
-                        .padding(.horizontal, isWide ? 32 : 20)
-                        .padding(.vertical, 24)
-                        .frame(maxWidth: 1080)
-                        .frame(maxWidth: .infinity)
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Status & Control
+                    if viewModel.showLiDAR, let depthSample = viewModel.latestDepthSample {
+                        lidarCard(depthSample: depthSample)
                     }
-                    .background(Color.clear)
-                    .navigationTitle("Sensor Test")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button("Close") { dismiss() }
-                        }
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button(viewModel.isRunning ? "Stop" : "Start") {
-                                viewModel.toggleTesting()
-                            }
-                            .foregroundColor(viewModel.isRunning ? .red : .blue)
-                        }
+
+                    if viewModel.showCamera, viewModel.latestCameraImage != nil {
+                        cameraCard
+                    }
+
+                    if viewModel.showIMU, let imuSample = viewModel.latestIMU {
+                        imuCard(imuSample: imuSample)
+                    }
+
+                    if viewModel.showPose, let poseSample = viewModel.latestPose {
+                        poseCard(poseSample: poseSample)
+                    }
+
+                    if viewModel.showGPS, let gpsSample = viewModel.latestGPS {
+                        gpsCard(gpsSample: gpsSample)
+                    }
+
+                    if viewModel.showWatch, viewModel.watchConnected {
+                        watchCard
                     }
                 }
-
-                // Fullscreen LiDAR overlay
-                if isFullscreen, let depthSample = viewModel.latestDepthSample {
-                    fullscreenLiDARView(depthSample: depthSample)
-                }
+                .padding()
             }
-            .onDisappear {
-                viewModel.stopTesting()
+            .background(Color(.systemBackground))
+            .navigationTitle("Sensor Test")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(viewModel.isRunning ? "Stop" : "Start") {
+                        viewModel.toggleTesting()
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundColor(viewModel.isRunning ? .red : .primary)
+                }
             }
         }
     }
-    
-    // MARK: - Status Header
-    
+
+    // MARK: - Simple Cards
+
+    private func lidarCard(depthSample: DepthVisualizationSample) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("LiDAR Depth")
+                .font(.headline)
+
+            Text("\(depthSample.width)×\(depthSample.height)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    private var cameraCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Camera")
+                .font(.headline)
+
+            Text("Camera feed active")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    private func imuCard(imuSample: IMUData) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Motion (IMU)")
+                .font(.headline)
+
+            Text("IMU data active")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    private func poseCard(poseSample: PoseData) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Pose Tracking")
+                .font(.headline)
+
+            Text("Pose data active")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    private func gpsCard(gpsSample: GPSData) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("GPS Location")
+                .font(.headline)
+
+            Text("GPS data active")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    private var watchCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Apple Watch")
+                .font(.headline)
+
+            Text("Watch data active")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    // MARK: - Old Views (kept for compatibility)
+
     private var statusHeader: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center, spacing: 12) {
