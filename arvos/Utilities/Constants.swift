@@ -11,10 +11,10 @@ enum Constants {
     // MARK: - Network
     enum Network {
         static let defaultPort = 9090
-        static let reconnectDelay: TimeInterval = 2.0
-        static let maxReconnectAttempts = 5
+        static let reconnectDelay: TimeInterval = 1.0  // Reduced from 2.0 for faster recovery
+        static let maxReconnectAttempts = 10  // Increased from 5 for better resilience
         static let connectionTimeout: TimeInterval = 10.0
-        static let heartbeatInterval: TimeInterval = 5.0
+        static let heartbeatInterval: TimeInterval = 15.0  // Reduced from 30.0 (if it was higher) to detect connection issues faster
     }
 
     // MARK: - Recording
