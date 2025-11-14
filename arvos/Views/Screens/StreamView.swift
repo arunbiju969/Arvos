@@ -202,22 +202,20 @@ struct StreamView: View {
         VStack(spacing: 16) {
             // Primary Actions: Connection + Start/Stop
             if !viewModel.isStreaming {
-                // Connection Button (glassy)
+                // Connection Button
                 Button {
                     viewModel.showingConnectionSheet = true
                 } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: viewModel.isConnected ? "checkmark.circle.fill" : "network")
-                            .font(.system(size: 14, weight: .medium))
-
-                        Text(viewModel.isConnected ? "CONNECTED" : "CONNECT TO SERVER")
-                            .font(.system(.subheadline).weight(.semibold))
-                    }
-                    .foregroundColor(viewModel.isConnected ? .green : .primary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
+                    Text(viewModel.isConnected ? "Connected" : "Connect to Server")
+                        .font(.headline)
+                        .foregroundColor(viewModel.isConnected ? .green : .primary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(
+                            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                                .fill(Color(.secondarySystemBackground))
+                        )
                 }
-                .buttonStyle(GlassButtonStyle())
             }
 
             // Start/Stop Button
@@ -541,7 +539,6 @@ struct DataSourceToggle: View {
                 }
             }
         }
-        .tint(Theme.accent)
     }
 }
 
