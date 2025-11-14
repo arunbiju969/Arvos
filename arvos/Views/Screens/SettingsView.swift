@@ -32,7 +32,7 @@ struct SettingsView: View {
                     } maximumValueLabel: {
                         Text("30")
                     }
-                    .onChange(of: cameraFPS) { oldValue, newValue in
+                    .onChange(of: cameraFPS) { newValue in
                         viewModel.updateCameraFPS(Int(newValue))
                     }
                 } header: {
@@ -54,7 +54,7 @@ struct SettingsView: View {
                     } maximumValueLabel: {
                         Text("10")
                     }
-                    .onChange(of: depthFPS) { oldValue, newValue in
+                    .onChange(of: depthFPS) { newValue in
                         viewModel.updateDepthFPS(Int(newValue))
                     }
                 } header: {
@@ -76,7 +76,7 @@ struct SettingsView: View {
                     } maximumValueLabel: {
                         Text("400")
                     }
-                    .onChange(of: imuHz) { oldValue, newValue in
+                    .onChange(of: imuHz) { newValue in
                         viewModel.updateIMUHz(Int(newValue))
                     }
 
@@ -94,7 +94,7 @@ struct SettingsView: View {
                     } maximumValueLabel: {
                         Text("60")
                     }
-                    .onChange(of: poseHz) { oldValue, newValue in
+                    .onChange(of: poseHz) { newValue in
                         viewModel.updatePoseHz(Int(newValue))
                     }
                 } header: {

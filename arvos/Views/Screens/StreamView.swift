@@ -104,7 +104,7 @@ struct StreamView: View {
         .sheet(isPresented: $viewModel.showingQRScanner) {
             QRScannerView(scannedCode: $scannedQRCode)
         }
-        .onChange(of: scannedQRCode) { _, newValue in
+        .onChange(of: scannedQRCode) { newValue in
             if let code = newValue {
                 viewModel.scanQRCode(code)
                 scannedQRCode = nil
