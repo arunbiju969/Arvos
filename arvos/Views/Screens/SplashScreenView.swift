@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVKit
+import AVFoundation
 
 struct SplashScreenView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -71,9 +72,8 @@ struct VideoSplashView: View {
                 .ignoresSafeArea()
 
             if let player = player {
-                VideoPlayer(player: player)
+                VideoPlayerFillView(player: player)
                     .ignoresSafeArea()
-                    .disabled(true) // Disable controls
             } else {
                 // Fallback while video loads
                 Text("ARVOS")
@@ -108,6 +108,43 @@ struct VideoSplashView: View {
             queue: .main
         ) { _ in
             // Video finished playing - will auto-transition via parent view
+        }
+    }
+}
+
+// MARK: - Custom Video Player with Fill Mode
+
+struct VideoPlayerFillView: UIViewRepresentable {
+    let player: AVPlayer
+
+    func makeUIView(context: Context) -> PlayerView {
+        let view = PlayerView()
+        view.player = player
+        view.playerLayer.videoGravity = .resizeAspectFill // Fill instead of fit
+        return view
+    }
+
+    func updateUIView(_ uiView: PlayerView, context: Context) {
+        // Frame updates are handled automatically by the custom view
+    }
+
+    class PlayerView: UIView {
+        var playerLayer: AVPlayerLayer {
+            return layer as! AVPlayerLayer
+        }
+        
+        var player: AVPlayer? {
+            get { playerLayer.player }
+            set { playerLayer.player = newValue }
+        }
+        
+        override class var layerClass: AnyClass {
+            return AVPlayerLayer.self
+        }
+        
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            playerLayer.frame = bounds
         }
     }
 }
