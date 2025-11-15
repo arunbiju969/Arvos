@@ -14,10 +14,14 @@ struct SensorTestView: View {
     @State private var cameraBoxMinimized = false
     @State private var sensorBoxMinimized = false
     @State private var hasLiDAR: Bool = false
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @Environment(\.verticalSizeClass) var verticalSizeClass
 
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
+                let isLandscape = geometry.size.width > geometry.size.height
+
                 ZStack {
                     // Full-screen LiDAR/Depth background
                     Color.black
@@ -35,72 +39,95 @@ struct SensorTestView: View {
                         }
                     } else {
                         // Loading state
-                        VStack(spacing: 16) {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(1.2)
-                            
+                        VStack(spacing: 18) {
+                            if viewModel.isRunning {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(1.3)
+                            } else {
+                                Image(systemName: "play.circle")
+                                    .font(.system(size: 48, weight: .light))
+                                    .foregroundColor(.white.opacity(0.4))
+                            }
+
                             Text(viewModel.isRunning ? "Initializing depth sensor…" : "Tap Start to begin")
-                                .font(.subheadline)
+                                .font(.system(.subheadline, design: .rounded))
+                                .fontWeight(.medium)
                                 .foregroundColor(.white.opacity(0.8))
                         }
                     }
                     
                     // Top status bar
                     VStack {
-                        HStack {
+                        HStack(spacing: 12) {
                             // Status indicator
                             HStack(spacing: 8) {
                                 Circle()
-                                    .fill(viewModel.isRunning ? Color.green : Color.gray)
+                                    .fill(viewModel.isRunning ? Color.green : Color.gray.opacity(0.8))
                                     .frame(width: 8, height: 8)
-                                
+
                                 Text(viewModel.isRunning ? "LIVE" : "STOPPED")
                                     .font(.system(.caption, design: .monospaced))
+                                    .fontWeight(.semibold)
                                     .foregroundColor(.white)
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
                             .background(
                                 Capsule()
-                                    .fill(Color.black.opacity(0.6))
+                                    .fill(Color.black.opacity(0.7))
+                                    .overlay(
+                                        Capsule()
+                                            .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
+                                    )
                             )
-                            
+
                             Spacer()
-                            
+
                             // Device capability indicator
                             if hasLiDAR {
-                                HStack(spacing: 4) {
+                                HStack(spacing: 6) {
                                     Image(systemName: "cube.fill")
-                                        .font(.system(size: 10))
+                                        .font(.system(size: 11, weight: .semibold))
                                     Text("LiDAR")
                                         .font(.system(.caption2, design: .monospaced))
+                                        .fontWeight(.semibold)
                                 }
                                 .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
                                 .background(
                                     Capsule()
-                                        .fill(Color.black.opacity(0.6))
+                                        .fill(Color.black.opacity(0.7))
+                                        .overlay(
+                                            Capsule()
+                                                .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
+                                        )
                                 )
                             } else {
-                                HStack(spacing: 4) {
+                                HStack(spacing: 6) {
                                     Image(systemName: "cube.transparent.fill")
-                                        .font(.system(size: 10))
+                                        .font(.system(size: 11, weight: .semibold))
                                     Text("DEPTH")
                                         .font(.system(.caption2, design: .monospaced))
+                                        .fontWeight(.semibold)
                                 }
                                 .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
                                 .background(
                                     Capsule()
-                                        .fill(Color.black.opacity(0.6))
+                                        .fill(Color.black.opacity(0.7))
+                                        .overlay(
+                                            Capsule()
+                                                .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
+                                        )
                                 )
                             }
                         }
-                        .padding()
-                        
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+
                         Spacer()
                     }
                     
@@ -108,88 +135,111 @@ struct SensorTestView: View {
                     VStack {
                         HStack {
                             Spacer()
-                            
+
                             if !cameraBoxMinimized {
                                 cameraOverlayBox
-                                    .frame(width: min(geometry.size.width * 0.35, 200))
-                                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                                    .frame(width: isLandscape ? min(geometry.size.width * 0.25, 180) : min(geometry.size.width * 0.35, 200))
+                                    .transition(.asymmetric(
+                                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                                        removal: .move(edge: .trailing).combined(with: .opacity)
+                                    ))
                             } else {
                                 Button {
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                                         cameraBoxMinimized = false
                                     }
                                 } label: {
                                     Image(systemName: "camera.fill")
-                                        .font(.system(size: 16))
+                                        .font(.system(size: 16, weight: .medium))
                                         .foregroundColor(.white)
-                                        .padding(12)
+                                        .padding(14)
                                         .background(
                                             Circle()
-                                                .fill(Color.black.opacity(0.6))
+                                                .fill(Color.black.opacity(0.7))
+                                                .overlay(
+                                                    Circle()
+                                                        .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
+                                                )
                                         )
                                 }
                                 .transition(.scale.combined(with: .opacity))
                             }
                         }
-                        .padding(.trailing, 16)
-                        .padding(.top, 60)
-                        
+                        .padding(.trailing, isLandscape ? 16 : 20)
+                        .padding(.top, isLandscape ? 16 : 72)
+
                         Spacer()
                     }
                     
                     // Minimizable Sensor Data Box (bottom-left)
                     VStack {
                         Spacer()
-                        
+
                         HStack {
                             if !sensorBoxMinimized {
-                                sensorDataOverlayBox
-                                    .frame(width: min(geometry.size.width * 0.45, 240))
-                                    .transition(.move(edge: .leading).combined(with: .opacity))
+                                sensorDataOverlayBox(isLandscape: isLandscape)
+                                    .frame(width: isLandscape ? min(geometry.size.width * 0.30, 220) : min(geometry.size.width * 0.45, 240))
+                                    .transition(.asymmetric(
+                                        insertion: .move(edge: .leading).combined(with: .opacity),
+                                        removal: .move(edge: .leading).combined(with: .opacity)
+                                    ))
                             } else {
                                 Button {
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                                         sensorBoxMinimized = false
                                     }
                                 } label: {
                                     Image(systemName: "chart.bar.fill")
-                                        .font(.system(size: 16))
+                                        .font(.system(size: 16, weight: .medium))
                                         .foregroundColor(.white)
-                                        .padding(12)
+                                        .padding(14)
                                         .background(
                                             Circle()
-                                                .fill(Color.black.opacity(0.6))
+                                                .fill(Color.black.opacity(0.7))
+                                                .overlay(
+                                                    Circle()
+                                                        .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
+                                                )
                                         )
                                 }
                                 .transition(.scale.combined(with: .opacity))
                             }
-                            
+
                             Spacer()
                         }
-                        .padding(.leading, 16)
-                        .padding(.bottom, 100)
+                        .padding(.leading, isLandscape ? 16 : 20)
+                        .padding(.bottom, isLandscape ? 80 : 100)
                     }
                     
                     // Bottom controls
                     VStack {
                         Spacer()
-                        
+
                         HStack(spacing: 12) {
                             Button {
-                                viewModel.toggleTesting()
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    viewModel.toggleTesting()
+                                }
                             } label: {
-                                Text(viewModel.isRunning ? "Stop" : "Start")
-                                    .font(.system(.headline, design: .rounded))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 50)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                            .fill(viewModel.isRunning ? Color.red : Color.accentColor)
-                                    )
+                                HStack(spacing: 8) {
+                                    Image(systemName: viewModel.isRunning ? "stop.fill" : "play.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+
+                                    Text(viewModel.isRunning ? "Stop" : "Start")
+                                        .font(.system(.headline, design: .rounded))
+                                        .fontWeight(.semibold)
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 54)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .fill(viewModel.isRunning ? Color.red.opacity(0.9) : Color.accentColor)
+                                )
                             }
                         }
-                        .padding()
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
                     }
                 }
             }
@@ -212,44 +262,46 @@ struct SensorTestView: View {
     }
     
     // MARK: - Camera Overlay Box
-    
+
     private var cameraOverlayBox: some View {
         VStack(spacing: 0) {
             // Header with minimize button
             HStack {
                 HStack(spacing: 6) {
                     Image(systemName: "camera.fill")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 11, weight: .semibold))
                     Text("CAMERA")
                         .font(.system(.caption2, design: .monospaced))
                         .fontWeight(.semibold)
+                        .tracking(0.5)
                 }
                 .foregroundColor(.white)
-                
+
                 Spacer()
-                
-                        Button {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                         cameraBoxMinimized = true
                     }
                 } label: {
                     Image(systemName: "chevron.down")
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(.white.opacity(0.7))
+                        .padding(4)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.black.opacity(0.7))
-            
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color.black.opacity(0.8))
+
             // Camera feed
-                if let image = viewModel.latestCameraImage {
-                    Image(uiImage: image)
-                        .resizable()
+            if let image = viewModel.latestCameraImage {
+                Image(uiImage: image)
+                    .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(height: 120)
                     .clipped()
-                } else {
+            } else {
                 Rectangle()
                     .fill(Color.black.opacity(0.5))
                     .frame(height: 120)
@@ -259,56 +311,61 @@ struct SensorTestView: View {
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                 .scaleEffect(0.8)
                             Text("Waiting…")
-                                .font(.system(.caption2))
+                                .font(.system(.caption2, design: .monospaced))
                                 .foregroundColor(.white.opacity(0.7))
                         }
                     }
             }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.black.opacity(0.8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
-                )
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.black.opacity(0.85))
+                .shadow(color: Color.black.opacity(0.3), radius: 12, x: 0, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
         )
     }
     
     // MARK: - Sensor Data Overlay Box
-    
-    private var sensorDataOverlayBox: some View {
+
+    @ViewBuilder
+    private func sensorDataOverlayBox(isLandscape: Bool) -> some View {
         VStack(spacing: 0) {
             // Header with minimize button
             HStack {
                 HStack(spacing: 6) {
                     Image(systemName: "chart.bar.fill")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 11, weight: .semibold))
                     Text("SENSORS")
                         .font(.system(.caption2, design: .monospaced))
                         .fontWeight(.semibold)
+                        .tracking(0.5)
                 }
                 .foregroundColor(.white)
 
-            Spacer()
+                Spacer()
 
-                    Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                         sensorBoxMinimized = true
                     }
                 } label: {
                     Image(systemName: "chevron.down")
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(.white.opacity(0.7))
+                        .padding(4)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.black.opacity(0.7))
-            
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color.black.opacity(0.8))
+
             // Sensor data content
             ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: isLandscape ? 8 : 10) {
                     // IMU Data
                     if let imu = viewModel.latestIMU {
                         SensorDataRow(
@@ -316,9 +373,9 @@ struct SensorTestView: View {
                             label: "IMU",
                             content: {
                                 VStack(alignment: .leading, spacing: 4) {
-                            CompactDataRow(label: "Accel", x: imu.linearAcceleration.x, y: imu.linearAcceleration.y, z: imu.linearAcceleration.z, unit: "m/s²")
-                            CompactDataRow(label: "Gyro", x: imu.angularVelocity.x, y: imu.angularVelocity.y, z: imu.angularVelocity.z, unit: "rad/s")
-                        }
+                                    CompactDataRow(label: "Accel", x: imu.linearAcceleration.x, y: imu.linearAcceleration.y, z: imu.linearAcceleration.z, unit: "m/s²")
+                                    CompactDataRow(label: "Gyro", x: imu.angularVelocity.x, y: imu.angularVelocity.y, z: imu.angularVelocity.z, unit: "rad/s")
+                                }
                             }
                         )
                     }
@@ -330,14 +387,14 @@ struct SensorTestView: View {
                             label: "POSE",
                             content: {
                                 VStack(alignment: .leading, spacing: 4) {
-                            CompactDataRow(label: "Pos", x: Double(pose.position.x), y: Double(pose.position.y), z: Double(pose.position.z), unit: "m")
-                            HStack(spacing: 4) {
+                                    CompactDataRow(label: "Pos", x: Double(pose.position.x), y: Double(pose.position.y), z: Double(pose.position.z), unit: "m")
+                                    HStack(spacing: 4) {
                                         let statusColor = pose.isTrackingGood ? Color.green : Color.orange
                                         Circle()
                                             .fill(statusColor)
                                             .frame(width: 6, height: 6)
-                                Text(pose.trackingState)
-                                    .font(.system(.caption2, design: .monospaced))
+                                        Text(pose.trackingState)
+                                            .font(.system(.caption2, design: .monospaced))
                                             .foregroundColor(.white.opacity(0.8))
                                     }
                                 }
@@ -365,7 +422,7 @@ struct SensorTestView: View {
                             }
                         )
                     }
-                    
+
                     // Watch Data
                     if viewModel.watchConnected {
                         SensorDataRow(
@@ -377,24 +434,26 @@ struct SensorTestView: View {
                                         .fill(Color.green)
                                         .frame(width: 6, height: 6)
                                     Text(String(format: "%.1f Hz", viewModel.watchHz))
-                                    .font(.system(.caption2, design: .monospaced))
+                                        .font(.system(.caption2, design: .monospaced))
                                         .foregroundColor(.white.opacity(0.8))
                                 }
                             }
                         )
                     }
                 }
-                .padding(12)
+                .padding(isLandscape ? 12 : 14)
             }
-            .frame(maxHeight: 200)
+            .frame(maxHeight: isLandscape ? 180 : 220)
         }
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.black.opacity(0.8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
-                )
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.black.opacity(0.85))
+                .shadow(color: Color.black.opacity(0.3), radius: 12, x: 0, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
         )
     }
 }
@@ -407,7 +466,7 @@ struct SensorDataRow<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.system(size: 10, weight: .semibold))
@@ -415,16 +474,17 @@ struct SensorDataRow<Content: View>: View {
                 Text(label)
                     .font(.system(.caption2, design: .monospaced))
                     .fontWeight(.semibold)
+                    .tracking(0.3)
                     .foregroundColor(.white.opacity(0.9))
             }
 
             content
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 10)
         .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color.white.opacity(0.1))
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.white.opacity(0.08))
         )
     }
 }
@@ -437,16 +497,17 @@ struct CompactDataRow: View {
     let unit: String
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 6) {
             Text("\(label):")
                 .font(.system(.caption2, design: .monospaced))
+                .fontWeight(.medium)
                 .foregroundColor(.white.opacity(0.7))
-                .frame(width: 40, alignment: .leading)
+                .frame(width: 42, alignment: .leading)
             Text(String(format: "%.2f,%.2f,%.2f", x, y, z))
                 .font(.system(.caption2, design: .monospaced))
-                .foregroundColor(.white.opacity(0.9))
+                .foregroundColor(.white.opacity(0.95))
             Text(unit)
-                .font(.system(.caption2))
+                .font(.system(.caption2, design: .monospaced))
                 .foregroundColor(.white.opacity(0.6))
         }
     }
