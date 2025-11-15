@@ -53,11 +53,16 @@ struct BinaryMessage {
     let header: BinaryMessageHeader
     let data: Data
 
-    func encode() -> Data {
+    func encode() -> Data? {
         var result = Data()
 
         // Encode header as JSON
-        let headerJSON = try! JSONEncoder().encode(header)
+        guard let headerJSON = try? JSONEncoder().encode(header) else {
+            #if DEBUG
+            print("⚠️ Failed to encode binary message header")
+            #endif
+            return nil
+        }
         let headerSize = UInt32(headerJSON.count)
 
         // Write header size (4 bytes) + header JSON + binary data

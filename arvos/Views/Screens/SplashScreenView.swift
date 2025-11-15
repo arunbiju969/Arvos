@@ -93,7 +93,9 @@ struct VideoSplashView: View {
     private func setupVideoPlayer() {
         // Look for splash video in bundle
         guard let videoURL = Bundle.main.url(forResource: "splash", withExtension: "mp4") else {
+            #if DEBUG
             print("⚠️ Splash video not found - using fallback")
+            #endif
             return
         }
 
@@ -120,7 +122,7 @@ struct VideoPlayerFillView: UIViewRepresentable {
     func makeUIView(context: Context) -> PlayerView {
         let view = PlayerView()
         view.player = player
-        view.playerLayer.videoGravity = .resizeAspectFill // Fill instead of fit
+        view.playerLayer?.videoGravity = .resizeAspectFill // Fill instead of fit
         return view
     }
 
@@ -129,22 +131,22 @@ struct VideoPlayerFillView: UIViewRepresentable {
     }
 
     class PlayerView: UIView {
-        var playerLayer: AVPlayerLayer {
-            return layer as! AVPlayerLayer
+        var playerLayer: AVPlayerLayer? {
+            return layer as? AVPlayerLayer
         }
-        
+
         var player: AVPlayer? {
-            get { playerLayer.player }
-            set { playerLayer.player = newValue }
+            get { playerLayer?.player }
+            set { playerLayer?.player = newValue }
         }
-        
+
         override class var layerClass: AnyClass {
             return AVPlayerLayer.self
         }
-        
+
         override func layoutSubviews() {
             super.layoutSubviews()
-            playerLayer.frame = bounds
+            playerLayer?.frame = bounds
         }
     }
 }

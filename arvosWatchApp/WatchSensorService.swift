@@ -34,7 +34,11 @@ class WatchSensorService: ObservableObject {
         setupMotionManager()
         setupCommandObserver()
     }
-    
+
+    deinit {
+        updateTimer?.invalidate()
+    }
+
     private func setupCommandObserver() {
         NotificationCenter.default.addObserver(
             forName: .watchCommandReceived,
@@ -176,13 +180,15 @@ class WatchSensorService: ObservableObject {
         )
         
         // Create packet
-        let packet = WatchSensorPacket.imu(
+        guard let packet = WatchSensorPacket.imu(
             timestamp: timestamp,
             angularVelocity: angularVelocity,
             linearAcceleration: linearAcceleration,
             gravity: gravity
-        )
-        
+        ) else {
+            return
+        }
+
         // Send to phone
         connectivityService.send(packet: packet)
         
@@ -193,14 +199,16 @@ class WatchSensorService: ObservableObject {
             attitude.quaternion.z,
             attitude.quaternion.w
         )
-        let attitudePacket = WatchSensorPacket.attitude(
+        guard let attitudePacket = WatchSensorPacket.attitude(
             timestamp: timestamp,
             quaternion: quaternion,
             pitch: attitude.pitch,
             roll: attitude.roll,
             yaw: attitude.yaw,
             referenceFrame: "xArbitraryZVertical"
-        )
+        ) else {
+            return
+        }
         connectivityService.send(packet: attitudePacket)
         
         // Update statistics
@@ -235,7 +243,9 @@ class WatchSensorService: ObservableObject {
             confidence: activity.confidence.rawValue
         )
         
-        let activityPacket = WatchSensorPacket.motionActivity(timestamp: timestamp, activity: activityData)
+        guard let activityPacket = WatchSensorPacket.motionActivity(timestamp: timestamp, activity: activityData) else {
+            return
+        }
         connectivityService.send(packet: activityPacket)
         
         DispatchQueue.main.async {

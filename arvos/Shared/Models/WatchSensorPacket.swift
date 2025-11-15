@@ -16,15 +16,20 @@ struct WatchSensorPacket: Codable {
     let data: Data
     
     /// Create an IMU packet from watch sensor data
-    static func imu(timestamp: UInt64, angularVelocity: SIMD3<Double>, linearAcceleration: SIMD3<Double>, gravity: SIMD3<Double>) -> WatchSensorPacket {
+    static func imu(timestamp: UInt64, angularVelocity: SIMD3<Double>, linearAcceleration: SIMD3<Double>, gravity: SIMD3<Double>) -> WatchSensorPacket? {
         let imuData = WatchIMUData(
             angularVelocity: angularVelocity,
             linearAcceleration: linearAcceleration,
             gravity: gravity
         )
-        
-        let encoded = try! JSONEncoder().encode(imuData)
-        
+
+        guard let encoded = try? JSONEncoder().encode(imuData) else {
+            #if DEBUG
+            print("⚠️ Failed to encode watch IMU data")
+            #endif
+            return nil
+        }
+
         return WatchSensorPacket(
             timestampNs: timestamp,
             sensorType: "watch_imu",
@@ -33,7 +38,7 @@ struct WatchSensorPacket: Codable {
     }
     
     /// Create an attitude packet from watch pose data
-    static func attitude(timestamp: UInt64, quaternion: SIMD4<Double>, pitch: Double, roll: Double, yaw: Double, referenceFrame: String) -> WatchSensorPacket {
+    static func attitude(timestamp: UInt64, quaternion: SIMD4<Double>, pitch: Double, roll: Double, yaw: Double, referenceFrame: String) -> WatchSensorPacket? {
         let attitude = WatchAttitudeData(
             quaternion: quaternion,
             pitch: pitch,
@@ -41,9 +46,14 @@ struct WatchSensorPacket: Codable {
             yaw: yaw,
             referenceFrame: referenceFrame
         )
-        
-        let encoded = try! JSONEncoder().encode(attitude)
-        
+
+        guard let encoded = try? JSONEncoder().encode(attitude) else {
+            #if DEBUG
+            print("⚠️ Failed to encode watch attitude data")
+            #endif
+            return nil
+        }
+
         return WatchSensorPacket(
             timestampNs: timestamp,
             sensorType: "watch_attitude",
@@ -52,9 +62,14 @@ struct WatchSensorPacket: Codable {
     }
     
     /// Create a motion activity packet
-    static func motionActivity(timestamp: UInt64, activity: WatchMotionActivityData) -> WatchSensorPacket {
-        let encoded = try! JSONEncoder().encode(activity)
-        
+    static func motionActivity(timestamp: UInt64, activity: WatchMotionActivityData) -> WatchSensorPacket? {
+        guard let encoded = try? JSONEncoder().encode(activity) else {
+            #if DEBUG
+            print("⚠️ Failed to encode watch motion activity data")
+            #endif
+            return nil
+        }
+
         return WatchSensorPacket(
             timestampNs: timestamp,
             sensorType: "watch_activity",
