@@ -36,15 +36,21 @@ class WatchConnectivityService: NSObject, ObservableObject {
     
     override private init() {
         super.init()
-        
+
         guard WCSession.isSupported() else {
+            #if DEBUG
             print("⚠️ WatchConnectivity not supported on this device")
+            #endif
             return
         }
-        
+
         session = WCSession.default
         session?.delegate = self
         session?.activate()
+    }
+
+    deinit {
+        flushTimer?.invalidate()
     }
     
     // MARK: - Sending

@@ -58,6 +58,12 @@ class WebSocketService: NSObject {
     // Statistics
     private var bytesSent: Int64 = 0
     private var messagesSent: Int64 = 0
+
+    deinit {
+        reconnectTimer?.invalidate()
+        heartbeatTimer?.invalidate()
+        pathMonitor?.cancel()
+    }
     private var droppedMessages: Int64 = 0
 
     override init() {

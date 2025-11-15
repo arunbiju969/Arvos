@@ -47,6 +47,10 @@ class SensorManager: ObservableObject {
         setupDelegates()
     }
 
+    deinit {
+        burstScanTimer?.invalidate()
+    }
+
     private func setupDelegates() {
         cameraService.delegate = self
         arKitService.delegate = self

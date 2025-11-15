@@ -49,6 +49,10 @@ class RecordingManager: ObservableObject {
 
     // MARK: - Initialization
 
+    deinit {
+        timer?.invalidate()
+    }
+
     init() {
         createRecordingsDirectory()
     }
