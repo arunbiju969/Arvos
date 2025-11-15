@@ -8,6 +8,15 @@
 import Foundation
 import Combine
 
+// MARK: - Network Errors
+
+enum NetworkError: Error {
+    case encodingFailed
+    case invalidURL
+    case connectionFailed
+    case sendFailed
+}
+
 class NetworkManager: ObservableObject {
     static let shared = NetworkManager()
 
@@ -287,10 +296,14 @@ class NetworkManager: ObservableObject {
 
             // Create binary message
             let message = BinaryMessage(header: header, data: cameraFrame.data)
-            let encoded = message.encode()
+            guard let encoded = message.encode() else {
+                throw NetworkError.encodingFailed
+            }
 
+            #if DEBUG
             print("📤 Sending camera frame: \(cameraFrame.data.count) bytes, encoded: \(encoded.count) bytes")
-            
+            #endif
+
             if let adapter = adapter {
                 try adapter.send(data: encoded)
             } else {
@@ -311,7 +324,9 @@ class NetworkManager: ObservableObject {
             let header = try BinaryMessageHeader(metadata: metadata, dataSize: plyData.count)
 
             let message = BinaryMessage(header: header, data: plyData)
-            let encoded = message.encode()
+            guard let encoded = message.encode() else {
+                throw NetworkError.encodingFailed
+            }
 
             if let adapter = adapter {
                 try adapter.send(data: encoded)
