@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct arvosApp: App {
     @State private var showSplash = true
+    @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
 
     var body: some Scene {
         WindowGroup {
@@ -20,6 +21,12 @@ struct arvosApp: App {
                     SplashScreenView()
                         .transition(.opacity)
                         .zIndex(1)
+                }
+
+                if showOnboarding && !showSplash {
+                    OnboardingView(isPresented: $showOnboarding)
+                        .transition(.opacity)
+                        .zIndex(2)
                 }
             }
             .onAppear {
