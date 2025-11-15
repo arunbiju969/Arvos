@@ -58,7 +58,9 @@ class WatchConnectivityService: NSObject, ObservableObject {
     /// Send a sensor packet to the companion device
     func send(packet: WatchSensorPacket) {
         guard let session = session, session.activationState == .activated else {
+            #if DEBUG
             print("⚠️ WCSession not activated")
+            #endif
             bufferPacket(packet)
             return
         }
