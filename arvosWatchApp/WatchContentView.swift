@@ -11,75 +11,70 @@ import CoreMotion
 struct WatchContentView: View {
     @EnvironmentObject var connectivityService: WatchConnectivityService
     @StateObject private var sensorService = WatchSensorService()
-    
+
     var body: some View {
         NavigationView {
-            VStack(spacing: 16) {
-                // Connection status
-                HStack {
-                    Circle()
-                        .fill(connectivityService.isPhoneReachable ? Color.green : Color.red)
-                        .frame(width: 8, height: 8)
-                    Text(connectivityService.isPhoneReachable ? "Connected" : "Disconnected")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+            ScrollView {
+                VStack(spacing: 12) {
+                    // Connection status
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(connectivityService.isPhoneReachable ? Color.green : Color.red)
+                            .frame(width: 6, height: 6)
+                        Text(connectivityService.isPhoneReachable ? "Connected" : "Disconnected")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 4)
+
+                    // Streaming control
+                    Button(action: {
+                        if sensorService.isStreaming {
+                            sensorService.stopStreaming()
+                        } else {
+                            sensorService.startStreaming()
+                        }
+                    }) {
+                        VStack(spacing: 8) {
+                            Image(systemName: sensorService.isStreaming ? "stop.circle.fill" : "play.circle.fill")
+                                .font(.system(size: 50))
+                            Text(sensorService.isStreaming ? "Stop" : "Start")
+                                .font(.headline)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(sensorService.isStreaming ? .red : .green)
                 
-                // Streaming control
-                Button(action: {
                     if sensorService.isStreaming {
-                        sensorService.stopStreaming()
-                    } else {
-                        sensorService.startStreaming()
-                    }
-                }) {
-                    VStack {
-                        Image(systemName: sensorService.isStreaming ? "stop.circle.fill" : "play.circle.fill")
-                            .font(.system(size: 40))
-                        Text(sensorService.isStreaming ? "Stop" : "Start")
-                            .font(.headline)
+                        // Stats
+                        VStack(spacing: 8) {
+                            HStack {
+                                Text("\(String(format: "%.0f", sensorService.currentHz)) Hz")
+                                    .font(.title3.bold())
+                                Spacer()
+                                Text("\(sensorService.sampleCount)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            if let activity = sensorService.latestActivity {
+                                Divider()
+                                HStack {
+                                    Text(activityDescription(activity))
+                                        .font(.caption.bold())
+                                    Spacer()
+                                    Text(confidenceString(activity.confidence))
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
                     }
                 }
-                .buttonStyle(.plain)
-                .foregroundColor(sensorService.isStreaming ? .red : .green)
-                
-                if sensorService.isStreaming {
-                    VStack(alignment: .leading, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("IMU: \(String(format: "%.0f Hz", sensorService.currentHz))")
-                            Text("Samples: \(sensorService.sampleCount)")
-                        }
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        
-                        if let attitude = sensorService.latestAttitude {
-                            Divider()
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Attitude").font(.caption.bold())
-                                Text("Pitch: \(formatAngle(attitude.pitch))")
-                                Text("Roll: \(formatAngle(attitude.roll))")
-                                Text("Yaw: \(formatAngle(attitude.yaw))")
-                            }
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        }
-                        
-                        if let activity = sensorService.latestActivity {
-                            Divider()
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Activity").font(.caption.bold())
-                                Text(activityDescription(activity))
-                                Text("Confidence: \(confidenceString(activity.confidence))")
-                            }
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        }
-                        
-                    }
-                }
+                .padding(.horizontal, 8)
             }
-            .padding()
-            .navigationTitle("arvos")
+            .navigationTitle("ARVOS")
         }
     }
     
