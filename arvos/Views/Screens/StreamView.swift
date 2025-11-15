@@ -16,6 +16,7 @@ struct StreamView: View {
         GeometryReader { geometry in
             let isLandscape = geometry.size.width > geometry.size.height
             let isIPad = UIDevice.current.userInterfaceIdiom == .pad
+            let isIPhoneLandscape = isLandscape && !isIPad
 
             ZStack {
                 // Background
@@ -62,33 +63,69 @@ struct StreamView: View {
                         }
                         .frame(width: geometry.size.width * 0.4)
                     }
+                } else if isIPhoneLandscape {
+                    // iPhone Landscape: Scrollable horizontal layout
+                    ScrollView {
+                        HStack(spacing: 0) {
+                            // Left side: Status and content
+                            VStack(spacing: 12) {
+                                topStatusBar
+                                    .background(Color(.systemBackground))
+
+                                if viewModel.isStreaming {
+                                    liveDataBentoBox
+                                } else {
+                                    centerContent
+                                        .padding(.vertical, 20)
+                                }
+                            }
+                            .frame(width: geometry.size.width * 0.5)
+
+                            // Right side: Controls
+                            VStack(spacing: 12) {
+                                if !viewModel.isStreaming {
+                                    modeSelector
+                                        .padding(.horizontal, 16)
+                                }
+
+                                Spacer()
+
+                                bottomControls
+                                    .background(Color(.systemBackground))
+                            }
+                            .frame(width: geometry.size.width * 0.5)
+                        }
+                        .frame(minHeight: geometry.size.height)
+                    }
                 } else {
-                    // iPhone or iPad Portrait: Vertical layout
-                    VStack(spacing: 0) {
-                        // Top Status Bar
-                        topStatusBar
-                            .background(Color(.systemBackground))
+                    // iPhone Portrait: Scrollable vertical layout
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            // Top Status Bar
+                            topStatusBar
+                                .background(Color(.systemBackground))
 
-                        Spacer()
+                            // Center Content
+                            if viewModel.isStreaming {
+                                liveDataBentoBox
+                                    .padding(.vertical, 20)
+                            } else {
+                                centerContent
+                                    .padding(.vertical, 40)
+                            }
 
-                        // Center Content
-                        if viewModel.isStreaming {
-                            liveDataBentoBox
-                        } else {
-                            centerContent
+                            if !viewModel.isStreaming {
+                                modeSelector
+                                    .padding(.horizontal)
+                                    .padding(.vertical, 16)
+                            }
+
+                            // Bottom Controls
+                            bottomControls
+                                .background(Color(.systemBackground))
+                                .padding(.bottom, 20)
                         }
-
-                        Spacer()
-
-                        if !viewModel.isStreaming {
-                            modeSelector
-                                .padding(.horizontal)
-                                .padding(.bottom, 16)
-                        }
-
-                        // Bottom Controls
-                        bottomControls
-                            .background(Color(.systemBackground))
+                        .frame(minWidth: geometry.size.width)
                     }
                 }
             }
@@ -127,9 +164,18 @@ struct StreamView: View {
         }
         .onChange(of: scannedQRCode) { newValue in
             if let code = newValue {
-                viewModel.scanQRCode(code)
+                if self.validateQRCode(code) {
+                    viewModel.scanQRCode(code)
+                } else {
+                    viewModel.showError(message: "Invalid QR code format. Expected ws:// or wss:// URL.")
+                }
                 scannedQRCode = nil
             }
+        }
+        .alert("Error", isPresented: $viewModel.showingError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred")
         }
     }
 
@@ -374,6 +420,7 @@ struct ModeCard: View {
     let mode: StreamMode
     let isSelected: Bool
     let action: () -> Void
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         Button {
@@ -382,18 +429,18 @@ struct ModeCard: View {
             VStack(spacing: 6) {
                 Image(systemName: mode.icon)
                     .font(.system(size: 16, weight: .regular))
-                    .foregroundColor(isSelected ? .white : .primary)
+                    .foregroundColor(isSelected ? (colorScheme == .dark ? .black : .white) : .primary)
                     .frame(height: 20)
 
                 Text(mode.rawValue.uppercased())
                     .font(.system(.caption2).weight(.semibold))
-                    .foregroundColor(isSelected ? .white : .primary)
+                    .foregroundColor(isSelected ? (colorScheme == .dark ? .black : .white) : .primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
 
                 Text(mode.description)
                     .font(.system(.caption2))
-                    .foregroundColor(isSelected ? Color.white.opacity(0.8) : .secondary)
+                    .foregroundColor(isSelected ? (colorScheme == .dark ? Color.black.opacity(0.7) : Color.white.opacity(0.8)) : .secondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
@@ -404,7 +451,7 @@ struct ModeCard: View {
             .padding(.horizontal, 8)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(isSelected ? Color.primary : Color(.secondarySystemBackground))
+                    .fill(isSelected ? (colorScheme == .dark ? Color.white : Color.primary) : Color(.secondarySystemBackground))
             )
         }
     }
@@ -585,6 +632,36 @@ struct BentoCard: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
         )
+    }
+}
+
+// MARK: - QR Code Validation Extension
+
+extension StreamView {
+    private func validateQRCode(_ code: String) -> Bool {
+        // Must be a valid URL
+        guard let url = URL(string: code) else {
+            return false
+        }
+
+        // Must have ws:// or wss:// scheme
+        guard let scheme = url.scheme, (scheme == "ws" || scheme == "wss") else {
+            return false
+        }
+
+        // Must have a host
+        guard let host = url.host, !host.isEmpty else {
+            return false
+        }
+
+        // Port must be valid if specified
+        if let port = url.port {
+            guard (1...65535).contains(port) else {
+                return false
+            }
+        }
+
+        return true
     }
 }
 

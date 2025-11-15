@@ -40,6 +40,8 @@ class StreamingViewModel: ObservableObject {
     @Published var showingQRScanner = false
     @Published var showingConnectionSheet = false
     @Published var showingSettings = false
+    @Published var errorMessage: String?
+    @Published var showingError = false
     // Removed LiDAR preview - it was causing ARFrame retention issues
 
     private var cancellables = Set<AnyCancellable>()
@@ -261,5 +263,12 @@ class StreamingViewModel: ObservableObject {
 
     deinit {
         updateTimer?.invalidate()
+    }
+
+    // MARK: - Error Handling
+
+    func showError(message: String) {
+        errorMessage = message
+        showingError = true
     }
 }
