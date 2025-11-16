@@ -75,6 +75,8 @@ class SensorManager: ObservableObject {
         guard !isStreaming else { return }
 
         let config = currentMode.config
+        print("📡 Starting streaming with mode: \(currentMode.name)")
+        print("   Camera: \(config.cameraEnabled), Depth: \(config.depthEnabled), IMU: \(config.imuEnabled)")
 
         // Camera system selection:
         // - Use ARKit camera when both camera AND depth are enabled (integrated depth+RGB)
