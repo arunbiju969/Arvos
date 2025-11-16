@@ -18,6 +18,7 @@ struct arvosApp: App {
 
                 if showSplash {
                     SplashScreenView()
+                        .ignoresSafeArea()
                         .transition(.opacity)
                         .zIndex(1)
                 }

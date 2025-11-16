@@ -91,10 +91,48 @@ struct VideoSplashView: View {
     }
 
     private func setupVideoPlayer() {
-        // Look for splash video in bundle
-        guard let videoURL = Bundle.main.url(forResource: "splash", withExtension: "mp4") else {
+        // Try multiple ways to find the video file
+        var videoURL: URL?
+        
+        // Method 1: Standard bundle resource lookup (try both cases)
+        videoURL = Bundle.main.url(forResource: "splash", withExtension: "mp4")
+        if videoURL == nil {
+            videoURL = Bundle.main.url(forResource: "Splash", withExtension: "mp4")
+        }
+        
+        // Method 2: Direct path lookup in bundle
+        if videoURL == nil, let resourcePath = Bundle.main.resourcePath {
+            let possiblePaths = [
+                "\(resourcePath)/splash.mp4",
+                "\(resourcePath)/Splash.mp4",
+                "\(resourcePath)/arvos/splash.mp4",
+                "\(resourcePath)/arvos/Splash.mp4"
+            ]
+            
+            for path in possiblePaths {
+                if FileManager.default.fileExists(atPath: path) {
+                    videoURL = URL(fileURLWithPath: path)
+                    break
+                }
+            }
+        }
+        
+        guard let videoURL = videoURL else {
             #if DEBUG
-            print("⚠️ Splash video not found - using fallback")
+            // List available resources for debugging
+            if let resourcePath = Bundle.main.resourcePath {
+                print("⚠️ Splash video not found - using fallback")
+                print("   Resource path: \(resourcePath)")
+                if let contents = try? FileManager.default.contentsOfDirectory(atPath: resourcePath) {
+                    let videoFiles = contents.filter { $0.lowercased().contains("splash") || $0.lowercased().hasSuffix(".mp4") }
+                    if !videoFiles.isEmpty {
+                        print("   Found video files: \(videoFiles)")
+                    } else {
+                        print("   No splash or mp4 files found in bundle")
+                    }
+                }
+                print("   💡 Make sure Splash.mp4 is added to 'Copy Bundle Resources' in Build Phases")
+            }
             #endif
             return
         }
@@ -122,7 +160,7 @@ struct VideoPlayerFillView: UIViewRepresentable {
     func makeUIView(context: Context) -> PlayerView {
         let view = PlayerView()
         view.player = player
-        view.playerLayer?.videoGravity = .resizeAspectFill // Fill instead of fit
+        view.playerLayer?.videoGravity = .resizeAspectFill // Fill screen, may crop
         return view
     }
 

@@ -56,9 +56,22 @@
 		3FF2D1FC2EC6FBF2009B34B2 /* WatchConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2A336EA02ECA8696000BEB6D /* Exceptions for "arvos" folder in "arvosWatchApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Splash.mp4,
+			);
+			target = 2A91EA6D2EC3DEC1000EBD56 /* arvosWatchApp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2AB654192EBD65FC007FBEFB /* arvos */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2A336EA02ECA8696000BEB6D /* Exceptions for "arvos" folder in "arvosWatchApp" target */,
+			);
 			path = arvos;
 			sourceTree = "<group>";
 		};
