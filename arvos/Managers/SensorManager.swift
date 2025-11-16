@@ -353,6 +353,9 @@ extension SensorManager: CameraServiceDelegate {
     func cameraService(_ service: CameraService, didCapture frame: CameraFrame) {
         updateFPS()
 
+        // Only stream if camera is enabled in current mode
+        guard currentMode.config.cameraEnabled else { return }
+
         // Stream to network
         networkManager.stream(cameraFrame: frame)
 
@@ -373,6 +376,9 @@ extension SensorManager: CameraServiceDelegate {
 
 extension SensorManager: ARKitServiceDelegate {
     func arKitService(_ service: ARKitService, didUpdate pose: PoseData) {
+        // Only stream if pose is enabled in current mode
+        guard currentMode.config.poseEnabled else { return }
+
         // Stream to network
         networkManager.stream(poseData: pose)
 
@@ -383,6 +389,8 @@ extension SensorManager: ARKitServiceDelegate {
     }
 
     func arKitService(_ service: ARKitService, didCapture depth: DepthFrame) {
+        // Only stream if depth is enabled in current mode
+        guard currentMode.config.depthEnabled else { return }
         // Stream to network
         networkManager.stream(depthFrame: depth)
 
@@ -425,6 +433,9 @@ extension SensorManager: ARKitServiceDelegate {
 
 extension SensorManager: IMUServiceDelegate {
     func imuService(_ service: IMUService, didUpdate data: IMUData) {
+        // Only stream if IMU is enabled in current mode
+        guard currentMode.config.imuEnabled else { return }
+
         // Stream to network
         networkManager.stream(imuData: data)
 
@@ -445,6 +456,9 @@ extension SensorManager: IMUServiceDelegate {
 
 extension SensorManager: GPSServiceDelegate {
     func gpsService(_ service: GPSService, didUpdate location: GPSData) {
+        // Only stream if GPS is enabled in current mode
+        guard currentMode.config.gpsEnabled else { return }
+
         // Stream to network
         networkManager.stream(gpsData: location)
 
