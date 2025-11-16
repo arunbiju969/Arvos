@@ -36,7 +36,7 @@ enum Constants {
         static let maxPoints = 100_000
         static let minDepth: Float = 0.1 // meters
         static let maxDepth: Float = 5.0 // meters
-        static let downsampleFactor = 2  // Reduced from 4 for denser point cloud (2x more points)
+        static let downsampleFactor = 4  // Original value - works well for iOS
     }
 
     // MARK: - UI
