@@ -109,8 +109,8 @@ class ARKitService: NSObject {
         self.depthEnabled = depthEnabled
         self.targetDepthFPS = depthFPS
         self.targetPoseFPS = poseFPS
-        self.depthInterval = Constants.Time.nanosPerSecond / UInt64(depthFPS)
-        self.poseInterval = Constants.Time.nanosPerSecond / UInt64(poseFPS)
+        self.depthInterval = depthFPS > 0 ? Constants.Time.nanosPerSecond / UInt64(depthFPS) : 0
+        self.poseInterval = poseFPS > 0 ? Constants.Time.nanosPerSecond / UInt64(poseFPS) : 0
 
         arSession = ARSession()
         arSession?.delegate = self
