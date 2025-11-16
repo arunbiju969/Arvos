@@ -20,6 +20,17 @@ class SensorManager: ObservableObject {
     @Published private(set) var latestDepthFrame: DepthFrame?
     // Removed latestDepthSample to avoid ARFrame retention issues
 
+    // Custom mode configuration storage
+    private var customModeConfig: ModeConfiguration?
+
+    /// Returns the current active configuration (custom config if in custom mode, otherwise mode's default config)
+    var currentConfig: ModeConfiguration {
+        if currentMode == .custom, let customConfig = customModeConfig {
+            return customConfig
+        }
+        return currentMode.config
+    }
+
     // Services (exposed for sensor test view)
     let cameraService = CameraService()
     let arKitService = ARKitService()
@@ -74,7 +85,7 @@ class SensorManager: ObservableObject {
     func startStreaming() {
         guard !isStreaming else { return }
 
-        let config = currentMode.config
+        let config = currentConfig
         print("📡 Starting streaming with mode: \(currentMode)")
         print("   Camera: \(config.cameraEnabled), Depth: \(config.depthEnabled), IMU: \(config.imuEnabled)")
 
@@ -289,7 +300,7 @@ class SensorManager: ObservableObject {
     }
 
     var burstScanRemainingTime: TimeInterval? {
-        guard let startTime = burstScanStartTime, let duration = currentMode.config.autoDuration else {
+        guard let startTime = burstScanStartTime, let duration = currentConfig.autoDuration else {
             return nil
         }
 
@@ -318,6 +329,32 @@ class SensorManager: ObservableObject {
 
     func updateGPSFrequency(_ hz: Int) {
         gpsService.updateFrequency(hz)
+    }
+
+    /// Apply a custom mode configuration
+    /// This allows creating custom modes by directly specifying sensor settings
+    func applyCustomConfiguration(_ config: ModeConfiguration) {
+        guard !isStreaming else {
+            print("Cannot change configuration while streaming")
+            return
+        }
+
+        // Store the custom configuration
+        customModeConfig = config
+
+        // Set to custom mode
+        currentMode = .custom
+
+        print("📊 Applying custom configuration:")
+        print("   Camera: \(config.cameraEnabled) @ \(config.cameraFPS)fps")
+        print("   Depth: \(config.depthEnabled) @ \(config.depthFPS)fps")
+        print("   IMU: \(config.imuEnabled) @ \(config.imuHz)Hz")
+        print("   Pose: \(config.poseEnabled) @ \(config.poseHz)Hz")
+        print("   GPS: \(config.gpsEnabled)")
+        print("   Watch: \(config.watchEnabled) @ \(config.watchHz)Hz")
+
+        // Send config to network
+        networkManager.sendModeConfig(.custom)
     }
 
     // MARK: - FPS Calculation
@@ -354,7 +391,7 @@ extension SensorManager: CameraServiceDelegate {
         updateFPS()
 
         // Only stream if camera is enabled in current mode
-        guard currentMode.config.cameraEnabled else { return }
+        guard currentConfig.cameraEnabled else { return }
 
         // Stream to network
         networkManager.stream(cameraFrame: frame)
@@ -377,7 +414,7 @@ extension SensorManager: CameraServiceDelegate {
 extension SensorManager: ARKitServiceDelegate {
     func arKitService(_ service: ARKitService, didUpdate pose: PoseData) {
         // Only stream if pose is enabled in current mode
-        guard currentMode.config.poseEnabled else { return }
+        guard currentConfig.poseEnabled else { return }
 
         // Stream to network
         networkManager.stream(poseData: pose)
@@ -390,7 +427,7 @@ extension SensorManager: ARKitServiceDelegate {
 
     func arKitService(_ service: ARKitService, didCapture depth: DepthFrame) {
         // Only stream if depth is enabled in current mode
-        guard currentMode.config.depthEnabled else { return }
+        guard currentConfig.depthEnabled else { return }
         // Stream to network
         networkManager.stream(depthFrame: depth)
 
@@ -434,7 +471,7 @@ extension SensorManager: ARKitServiceDelegate {
 extension SensorManager: IMUServiceDelegate {
     func imuService(_ service: IMUService, didUpdate data: IMUData) {
         // Only stream if IMU is enabled in current mode
-        guard currentMode.config.imuEnabled else { return }
+        guard currentConfig.imuEnabled else { return }
 
         // Stream to network
         networkManager.stream(imuData: data)
@@ -457,7 +494,7 @@ extension SensorManager: IMUServiceDelegate {
 extension SensorManager: GPSServiceDelegate {
     func gpsService(_ service: GPSService, didUpdate location: GPSData) {
         // Only stream if GPS is enabled in current mode
-        guard currentMode.config.gpsEnabled else { return }
+        guard currentConfig.gpsEnabled else { return }
 
         // Stream to network
         networkManager.stream(gpsData: location)

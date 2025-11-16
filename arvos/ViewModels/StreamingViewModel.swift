@@ -189,29 +189,25 @@ class StreamingViewModel: ObservableObject {
     // MARK: - Sensor Controls
 
     func updateDataSources(camera: Bool, depth: Bool, imu: Bool, pose: Bool, gps: Bool) {
-        // Create custom mode based on user selection
-        let customMode: StreamMode = .fullSensor // Use as base
-        sensorManager.setMode(customMode)
+        // Create custom configuration based on user selection
+        let config = ModeConfiguration(
+            cameraEnabled: camera,
+            cameraFPS: camera ? 30 : 0,
+            depthEnabled: depth,
+            depthFPS: depth ? 10 : 0,
+            imuEnabled: imu,
+            imuHz: imu ? 200 : 0,
+            poseEnabled: pose,
+            poseHz: pose ? 60 : 0,
+            gpsEnabled: gps,
+            watchEnabled: false,
+            watchHz: 0,
+            recordingEnabled: false,
+            autoDuration: nil
+        )
 
-        // Then dynamically enable/disable sensors
-        if !camera {
-            // Disable camera - set to 0 FPS
-            sensorManager.updateCameraFPS(0)
-        }
-
-        sensorManager.updateDepthSettings(enabled: depth, fps: depth ? 5 : 0)
-
-        if !imu {
-            sensorManager.updateIMUFrequency(0)
-        }
-
-        if !pose {
-            sensorManager.updatePoseFPS(0)
-        }
-
-        if !gps {
-            sensorManager.updateGPSFrequency(0)
-        }
+        // Apply the custom configuration
+        sensorManager.applyCustomConfiguration(config)
 
         print("📊 Data sources updated: Camera=\(camera), Depth=\(depth), IMU=\(imu), Pose=\(pose), GPS=\(gps)")
     }

@@ -16,6 +16,7 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
     case gpsTracker = "GPS Tracker"
     case fullSensor = "Full Sensor"
     case lowPower = "Low Power"
+    case custom = "Custom"
 
     var id: String { rawValue }
 
@@ -36,6 +37,8 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
             return "All sensors max rate\n(Research mode)"
         case .lowPower:
             return "Minimal sensors\n(Battery saver)"
+        case .custom:
+            return "Choose specific sensors\n(Custom configuration)"
         }
     }
 
@@ -56,6 +59,8 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
             return "cpu.fill"
         case .lowPower:
             return "battery.100"
+        case .custom:
+            return "slider.horizontal.3"
         }
     }
 
@@ -175,6 +180,23 @@ enum StreamMode: String, Codable, CaseIterable, Identifiable {
                 imuHz: 50,
                 poseEnabled: false,
                 poseHz: 0,
+                gpsEnabled: false,
+                watchEnabled: false,
+                watchHz: 0,
+                recordingEnabled: false,
+                autoDuration: nil
+            )
+        case .custom:
+            // Default configuration for custom mode - will be modified by user selection
+            return ModeConfiguration(
+                cameraEnabled: true,
+                cameraFPS: 30,
+                depthEnabled: true,
+                depthFPS: 10,
+                imuEnabled: true,
+                imuHz: 200,
+                poseEnabled: true,
+                poseHz: 60,
                 gpsEnabled: false,
                 watchEnabled: false,
                 watchHz: 0,

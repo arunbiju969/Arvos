@@ -172,6 +172,12 @@ struct StreamView: View {
                 scannedQRCode = nil
             }
         }
+        .onChange(of: viewModel.selectedMode) { newMode in
+            // Automatically show data source picker when Custom mode is selected
+            if newMode == .custom && !viewModel.isStreaming {
+                showDataSourcePicker = true
+            }
+        }
         .alert("Error", isPresented: $viewModel.showingError) {
             Button("OK", role: .cancel) { }
         } message: {
