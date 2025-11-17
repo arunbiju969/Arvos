@@ -39,13 +39,7 @@ float3 unprojectDepthSample(float2 pixelCoord,
                             float2 depthResolution) {
     // Normalize to [0, 1] range
     float2 normalizedCoord = pixelCoord / depthResolution;
-
-    // Convert to view space coordinates [-1, 1] with proper aspect
-    // Note: Y is flipped because image coordinates start at top-left
-    float2 viewCoord = float2(
-        (normalizedCoord.x * 2.0 - 1.0),
-        (1.0 - normalizedCoord.y * 2.0)  // Flip Y
-    );
+    (void)normalizedCoord; // Calculated for potential future use
 
     // Apply inverse intrinsics to get direction vector
     // The intrinsics matrix already contains focal length and principal point

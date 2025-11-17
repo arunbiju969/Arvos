@@ -125,8 +125,7 @@ struct PointCloudMetalView: UIViewRepresentable {
         }
 
         func draw(in view: MTKView) {
-            guard let device = device,
-                  let commandQueue = commandQueue,
+            guard let commandQueue = commandQueue,
                   let pipelineState = pipelineState,
                   let depthState = depthState,
                   let drawable = view.currentDrawable,

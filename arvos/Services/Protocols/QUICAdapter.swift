@@ -36,9 +36,8 @@ final class QUICAdapter: NSObject, StreamingProtocol {
         // Note: HTTP/3 (QUIC) is automatically negotiated by URLSession on iOS 15+
         // when the server supports it via Alt-Svc header. No explicit configuration needed.
         // If the server doesn't support HTTP/3, it will fall back to HTTP/2 or HTTP/1.1.
-        if #available(iOS 15.0, *) {
-            urlSession = URLSession(configuration: configuration)
-        }
+        // Class is already marked @available(iOS 15.0, *)
+        urlSession = URLSession(configuration: configuration)
     }
     
     func connect(config: ConnectionConfig) async throws {
@@ -155,11 +154,8 @@ final class QUICAdapter: NSObject, StreamingProtocol {
     }
     
     static func isAvailable() -> Bool {
-        if #available(iOS 15.0, *) {
-            return true
-        } else {
-            return false
-        }
+        // Class is already marked @available(iOS 15.0, *)
+        return true
     }
 }
 

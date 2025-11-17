@@ -79,7 +79,7 @@ struct BinaryMessage {
 
 /// Connection handshake message
 struct HandshakeMessage: Codable {
-    let type: String = "handshake"
+    let type: String
     let deviceName: String
     let deviceModel: String
     let osVersion: String
@@ -88,6 +88,7 @@ struct HandshakeMessage: Codable {
     let timestampNs: UInt64
 
     init(timestamp: UInt64) {
+        self.type = "handshake"
         self.deviceName = UIDevice.current.name
         self.deviceModel = UIDevice.current.model
         self.osVersion = UIDevice.current.systemVersion
@@ -116,12 +117,13 @@ struct DeviceCapabilities: Codable {
 
 /// Mode configuration message
 struct ModeConfigMessage: Codable {
-    let type: String = "mode_config"
+    let type: String
     let mode: StreamMode
     let config: ModeConfiguration
     let timestampNs: UInt64
 
     init(mode: StreamMode, timestamp: UInt64) {
+        self.type = "mode_config"
         self.mode = mode
         self.config = mode.config
         self.timestampNs = timestamp
@@ -130,13 +132,14 @@ struct ModeConfigMessage: Codable {
 
 /// Status message
 struct StatusMessage: Codable {
-    let type: String = "status"
+    let type: String
     let timestampNs: UInt64
     let status: String // "connected", "streaming", "recording", "stopped", "error"
     let message: String?
     let sessionId: String?
 
     init(timestamp: UInt64, status: String, message: String? = nil, sessionId: String? = nil) {
+        self.type = "status"
         self.timestampNs = timestamp
         self.status = status
         self.message = message
@@ -146,12 +149,13 @@ struct StatusMessage: Codable {
 
 /// Error message
 struct ErrorMessage: Codable {
-    let type: String = "error"
+    let type: String
     let timestampNs: UInt64
     let error: String
     let details: String?
 
     init(timestamp: UInt64, error: String, details: String? = nil) {
+        self.type = "error"
         self.timestampNs = timestamp
         self.error = error
         self.details = details

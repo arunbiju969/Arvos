@@ -73,10 +73,10 @@ final class BLEAdapter: NSObject, StreamingProtocol {
     }
     
     func send<T: Encodable>(json object: T) throws {
-        guard state == .connected, let peripheral = peripheral else {
+        guard state == .connected, peripheral != nil else {
             throw StreamingProtocolError.notConnected
         }
-        
+
         let data = try JSONEncoder().encode(object)
         try send(data: data)
     }

@@ -24,7 +24,7 @@ protocol SensorData: Codable {
 /// Accelerometer and gyroscope data from CoreMotion
 struct IMUData: SensorData {
     let timestampNs: UInt64
-    let sensorType: String = "imu"
+    let sensorType: String
 
     /// Angular velocity in rad/s (x, y, z)
     let angularVelocity: SIMD3<Double>
@@ -37,6 +37,7 @@ struct IMUData: SensorData {
 
     init(timestamp: UInt64, motion: CMDeviceMotion) {
         self.timestampNs = timestamp
+        self.sensorType = "imu"
         self.angularVelocity = SIMD3(
             motion.rotationRate.x,
             motion.rotationRate.y,
@@ -57,6 +58,7 @@ struct IMUData: SensorData {
     // Memberwise initializer for custom use
     init(timestampNs: UInt64, angularVelocity: SIMD3<Double>, linearAcceleration: SIMD3<Double>, gravity: SIMD3<Double> = SIMD3(0, 0, -9.81)) {
         self.timestampNs = timestampNs
+        self.sensorType = "imu"
         self.angularVelocity = angularVelocity
         self.linearAcceleration = linearAcceleration
         self.gravity = gravity
@@ -68,7 +70,7 @@ struct IMUData: SensorData {
 /// GPS location data from CoreLocation
 struct GPSData: SensorData {
     let timestampNs: UInt64
-    let sensorType: String = "gps"
+    let sensorType: String
 
     let latitude: Double
     let longitude: Double
@@ -80,6 +82,7 @@ struct GPSData: SensorData {
 
     init(timestamp: UInt64, location: CLLocation) {
         self.timestampNs = timestamp
+        self.sensorType = "gps"
         self.latitude = location.coordinate.latitude
         self.longitude = location.coordinate.longitude
         self.altitude = location.altitude
@@ -95,7 +98,7 @@ struct GPSData: SensorData {
 /// 6DOF pose from ARKit world tracking
 struct PoseData: SensorData {
     let timestampNs: UInt64
-    let sensorType: String = "pose"
+    let sensorType: String
 
     /// Position in 3D space (x, y, z) in meters
     let position: SIMD3<Float>
@@ -113,6 +116,7 @@ struct PoseData: SensorData {
 
     init(timestamp: UInt64, camera: ARCamera) {
         self.timestampNs = timestamp
+        self.sensorType = "pose"
 
         let transform = camera.transform
         self.position = SIMD3(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
@@ -139,7 +143,7 @@ struct PoseData: SensorData {
 /// Camera frame metadata (actual image sent as binary)
 struct CameraFrameMetadata: SensorData {
     let timestampNs: UInt64
-    let sensorType: String = "camera"
+    let sensorType: String
 
     let width: Int
     let height: Int
@@ -149,6 +153,7 @@ struct CameraFrameMetadata: SensorData {
 
     init(timestamp: UInt64, width: Int, height: Int, format: String, size: Int, intrinsics: CameraIntrinsics? = nil) {
         self.timestampNs = timestamp
+        self.sensorType = "camera"
         self.width = width
         self.height = height
         self.format = format
@@ -177,7 +182,7 @@ struct CameraIntrinsics: Codable {
 /// Depth/point cloud metadata (actual data sent as binary)
 struct DepthFrameMetadata: SensorData {
     let timestampNs: UInt64
-    let sensorType: String = "depth"
+    let sensorType: String
 
     let width: Int
     let height: Int
@@ -190,6 +195,7 @@ struct DepthFrameMetadata: SensorData {
 
     init(timestamp: UInt64, width: Int, height: Int, pointCount: Int, format: String, size: Int, minDepth: Float, maxDepth: Float, hasConfidenceData: Bool = false) {
         self.timestampNs = timestamp
+        self.sensorType = "depth"
         self.width = width
         self.height = height
         self.pointCount = pointCount

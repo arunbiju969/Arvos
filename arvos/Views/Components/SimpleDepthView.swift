@@ -77,12 +77,11 @@ struct SimpleDepthView: UIViewRepresentable {
         func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 
         func draw(in view: MTKView) {
-            guard let device = device,
-                  let commandQueue = commandQueue,
+            guard let commandQueue = commandQueue,
                   let pipelineState = pipelineState,
                   let drawable = view.currentDrawable,
                   let descriptor = view.currentRenderPassDescriptor,
-                  let sample = depthSample else {
+                  depthSample != nil else {
                 return
             }
 
