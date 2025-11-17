@@ -309,6 +309,15 @@ struct StreamView: View {
                     .fill(Color(.secondarySystemBackground))
             )
 
+            // Server Status - Show QR code and connection info
+            if NetworkManager.shared.isServerMode {
+                ServerStatusView(
+                    ipAddresses: NetworkManager.shared.serverIPAddresses,
+                    connectedClients: NetworkManager.shared.connectedClients
+                )
+                .padding(.top, 8)
+            }
+
             Spacer()
         }
         .padding()
