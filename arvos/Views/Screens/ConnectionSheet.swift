@@ -55,6 +55,42 @@ struct ConnectionSheet: View {
                     Text(viewModel.selectedProtocol == .ble ? "Enter the advertised Bluetooth name (defaults to your device name)." : "Enter the IP address and port of your server")
                 }
 
+                // Cloud Relay Option - Out of the box!
+                Section {
+                    Button {
+                        viewModel.selectedProtocol = .websocket
+                        viewModel.connectionHost = "arvos-web.onrender.com"
+                        viewModel.connectionPort = ""
+                    } label: {
+                        HStack {
+                            Image(systemName: "cloud")
+                                .foregroundColor(.blue)
+                                .font(.system(size: 18))
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Use Cloud Relay")
+                                    .foregroundColor(.primary)
+                                    .font(.system(.body).weight(.medium))
+
+                                Text("Connect instantly - no setup needed")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                } header: {
+                    Text("RECOMMENDED")
+                } footer: {
+                    Text("Works out-of-the-box with Studio on Vercel. No local server needed!")
+                }
+
                 Section {
                     Button {
                         viewModel.showingQRScanner = true
@@ -77,7 +113,7 @@ struct ConnectionSheet: View {
                 } header: {
                     Text("QUICK SETUP")
                 } footer: {
-                    Text("Scan QR code from your server")
+                    Text("Scan QR code from your server or Studio")
                 }
 
                 // Connection Status & Diagnostics
@@ -117,29 +153,51 @@ struct ConnectionSheet: View {
                 // Troubleshooting Tips
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
-                        TroubleshootTip(
-                            icon: "wifi",
-                            title: "Same Network",
-                            detail: "Ensure both devices are on the same WiFi network"
-                        )
+                        if viewModel.connectionHost.contains("onrender.com") {
+                            // Cloud relay specific tips
+                            TroubleshootTip(
+                                icon: "wifi",
+                                title: "Internet Connection",
+                                detail: "Ensure your iPhone has internet access (WiFi or cellular)"
+                            )
 
-                        TroubleshootTip(
-                            icon: "network",
-                            title: "Firewall",
-                            detail: "Check that your server's firewall allows the port"
-                        )
+                            TroubleshootTip(
+                                icon: "hourglass",
+                                title: "First Connection",
+                                detail: "Cloud relay may take ~30 seconds to wake up on first use"
+                            )
 
-                        TroubleshootTip(
-                            icon: "server.rack",
-                            title: "Server Running",
-                            detail: "Verify your WebSocket server is running and listening"
-                        )
+                            TroubleshootTip(
+                                icon: "globe",
+                                title: "Open Studio",
+                                detail: "Make sure Studio is open in your browser at arvos-studio.vercel.app"
+                            )
+                        } else {
+                            // Local server tips
+                            TroubleshootTip(
+                                icon: "wifi",
+                                title: "Same Network",
+                                detail: "Ensure both devices are on the same WiFi network"
+                            )
+
+                            TroubleshootTip(
+                                icon: "network",
+                                title: "Firewall",
+                                detail: "Check that your server's firewall allows the port"
+                            )
+
+                            TroubleshootTip(
+                                icon: "server.rack",
+                                title: "Server Running",
+                                detail: "Verify your WebSocket server is running and listening"
+                            )
+                        }
                     }
                     .padding(.vertical, 4)
                 } header: {
                     Text("TROUBLESHOOTING")
                 } footer: {
-                    Text("Common connection issues and solutions")
+                    Text(viewModel.connectionHost.contains("onrender.com") ? "Cloud relay troubleshooting" : "Local server troubleshooting")
                 }
             }
             .navigationTitle("Server Connection")
