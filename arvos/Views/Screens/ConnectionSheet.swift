@@ -60,7 +60,7 @@ struct ConnectionSheet: View {
                     Button {
                         viewModel.selectedProtocol = .websocket
                         viewModel.connectionHost = "arvos-web.onrender.com"
-                        viewModel.connectionPort = ""
+                        viewModel.connectionPort = "443"  // Cloud relay uses standard HTTPS port
                     } label: {
                         HStack {
                             Image(systemName: "cloud")

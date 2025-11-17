@@ -93,7 +93,12 @@ class NetworkManager: ObservableObject {
             config = ConnectionConfig.ble(deviceName: host)
         case .websocket:
             let actualPort = port ?? selectedProtocol.defaultPort
-            config = ConnectionConfig.websocket(host: host, port: actualPort)
+            // Auto-detect TLS: use WSS for onrender.com, vercel.app, and standard HTTPS ports
+            let useTLS = host.contains("onrender.com") ||
+                         host.contains("vercel.app") ||
+                         host.contains("herokuapp.com") ||
+                         actualPort == 443
+            config = ConnectionConfig.websocket(host: host, port: actualPort, useTLS: useTLS)
         case .grpc:
             let actualPort = port ?? selectedProtocol.defaultPort
             config = ConnectionConfig.grpc(host: host, port: actualPort)
