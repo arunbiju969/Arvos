@@ -214,10 +214,11 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             }
         }
 
-        // Convert to JPEG using cached context
+        // Convert to JPEG using cached context with correct orientation
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
         guard let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent) else { return }
-        let uiImage = UIImage(cgImage: cgImage)
+        // Fix rotation: iPhone camera is rotated 90 degrees, use .right orientation
+        let uiImage = UIImage(cgImage: cgImage, scale: 1.0, orientation: .right)
         guard let jpegData = uiImage.jpegData(compressionQuality: Constants.Camera.jpegQuality) else { return }
 
         let width = CVPixelBufferGetWidth(pixelBuffer)
