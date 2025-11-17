@@ -33,7 +33,9 @@ final class QUICAdapter: NSObject, StreamingProtocol {
         super.init()
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 10.0
-        // Enable HTTP/3
+        // Note: HTTP/3 (QUIC) is automatically negotiated by URLSession on iOS 15+
+        // when the server supports it via Alt-Svc header. No explicit configuration needed.
+        // If the server doesn't support HTTP/3, it will fall back to HTTP/2 or HTTP/1.1.
         if #available(iOS 15.0, *) {
             urlSession = URLSession(configuration: configuration)
         }

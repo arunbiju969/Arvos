@@ -40,9 +40,9 @@
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Arvos needs local network access to communicate with your desktop receiver.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Arvos uses Bluetooth to stream low-bandwidth sensor data to nearby receivers.</string>
+	<string>Arvos uses Bluetooth to discover and connect to nearby receivers for streaming sensor data when using Bluetooth LE protocol.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>Arvos advertises a Bluetooth service so nearby receivers can subscribe to sensor telemetry.</string>
+	<string>Arvos uses Bluetooth to discover and connect to nearby receivers for streaming sensor data when using Bluetooth LE protocol.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Arvos needs location access to tag sensor data with GPS coordinates for spatial mapping.</string>
 	<key>NSMotionUsageDescription</key>

@@ -15,9 +15,7 @@
 		3FF2D1212EC6F75B009B34B2 /* WatchSensorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D11C2EC6F75B009B34B2 /* WatchSensorService.swift */; };
 		3FF2D1232EC6F75B009B34B2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3FF2D11D2EC6F75B009B34B2 /* Assets.xcassets */; };
 		3FF2D2012EC6FBF2009B34B2 /* WatchSensorPacket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D1FB2EC6FBF2009B34B2 /* WatchSensorPacket.swift */; };
-		3FF2D2022EC6FBF2009B34B2 /* WatchSensorPacket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D1FB2EC6FBF2009B34B2 /* WatchSensorPacket.swift */; };
 		3FF2D2032EC6FBF2009B34B2 /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D1FC2EC6FBF2009B34B2 /* WatchConnectivityService.swift */; };
-		3FF2D2042EC6FBF2009B34B2 /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF2D1FC2EC6FBF2009B34B2 /* WatchConnectivityService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -268,8 +266,8 @@
 				3FF2D1212EC6F75B009B34B2 /* WatchSensorService.swift in Sources */,
 				3FF2D1202EC6F75B009B34B2 /* WatchContentView.swift in Sources */,
 				3FF2D11F2EC6F75B009B34B2 /* arvosWatchApp.swift in Sources */,
-				3FF2D2022EC6FBF2009B34B2 /* WatchSensorPacket.swift in Sources */,
-				3FF2D2042EC6FBF2009B34B2 /* WatchConnectivityService.swift in Sources */,
+				3FF2D2012EC6FBF2009B34B2 /* WatchSensorPacket.swift in Sources */,
+				3FF2D2032EC6FBF2009B34B2 /* WatchConnectivityService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,8 +275,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3FF2D2032EC6FBF2009B34B2 /* WatchConnectivityService.swift in Sources */,
-				3FF2D2012EC6FBF2009B34B2 /* WatchSensorPacket.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

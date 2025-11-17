@@ -36,9 +36,18 @@ final class WebSocketAdapter: NSObject, StreamingProtocol {
         service.connect(to: url)
         service.startHeartbeat()
         
-        // Wait for connection
+        // Wait for connection with timeout (30 seconds)
+        let timeout: TimeInterval = 30.0
+        let startTime = Date()
+        
         while state == .connecting {
+            if Date().timeIntervalSince(startTime) > timeout {
+                state = .error
+                throw StreamingProtocolError.connectionFailed("Connection timeout after \(timeout) seconds")
+            }
+            
             try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            
             if state == .connected {
                 return
             }

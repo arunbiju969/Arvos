@@ -21,6 +21,7 @@ final class BLEAdapter: NSObject, StreamingProtocol {
     
     private var centralManager: CBCentralManager?
     private var peripheral: CBPeripheral?
+    private var targetDeviceName: String?
     
     private let serviceUUID = CBUUID(string: "5B6A38A0-2A0E-4A5F-8C96-5ED26F1935B8")
     private let characteristicUUID = CBUUID(string: "3E2E3101-0BC0-4B53-9CF0-9E9981F357F1")
@@ -38,6 +39,7 @@ final class BLEAdapter: NSObject, StreamingProtocol {
     
     func connect(config: ConnectionConfig) async throws {
         state = .connecting
+        targetDeviceName = config.deviceName
         
         centralManager = CBCentralManager(delegate: self, queue: nil)
         
@@ -51,8 +53,13 @@ final class BLEAdapter: NSObject, StreamingProtocol {
             throw StreamingProtocolError.connectionFailed("Bluetooth not available")
         }
         
-        // Start scanning
-        centralManager?.scanForPeripherals(withServices: [serviceUUID], options: nil)
+        // Start scanning - if deviceName is specified, scan for all peripherals and filter by name
+        // Otherwise, scan for peripherals with the specific service UUID
+        if targetDeviceName != nil {
+            centralManager?.scanForPeripherals(withServices: nil, options: nil)
+        } else {
+            centralManager?.scanForPeripherals(withServices: [serviceUUID], options: nil)
+        }
     }
     
     func disconnect() {
@@ -61,6 +68,7 @@ final class BLEAdapter: NSObject, StreamingProtocol {
         }
         centralManager?.stopScan()
         peripheral = nil
+        targetDeviceName = nil
         state = .disconnected
     }
     
@@ -131,6 +139,16 @@ extension BLEAdapter: CBCentralManagerDelegate {
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        // If deviceName is specified, filter by name
+        if let targetName = targetDeviceName {
+            let peripheralName = peripheral.name ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String
+            if peripheralName?.lowercased() != targetName.lowercased() {
+                // Not the target device, continue scanning
+                return
+            }
+        }
+        
+        // Found matching peripheral
         self.peripheral = peripheral
         central.stopScan()
         central.connect(peripheral, options: nil)
