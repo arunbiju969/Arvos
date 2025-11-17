@@ -203,6 +203,10 @@ class SensorManager: ObservableObject {
             }
 
             isStreaming = true
+
+            // Start embedded WebSocket server (Foxglove-style)
+            networkManager.startServer()
+
             networkManager.sendStatus("streaming", sessionId: recordingManager.sessionId)
 
             // Start burst scan timer if applicable

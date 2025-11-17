@@ -69,15 +69,24 @@ class NetworkManager: ObservableObject {
     @Published private(set) var connectionState: ConnectionState = .disconnected
     @Published private(set) var statistics: StreamingProtocolStatistics?
 
+    // Server mode (Foxglove-style: iPhone is server, Studio connects as client)
+    @Published private(set) var isServerMode: Bool = true  // Default to server mode
+    @Published private(set) var serverIPAddresses: [String] = []
+    @Published private(set) var connectedClients: Int = 0
+
     // Protocol adapter (abstraction layer)
     private var adapter: StreamingProtocol?
 
-    // Legacy WebSocket service (for backward compatibility)
+    // Embedded WebSocket server (Foxglove-style)
+    private let webSocketServer = WebSocketServer(port: 8765)
+
+    // Legacy WebSocket client service (for cloud relay fallback)
     private let webSocketService = WebSocketService()
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
         webSocketService.delegate = self
+        webSocketServer.delegate = self
     }
 
     // MARK: - Connection
@@ -171,7 +180,51 @@ class NetworkManager: ObservableObject {
             adapter.disconnect()
         } else {
             // Legacy path
-        webSocketService.disconnect()
+            webSocketService.disconnect()
+        }
+        stopServer()
+    }
+
+    // MARK: - Server Mode (Foxglove-style)
+
+    /// Start embedded WebSocket server (iPhone acts as server)
+    func startServer() {
+        guard isServerMode else {
+            print("⚠️ Not in server mode")
+            return
+        }
+
+        do {
+            try webSocketServer.start()
+            serverIPAddresses = webSocketServer.getLocalIPAddresses()
+            connectionState = .connected  // Server is "connected" when running
+            print("📡 Server started. Connect Studio to:")
+            for ip in serverIPAddresses {
+                print("   ws://\(ip):8765")
+            }
+        } catch {
+            print("❌ Failed to start server: \(error)")
+            connectionState = .error
+        }
+    }
+
+    /// Stop embedded WebSocket server
+    func stopServer() {
+        webSocketServer.stop()
+        if isServerMode {
+            connectionState = .disconnected
+        }
+    }
+
+    /// Toggle between server mode (iPhone is server) and client mode (cloud relay)
+    func setServerMode(_ enabled: Bool) {
+        isServerMode = enabled
+        if enabled {
+            stopServer()  // Stop if running
+            connectionState = .disconnected
+        } else {
+            stopServer()
+            disconnect()
         }
     }
     
@@ -253,11 +306,13 @@ class NetworkManager: ObservableObject {
     /// Stream IMU data
     func stream(imuData: IMUData) {
         do {
-            if let adapter = adapter {
+            if isServerMode {
+                try webSocketServer.broadcast(json: imuData)
+            } else if let adapter = adapter {
                 try adapter.send(json: imuData)
             } else {
                 // Legacy path
-            try webSocketService.send(json: imuData)
+                try webSocketService.send(json: imuData)
             }
         } catch {
             print("Failed to stream IMU data: \(error)")
@@ -268,11 +323,13 @@ class NetworkManager: ObservableObject {
     func stream(gpsData: GPSData) {
         do {
             print("📤 Sending GPS: (\(gpsData.latitude), \(gpsData.longitude)), accuracy: ±\(gpsData.horizontalAccuracy)m")
-            if let adapter = adapter {
+            if isServerMode {
+                try webSocketServer.broadcast(json: gpsData)
+            } else if let adapter = adapter {
                 try adapter.send(json: gpsData)
             } else {
                 // Legacy path
-            try webSocketService.send(json: gpsData)
+                try webSocketService.send(json: gpsData)
             }
         } catch {
             print("❌ Failed to stream GPS data: \(error)")
@@ -282,11 +339,13 @@ class NetworkManager: ObservableObject {
     /// Stream pose data
     func stream(poseData: PoseData) {
         do {
-            if let adapter = adapter {
+            if isServerMode {
+                try webSocketServer.broadcast(json: poseData)
+            } else if let adapter = adapter {
                 try adapter.send(json: poseData)
             } else {
                 // Legacy path
-            try webSocketService.send(json: poseData)
+                try webSocketService.send(json: poseData)
             }
         } catch {
             print("Failed to stream pose data: \(error)")
@@ -349,11 +408,14 @@ class NetworkManager: ObservableObject {
         let config = ModeConfigMessage(mode: mode, timestamp: TimestampManager.shared.now())
 
         do {
-            if let adapter = adapter {
+            if isServerMode {
+                // Server mode: broadcast to all connected clients
+                try webSocketServer.broadcast(json: config)
+            } else if let adapter = adapter {
                 try adapter.send(json: config)
             } else {
                 // Legacy path
-            try webSocketService.send(json: config)
+                try webSocketService.send(json: config)
             }
         } catch {
             print("Failed to send mode config: \(error)")
@@ -370,11 +432,13 @@ class NetworkManager: ObservableObject {
         )
 
         do {
-            if let adapter = adapter {
+            if isServerMode {
+                try webSocketServer.broadcast(json: statusMsg)
+            } else if let adapter = adapter {
                 try adapter.send(json: statusMsg)
             } else {
                 // Legacy path
-            try webSocketService.send(json: statusMsg)
+                try webSocketService.send(json: statusMsg)
             }
         } catch {
             print("Failed to send status: \(error)")
@@ -390,11 +454,13 @@ class NetworkManager: ObservableObject {
         )
 
         do {
-            if let adapter = adapter {
+            if isServerMode {
+                try webSocketServer.broadcast(json: errorMsg)
+            } else if let adapter = adapter {
                 try adapter.send(json: errorMsg)
             } else {
                 // Legacy path
-            try webSocketService.send(json: errorMsg)
+                try webSocketService.send(json: errorMsg)
             }
         } catch {
             print("Failed to send error: \(error)")
