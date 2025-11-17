@@ -140,20 +140,8 @@ struct StreamView: View {
                         Image(systemName: "qrcode.viewfinder")
                     }
                     .accessibilityLabel("Scan QR Code")
-
-                    // Advanced Settings
-                    Button {
-                        showDataSourcePicker = true
-                    } label: {
-                        Image(systemName: "slider.horizontal.3")
-                    }
-                    .accessibilityLabel("Advanced Settings")
                 }
             }
-        }
-        .sheet(isPresented: $showDataSourcePicker) {
-            DataSourcePicker()
-                .environmentObject(viewModel)
         }
         .sheet(isPresented: $viewModel.showingConnectionSheet) {
             ConnectionSheet()
@@ -170,12 +158,6 @@ struct StreamView: View {
                     viewModel.showError(message: "Invalid QR code format. Expected ws:// or wss:// URL.")
                 }
                 scannedQRCode = nil
-            }
-        }
-        .onChange(of: viewModel.selectedMode) { newMode in
-            // Automatically show data source picker when Custom mode is selected
-            if newMode == .custom && !viewModel.isStreaming {
-                showDataSourcePicker = true
             }
         }
         .alert("Error", isPresented: $viewModel.showingError) {
@@ -290,34 +272,42 @@ struct StreamView: View {
     // MARK: - Live Data Display (Simplified for Performance)
 
     private var liveDataBentoBox: some View {
-        VStack(spacing: 12) {
-            // Status Grid
-            HStack(spacing: 12) {
-                // FPS Card
-                BentoCard(
-                    icon: "waveform",
-                    label: "FPS",
-                    value: viewModel.fpsFormatted,
-                    color: .primary
-                )
+        VStack(spacing: 20) {
+            // Live Indicator
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 8, height: 8)
+                    .overlay(
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 8, height: 8)
+                            .opacity(0.5)
+                            .scaleEffect(2)
+                            .blur(radius: 4)
+                    )
 
-                // Recording Card
+                Text("STREAMING")
+                    .font(.system(.caption).weight(.semibold))
+                    .foregroundColor(.secondary)
+                    .tracking(1)
+            }
+
+            // Stats Grid - Clean and minimal
+            HStack(spacing: 16) {
+                StreamingStat(label: "FPS", value: viewModel.fpsFormatted)
+                StreamingStat(label: "Mode", value: viewModel.selectedMode.rawValue.split(separator: " ").first.map(String.init) ?? "")
+
                 if viewModel.recordingDuration > 0 {
-                    BentoCard(
-                        icon: "record.circle",
-                        label: "REC",
-                        value: viewModel.recordingDurationFormatted,
-                        color: .red
-                    )
-                } else {
-                    BentoCard(
-                        icon: "checkmark.circle",
-                        label: "LIVE",
-                        value: "✓",
-                        color: .primary
-                    )
+                    StreamingStat(label: "Recording", value: viewModel.recordingDurationFormatted, isHighlight: true)
                 }
             }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 20)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color(.secondarySystemBackground))
+            )
 
             Spacer()
         }
@@ -360,19 +350,84 @@ struct StreamView: View {
     // MARK: - Mode Selector
 
     private var modeSelector: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 10) {
-                ForEach(StreamMode.allCases) { mode in
-                    ModeCard(
-                        mode: mode,
-                        isSelected: viewModel.selectedMode == mode,
-                        action: { viewModel.selectMode(mode) }
-                    )
+        VStack(spacing: 16) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 10) {
+                    ForEach(StreamMode.allCases) { mode in
+                        ModeCard(
+                            mode: mode,
+                            isSelected: viewModel.selectedMode == mode,
+                            action: { viewModel.selectMode(mode) }
+                        )
+                    }
                 }
+                .padding(.horizontal, 2)
             }
-            .padding(.horizontal, 2)
+            .frame(height: 120)
+
+            // Inline Custom Mode Selector
+            if viewModel.selectedMode == .custom {
+                customModeSensorSelector
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
-        .frame(height: 120)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.selectedMode)
+    }
+
+    // MARK: - Custom Mode Sensor Selector
+
+    private var customModeSensorSelector: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Select Sensors")
+                .font(.system(.subheadline).weight(.semibold))
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 4)
+
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 10) {
+                CustomSensorToggle(
+                    icon: "camera.fill",
+                    label: "Camera",
+                    isEnabled: viewModel.customCameraEnabled,
+                    action: { viewModel.toggleCustomCamera() }
+                )
+
+                CustomSensorToggle(
+                    icon: "cube.fill",
+                    label: "Depth",
+                    isEnabled: viewModel.customDepthEnabled,
+                    action: { viewModel.toggleCustomDepth() }
+                )
+
+                CustomSensorToggle(
+                    icon: "gyroscope",
+                    label: "IMU",
+                    isEnabled: viewModel.customIMUEnabled,
+                    action: { viewModel.toggleCustomIMU() }
+                )
+
+                CustomSensorToggle(
+                    icon: "location.fill",
+                    label: "Pose",
+                    isEnabled: viewModel.customPoseEnabled,
+                    action: { viewModel.toggleCustomPose() }
+                )
+
+                CustomSensorToggle(
+                    icon: "map.fill",
+                    label: "GPS",
+                    isEnabled: viewModel.customGPSEnabled,
+                    action: { viewModel.toggleCustomGPS() }
+                )
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
     }
 }
 
@@ -401,6 +456,26 @@ struct MetricBadge: View {
     }
 }
 
+struct StreamingStat: View {
+    let label: String
+    let value: String
+    var isHighlight: Bool = false
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(.title3).weight(.semibold).monospacedDigit())
+                .foregroundColor(isHighlight ? .red : .primary)
+
+            Text(label)
+                .font(.system(.caption2).weight(.medium))
+                .foregroundColor(.secondary)
+                .textCase(.uppercase)
+                .tracking(0.5)
+        }
+    }
+}
+
 struct SensorBadge: View {
     let icon: String
     let label: String
@@ -419,6 +494,46 @@ struct SensorBadge: View {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(Color(.tertiarySystemBackground))
         )
+    }
+}
+
+struct CustomSensorToggle: View {
+    let icon: String
+    let label: String
+    let isEnabled: Bool
+    let action: () -> Void
+    @Environment(\.colorScheme) var colorScheme
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(isEnabled ? .white : .secondary)
+                    .frame(width: 28, height: 28)
+                    .background(
+                        Circle()
+                            .fill(isEnabled ? Color.accentColor : Color(.systemGray5))
+                    )
+
+                Text(label)
+                    .font(.system(.subheadline).weight(.medium))
+                    .foregroundColor(isEnabled ? .primary : .secondary)
+
+                Spacer()
+
+                Image(systemName: isEnabled ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(isEnabled ? .accentColor : .secondary.opacity(0.5))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color(.tertiarySystemBackground))
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 

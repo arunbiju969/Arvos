@@ -44,6 +44,13 @@ class StreamingViewModel: ObservableObject {
     @Published var showingError = false
     // Removed LiDAR preview - it was causing ARFrame retention issues
 
+    // Custom mode sensor toggles
+    @Published var customCameraEnabled = true
+    @Published var customDepthEnabled = true
+    @Published var customIMUEnabled = true
+    @Published var customPoseEnabled = true
+    @Published var customGPSEnabled = false
+
     private var cancellables = Set<AnyCancellable>()
     private var updateTimer: Timer?
     private let updateQueue = DispatchQueue(label: "com.arvos.viewmodel.stats", qos: .utility)
@@ -105,7 +112,69 @@ class StreamingViewModel: ObservableObject {
     func selectMode(_ mode: StreamMode) {
         guard !isStreaming else { return }
         selectedMode = mode
-        sensorManager.setMode(mode)
+
+        if mode == .custom {
+            // Apply custom configuration
+            applyCustomConfiguration()
+        } else {
+            sensorManager.setMode(mode)
+        }
+    }
+
+    // MARK: - Custom Mode Toggles
+
+    func toggleCustomCamera() {
+        customCameraEnabled.toggle()
+        if selectedMode == .custom {
+            applyCustomConfiguration()
+        }
+    }
+
+    func toggleCustomDepth() {
+        customDepthEnabled.toggle()
+        if selectedMode == .custom {
+            applyCustomConfiguration()
+        }
+    }
+
+    func toggleCustomIMU() {
+        customIMUEnabled.toggle()
+        if selectedMode == .custom {
+            applyCustomConfiguration()
+        }
+    }
+
+    func toggleCustomPose() {
+        customPoseEnabled.toggle()
+        if selectedMode == .custom {
+            applyCustomConfiguration()
+        }
+    }
+
+    func toggleCustomGPS() {
+        customGPSEnabled.toggle()
+        if selectedMode == .custom {
+            applyCustomConfiguration()
+        }
+    }
+
+    private func applyCustomConfiguration() {
+        let config = ModeConfiguration(
+            cameraEnabled: customCameraEnabled,
+            cameraFPS: customCameraEnabled ? 30 : 0,
+            depthEnabled: customDepthEnabled,
+            depthFPS: customDepthEnabled ? 10 : 0,
+            imuEnabled: customIMUEnabled,
+            imuHz: customIMUEnabled ? 200 : 0,
+            poseEnabled: customPoseEnabled,
+            poseHz: customPoseEnabled ? 60 : 0,
+            gpsEnabled: customGPSEnabled,
+            watchEnabled: false,
+            watchHz: 0,
+            recordingEnabled: false,
+            autoDuration: nil
+        )
+        sensorManager.applyCustomConfiguration(config)
     }
 
     func toggleStreaming() {
