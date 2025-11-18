@@ -33,7 +33,6 @@ class WebSocketServer: NSObject {
         // CRITICAL: Accept connections on all interfaces (WiFi, Cellular, Hotspot)
         // By default NWListener only listens on localhost - we need external connections!
         parameters.acceptLocalOnly = false
-        parameters.requiredInterfaceType = nil  // Allow all interface types
 
         // Enable WebSocket upgrade
         let wsOptions = NWProtocolWebSocket.Options()
