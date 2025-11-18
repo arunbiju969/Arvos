@@ -143,10 +143,8 @@ struct StreamView: View {
                 }
             }
         }
-        .sheet(isPresented: $viewModel.showingConnectionSheet) {
-            ConnectionSheet()
-                .environmentObject(viewModel)
-        }
+        // Foxglove-style: No ConnectionSheet needed - iPhone is the server!
+        // ConnectionSheet removed - we don't connect TO servers, we ARE the server
         .sheet(isPresented: $viewModel.showingQRScanner) {
             QRScannerView(scannedCode: $scannedQRCode)
         }
@@ -234,23 +232,8 @@ struct StreamView: View {
 
     private var bottomControls: some View {
         VStack(spacing: 16) {
-            // Primary Actions: Connection + Start/Stop
-            if !viewModel.isStreaming {
-                // Connection Button
-                Button {
-                    viewModel.showingConnectionSheet = true
-                } label: {
-                    Text(viewModel.isConnected ? "Connected" : "Connect to Server")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .background(
-                            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                                .fill(Color(.secondarySystemBackground))
-                        )
-                }
-            }
+            // Foxglove-Style: No "Connect to Server" needed - iPhone IS the server!
+            // Just show the Start/Stop Streaming button
 
             // Start/Stop Button (Foxglove-style: no connection needed, iPhone is the server!)
             Button {
