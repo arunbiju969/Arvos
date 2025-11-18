@@ -38,7 +38,12 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Arvos needs camera access to capture and stream video data for AR and 3D reconstruction.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Arvos needs local network access to communicate with your desktop receiver.</string>
+	<string>Arvos runs a WebSocket server to stream sensor data to Studio on your local network.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_ws._tcp</string>
+		<string>_websocket._tcp</string>
+	</array>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Arvos uses Bluetooth to discover and connect to nearby receivers for streaming sensor data when using Bluetooth LE protocol.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
