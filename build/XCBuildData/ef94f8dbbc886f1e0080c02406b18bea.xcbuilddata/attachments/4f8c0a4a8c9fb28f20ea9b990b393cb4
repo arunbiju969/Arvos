@@ -1,0 +1,26 @@
+{
+  "" : {
+    "const-values" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/NIOEmbedded-primary.swiftconstvalues",
+    "dependencies" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/NIOEmbedded-primary.d",
+    "diagnostics" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/NIOEmbedded-primary.dia",
+    "emit-module-dependencies" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/NIOEmbedded-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/NIOEmbedded-primary-emit-module.dia",
+    "pch" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/NIOEmbedded-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/NIOEmbedded-primary.swiftdeps"
+  },
+  "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/Sources/NIOEmbedded/AsyncTestingChannel.swift" : {
+    "index-unit-output-path" : "/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/AsyncTestingChannel.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/AsyncTestingChannel.bc",
+    "object" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/AsyncTestingChannel.o"
+  },
+  "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/Sources/NIOEmbedded/AsyncTestingEventLoop.swift" : {
+    "index-unit-output-path" : "/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/AsyncTestingEventLoop.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/AsyncTestingEventLoop.bc",
+    "object" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/AsyncTestingEventLoop.o"
+  },
+  "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/Sources/NIOEmbedded/Embedded.swift" : {
+    "index-unit-output-path" : "/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/Embedded.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/Embedded.bc",
+    "object" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOEmbedded.build/Objects-normal/arm64/Embedded.o"
+  }
+}

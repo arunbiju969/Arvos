@@ -1,0 +1,31 @@
+{
+  "" : {
+    "const-values" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/NIOFoundationCompat-primary.swiftconstvalues",
+    "dependencies" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/NIOFoundationCompat-primary.d",
+    "diagnostics" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/NIOFoundationCompat-primary.dia",
+    "emit-module-dependencies" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/NIOFoundationCompat-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/NIOFoundationCompat-primary-emit-module.dia",
+    "pch" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/NIOFoundationCompat-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/NIOFoundationCompat-primary.swiftdeps"
+  },
+  "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/Sources/NIOFoundationCompat/ByteBuffer-foundation.swift" : {
+    "index-unit-output-path" : "/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/ByteBuffer-foundation.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/ByteBuffer-foundation.bc",
+    "object" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/ByteBuffer-foundation.o"
+  },
+  "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/Sources/NIOFoundationCompat/Codable+ByteBuffer.swift" : {
+    "index-unit-output-path" : "/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/Codable+ByteBuffer.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/Codable+ByteBuffer.bc",
+    "object" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/Codable+ByteBuffer.o"
+  },
+  "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/Sources/NIOFoundationCompat/JSONSerialization+ByteBuffer.swift" : {
+    "index-unit-output-path" : "/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/JSONSerialization+ByteBuffer.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/JSONSerialization+ByteBuffer.bc",
+    "object" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/JSONSerialization+ByteBuffer.o"
+  },
+  "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/Sources/NIOFoundationCompat/WaitSpinningRunLoop.swift" : {
+    "index-unit-output-path" : "/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/WaitSpinningRunLoop.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/WaitSpinningRunLoop.bc",
+    "object" : "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/swift-nio/build/swift-nio.build/Release-iphoneos/NIOFoundationCompat.build/Objects-normal/arm64/WaitSpinningRunLoop.o"
+  }
+}

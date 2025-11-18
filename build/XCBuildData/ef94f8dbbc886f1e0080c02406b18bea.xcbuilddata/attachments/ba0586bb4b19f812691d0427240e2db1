@@ -1,0 +1,246 @@
+{
+  "" : {
+    "const-values" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/arvos-primary.swiftconstvalues",
+    "dependencies" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/arvos-primary.d",
+    "diagnostics" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/arvos-primary.dia",
+    "emit-module-dependencies" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/arvos-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/arvos-primary-emit-module.dia",
+    "pch" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/arvos-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/arvos-primary.swiftdeps"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/ContentView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ContentView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Managers/NetworkManager.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/NetworkManager.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/NetworkManager.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/NetworkManager.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Managers/RecordingManager.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/RecordingManager.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/RecordingManager.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/RecordingManager.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Managers/SensorManager.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorManager.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorManager.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorManager.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Managers/TimestampManager.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/TimestampManager.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/TimestampManager.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/TimestampManager.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Managers/WatchSensorManager.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WatchSensorManager.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WatchSensorManager.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WatchSensorManager.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Models/NetworkMessage.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/NetworkMessage.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/NetworkMessage.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/NetworkMessage.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Models/SensorData.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorData.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorData.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorData.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Models/StreamMode.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamMode.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamMode.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamMode.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/ARKitService.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ARKitService.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ARKitService.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ARKitService.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/CameraService.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/CameraService.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/CameraService.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/CameraService.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/GPSService.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/GPSService.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/GPSService.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/GPSService.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/IMUService.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/IMUService.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/IMUService.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/IMUService.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/MCAPWriter.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MCAPWriter.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MCAPWriter.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MCAPWriter.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/Protocols/BLEAdapter.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/BLEAdapter.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/BLEAdapter.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/BLEAdapter.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/Protocols/GRPCAdapter.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/GRPCAdapter.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/GRPCAdapter.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/GRPCAdapter.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/Protocols/HTTPAdapter.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/HTTPAdapter.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/HTTPAdapter.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/HTTPAdapter.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/Protocols/MCAPAdapter.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MCAPAdapter.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MCAPAdapter.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MCAPAdapter.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/Protocols/MQTTAdapter.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MQTTAdapter.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MQTTAdapter.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MQTTAdapter.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/Protocols/QUICAdapter.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/QUICAdapter.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/QUICAdapter.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/QUICAdapter.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/Protocols/StreamingProtocol.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamingProtocol.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamingProtocol.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamingProtocol.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/Protocols/WebSocketAdapter.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WebSocketAdapter.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WebSocketAdapter.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WebSocketAdapter.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/VideoRecorder.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/VideoRecorder.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/VideoRecorder.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/VideoRecorder.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/WebSocketServer.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WebSocketServer.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WebSocketServer.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WebSocketServer.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Services/WebSocketService.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WebSocketService.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WebSocketService.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WebSocketService.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Shared/Models/WatchSensorPacket.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WatchSensorPacket.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WatchSensorPacket.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WatchSensorPacket.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Shared/Services/WatchConnectivityService.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WatchConnectivityService.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WatchConnectivityService.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/WatchConnectivityService.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Utilities/Constants.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/Constants.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/Constants.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/Constants.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Utilities/QRCodeGenerator.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/QRCodeGenerator.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/QRCodeGenerator.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/QRCodeGenerator.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Utilities/Theme.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/Theme.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/Theme.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/Theme.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Utils/DebugLogger.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/DebugLogger.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/DebugLogger.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/DebugLogger.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/ViewModels/SensorTestViewModel.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorTestViewModel.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorTestViewModel.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorTestViewModel.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/ViewModels/StreamingViewModel.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamingViewModel.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamingViewModel.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamingViewModel.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Components/DepthPointCloudView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/DepthPointCloudView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/DepthPointCloudView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/DepthPointCloudView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Components/PointCloudMetalView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/PointCloudMetalView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/PointCloudMetalView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/PointCloudMetalView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Components/QRScannerView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/QRScannerView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/QRScannerView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/QRScannerView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Components/ServerStatusView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ServerStatusView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ServerStatusView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ServerStatusView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Components/SimpleDepthView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SimpleDepthView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SimpleDepthView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SimpleDepthView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Screens/ConnectionSheet.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ConnectionSheet.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ConnectionSheet.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/ConnectionSheet.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Screens/FilesView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/FilesView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/FilesView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/FilesView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Screens/MainTabView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MainTabView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MainTabView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/MainTabView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Screens/SensorTestView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorTestView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorTestView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SensorTestView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Screens/SettingsView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SettingsView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SettingsView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SettingsView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Screens/SplashScreenView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SplashScreenView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SplashScreenView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/SplashScreenView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Views/Screens/StreamView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/StreamView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/arvosApp.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/arvosApp.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/arvosApp.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/arvosApp.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvos.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

@@ -252,7 +252,7 @@ struct StreamView: View {
                 }
             }
 
-            // Start/Stop Button
+            // Start/Stop Button (Foxglove-style: no connection needed, iPhone is the server!)
             Button {
                 viewModel.toggleStreaming()
             } label: {
@@ -263,8 +263,6 @@ struct StreamView: View {
                     .frame(height: 50)
             }
             .buttonStyle(PrimaryButtonStyle(isDestructive: viewModel.isStreaming))
-            .disabled(!viewModel.isStreaming && !viewModel.isConnected)
-            .opacity((!viewModel.isStreaming && !viewModel.isConnected) ? 0.5 : 1.0)
         }
         .padding()
     }

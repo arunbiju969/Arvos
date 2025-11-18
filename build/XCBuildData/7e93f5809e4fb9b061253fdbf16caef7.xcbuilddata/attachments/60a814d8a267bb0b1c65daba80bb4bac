@@ -1,0 +1,41 @@
+{
+  "" : {
+    "const-values" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/arvosWatchApp-primary.swiftconstvalues",
+    "dependencies" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/arvosWatchApp-primary.d",
+    "diagnostics" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/arvosWatchApp-primary.dia",
+    "emit-module-dependencies" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/arvosWatchApp-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/arvosWatchApp-primary-emit-module.dia",
+    "pch" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/arvosWatchApp-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/arvosWatchApp-primary.swiftdeps"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Shared/Models/WatchSensorPacket.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchSensorPacket.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchSensorPacket.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchSensorPacket.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvos/Shared/Services/WatchConnectivityService.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchConnectivityService.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchConnectivityService.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchConnectivityService.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvosWatchApp/WatchContentView.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchContentView.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchContentView.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchContentView.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvosWatchApp/WatchSensorService.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchSensorService.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchSensorService.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/WatchSensorService.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/arvosWatchApp/arvosWatchApp.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/arvosWatchApp.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/arvosWatchApp.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/arvosWatchApp.o"
+  },
+  "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/jaskiratsingh/Desktop/arvos/build/arvos.build/Release-iphoneos/arvosWatchApp.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

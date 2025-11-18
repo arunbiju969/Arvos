@@ -1,0 +1,4 @@
+module CGRPCZlib {
+umbrella header "/Users/jaskiratsingh/Library/Developer/Xcode/DerivedData/arvos-chtafbbqakyzqodnlqdntrehryfs/SourcePackages/checkouts/grpc-swift/Sources/CGRPCZlib/include/CGRPCZlib.h"
+export *
+}
