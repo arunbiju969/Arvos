@@ -109,7 +109,9 @@ struct DeviceCapabilities: Codable {
     init() {
         self.hasLiDAR = ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh)
         self.hasARKit = ARWorldTrackingConfiguration.isSupported
-        self.hasGPS = CLLocationManager.locationServicesEnabled()
+        // Check location services availability
+        let servicesEnabled = CLLocationManager.locationServicesEnabled()
+        self.hasGPS = servicesEnabled
         self.hasIMU = true // All iPhones have IMU
         self.supportedModes = StreamMode.allCases.map { $0.rawValue }
     }
@@ -131,7 +133,7 @@ struct ModeConfigMessage: Codable {
 }
 
 /// Status message
-struct StatusMessage: Codable {
+struct StatusMessage: Codable, Sendable {
     let type: String
     let timestampNs: UInt64
     let status: String // "connected", "streaming", "recording", "stopped", "error"

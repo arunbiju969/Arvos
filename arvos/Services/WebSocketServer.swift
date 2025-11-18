@@ -94,7 +94,7 @@ class WebSocketServer: NSObject {
         }
 
         conn.start()
-        delegate?.webSocketDidConnect()
+        // Note: WebSocketServer doesn't use delegate - it broadcasts to all connections
     }
 
     private func printConnectionInfo() {

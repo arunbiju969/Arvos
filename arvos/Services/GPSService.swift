@@ -86,7 +86,9 @@ class GPSService: NSObject {
             return
         }
 
-        guard CLLocationManager.locationServicesEnabled() else {
+        // Check if location services are enabled (do this check off main thread if possible)
+        let servicesEnabled = CLLocationManager.locationServicesEnabled()
+        guard servicesEnabled else {
             delegate?.gpsService(self, didEncounterError: GPSError.servicesDisabled)
             return
         }
