@@ -186,18 +186,11 @@ class StreamingViewModel: ObservableObject {
     }
 
     func startStreaming() {
-        let requiresHost = selectedProtocol != .ble
-        if requiresHost && connectionHost.isEmpty {
-            showingConnectionSheet = true
-            return
-        }
+        // Foxglove-style: iPhone IS the server - no need to connect anywhere!
+        // Server mode is enabled by default in NetworkManager.
+        // When streaming starts, the embedded WebSocket server starts automatically.
 
-        // Connect to server
-        if !isConnected {
-            connectToServer()
-        }
-
-        // Start sensors
+        // Just start sensors - SensorManager will handle starting the server
         sensorManager.startStreaming()
     }
 
