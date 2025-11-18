@@ -30,8 +30,8 @@ class WebSocketServer: NSObject {
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = true
 
-        // With paid Apple Developer account + Multicast Networking entitlement:
-        // Listen on all interfaces (WiFi, Cellular, Hotspot) for network connections
+        // With Multicast Networking entitlement enabled in Apple Developer portal:
+        // Accept connections from any network interface (WiFi, Cellular, Hotspot)
         parameters.acceptLocalOnly = false  // Listen on 0.0.0.0 (all interfaces)
 
         // Enable WebSocket upgrade
