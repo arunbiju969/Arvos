@@ -30,10 +30,9 @@ class WebSocketServer: NSObject {
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = true
 
-        // For USB connection via iproxy, listen on localhost only
-        // iOS blocks network servers on external interfaces without enterprise entitlements
-        // Solution: Use USB port forwarding (iproxy 8765 8765)
-        parameters.acceptLocalOnly = true  // Listen on 127.0.0.1 only
+        // With paid Apple Developer account + Multicast Networking entitlement:
+        // Listen on all interfaces (WiFi, Cellular, Hotspot) for network connections
+        parameters.acceptLocalOnly = false  // Listen on 0.0.0.0 (all interfaces)
 
         // Enable WebSocket upgrade
         let wsOptions = NWProtocolWebSocket.Options()
