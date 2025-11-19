@@ -278,7 +278,10 @@ class WebSocketService: NSObject {
                 status: "ping"
             )
 
-            try? self.send(json: ping)
+            // Ensure encoding happens on main actor to satisfy Swift 6 concurrency requirements
+            Task { @MainActor in
+                try? self.send(json: ping)
+            }
         }
         // Add to run loop to ensure it fires even during UI updates
         if let timer = heartbeatTimer {

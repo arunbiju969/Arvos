@@ -4,7 +4,8 @@
 <dict>
 	<key>com.apple.developer.networking.wifi-info</key>
 	<true/>
-	<key>com.apple.developer.networking.multicast</key>
-	<true/>
+	<!-- Multicast entitlement - uncomment when Apple approves -->
+	<!-- <key>com.apple.developer.networking.multicast</key>
+	<true/> -->
 </dict>
 </plist>

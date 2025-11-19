@@ -2,10 +2,11 @@
 //  FilesView.swift
 //  arvos
 //
-//  Browse and manage recorded files
+//  Browse and manage recorded files - Bento Box Design
 //
 
 import SwiftUI
+import QuickLook
 
 struct FilesView: View {
     @StateObject private var recordingManager = RecordingManager()
@@ -15,11 +16,21 @@ struct FilesView: View {
     @State private var showingShareSheet = false
     @State private var shareItems: [URL] = []
     @State private var showingDetailView = false
+    @State private var isLoading = false
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
+    @State private var previewURL: URL?
 
     var body: some View {
         NavigationStack {
-            Group {
-                if recordings.isEmpty {
+            ZStack {
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
+
+                if isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if recordings.isEmpty {
                     emptyState
                 } else {
                     recordingsList
@@ -30,8 +41,9 @@ struct FilesView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: loadRecordings) {
                         Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.system(size: 14, weight: .medium))
                     }
+                    .disabled(isLoading)
                 }
             }
             .alert("Delete Recording", isPresented: $showingDeleteAlert) {
@@ -72,76 +84,77 @@ struct FilesView: View {
             .onAppear {
                 loadRecordings()
             }
+            .alert("Error", isPresented: $showingErrorAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
+            .quickLookPreview($previewURL)
         }
     }
 
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "tray")
-                .font(.system(size: 64, weight: .light))
-                .foregroundColor(.secondary)
+        VStack(spacing: 16) {
+            Spacer()
 
-            VStack(spacing: 8) {
-                Text("No Recordings")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Text("Your recorded sessions will appear here")
-                    .font(.subheadline)
+            VStack(spacing: 12) {
+                Image(systemName: "waveform.path.ecg.rectangle")
+                    .font(.system(size: 32, weight: .light))
                     .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+
+                VStack(spacing: 4) {
+                    Text("No Recordings")
+                        .font(.headline)
+
+                    Text("Start streaming to record")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
+
+            Spacer()
         }
-        .padding()
     }
 
     // MARK: - Recordings List
 
     private var recordingsList: some View {
-        List {
-            ForEach(recordings, id: \.sessionId) { recording in
-                Button {
-                    selectedRecording = recording
-                    showingDetailView = true
-                } label: {
-                    RecordingRow(recording: recording)
-                }
-                .buttonStyle(PlainButtonStyle())
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        selectedRecording = recording
-                        showingDeleteAlert = true
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-
-                    Button {
-                        shareRecording(recording)
-                    } label: {
-                        Label("Share", systemImage: "square.and.arrow.up")
-                    }
-                    .tint(.blue)
-                }
-                .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                    Button {
-                        selectedRecording = recording
-                        showingDetailView = true
-                    } label: {
-                        Label("Details", systemImage: "info.circle")
-                    }
-                    .tint(.gray)
+        ScrollView(showsIndicators: false) {
+            LazyVStack(spacing: 12) {
+                ForEach(recordings, id: \.sessionId) { recording in
+                    RecordingCard(
+                        recording: recording,
+                        onTap: {
+                            selectedRecording = recording
+                            showingDetailView = true
+                        },
+                        onShare: {
+                            shareRecording(recording)
+                        },
+                        onDelete: {
+                            selectedRecording = recording
+                            showingDeleteAlert = true
+                        }
+                    )
                 }
             }
+            .padding(16)
         }
     }
 
     // MARK: - Actions
 
     private func loadRecordings() {
-        recordings = recordingManager.listRecordings()
+        isLoading = true
+        DispatchQueue.global(qos: .userInitiated).async {
+            let loadedRecordings = recordingManager.listRecordings()
+            DispatchQueue.main.async {
+                recordings = loadedRecordings
+                isLoading = false
+            }
+        }
     }
 
     private func deleteRecording(_ recording: SessionMetadata) {
@@ -149,23 +162,29 @@ struct FilesView: View {
             try recordingManager.deleteRecording(sessionId: recording.sessionId)
             loadRecordings()
         } catch {
-            print("❌ Failed to delete recording: \(error)")
-            // Could show an error alert here
+            errorMessage = "Failed to delete recording: \(error.localizedDescription)"
+            showingErrorAlert = true
         }
     }
-    
+
     private func shareRecording(_ recording: SessionMetadata) {
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let recordingsDir = documents.appendingPathComponent(Constants.Recording.recordingsDirectory)
         let sessionDir = recordingsDir.appendingPathComponent(recording.sessionId)
-        
+
         // Get all files in the session directory
         do {
             let files = try FileManager.default.contentsOfDirectory(at: sessionDir, includingPropertiesForKeys: nil)
+            if files.isEmpty {
+                errorMessage = "No files found in this recording."
+                showingErrorAlert = true
+                return
+            }
             shareItems = files
             showingShareSheet = true
         } catch {
-            print("❌ Failed to get files for sharing: \(error)")
+            errorMessage = "Failed to access files: \(error.localizedDescription)"
+            showingErrorAlert = true
         }
     }
     
@@ -190,67 +209,89 @@ struct ShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
-// MARK: - Recording Row
+// MARK: - Recording Card (Bento Style)
 
-struct RecordingRow: View {
+struct RecordingCard: View {
     let recording: SessionMetadata
+    let onTap: () -> Void
+    let onShare: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: recording.mode.icon)
-                    .foregroundColor(.primary)
+        Button(action: onTap) {
+            VStack(spacing: 12) {
+                // Header
+                HStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: recording.mode.icon)
+                            .font(.system(size: 14))
+                            .foregroundColor(.primary)
 
-                Text(recording.mode.rawValue)
-                    .font(.headline)
+                        Text(recording.mode.rawValue)
+                            .font(.system(.caption, weight: .semibold))
+                    }
 
-                Spacer()
+                    Spacer()
 
-                Text(formatDate(recording.startTime))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    Text(formatDate(recording.startTime))
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(.secondary)
+                }
+
+                // Stats Row
+                HStack(spacing: 12) {
+                    StatPill(icon: "clock", value: formatDuration(recording.duration))
+                    StatPill(icon: "doc", value: formatFileSize(recording.fileSize))
+                    Spacer()
+                }
+
+                // Sensor Icons
+                HStack(spacing: 6) {
+                    if recording.sensorCounts.cameraFrames > 0 {
+                        SensorIcon(icon: "camera.fill")
+                    }
+                    if recording.sensorCounts.depthFrames > 0 {
+                        SensorIcon(icon: "cube.fill")
+                    }
+                    if recording.sensorCounts.imuSamples > 0 {
+                        SensorIcon(icon: "gyroscope")
+                    }
+                    if recording.sensorCounts.poseSamples > 0 {
+                        SensorIcon(icon: "location.fill")
+                    }
+                    if recording.sensorCounts.gpsSamples > 0 {
+                        SensorIcon(icon: "map.fill")
+                    }
+                    Spacer()
+
+                    // Quick Actions
+                    HStack(spacing: 8) {
+                        Button(action: onShare) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                        }
+
+                        Button(action: onDelete) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 12))
+                                .foregroundColor(Theme.recording)
+                        }
+                    }
+                }
             }
-
-            HStack(spacing: 16) {
-                Label(formatDuration(recording.duration), systemImage: "clock")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Label(formatFileSize(recording.fileSize), systemImage: "doc")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            // Sensor counts
-            HStack(spacing: 12) {
-                if recording.sensorCounts.cameraFrames > 0 {
-                    SensorCountBadge(icon: "camera", count: recording.sensorCounts.cameraFrames)
-                }
-
-                if recording.sensorCounts.depthFrames > 0 {
-                    SensorCountBadge(icon: "cube", count: recording.sensorCounts.depthFrames)
-                }
-
-                if recording.sensorCounts.imuSamples > 0 {
-                    SensorCountBadge(icon: "gyroscope", count: recording.sensorCounts.imuSamples)
-                }
-
-                if recording.sensorCounts.poseSamples > 0 {
-                    SensorCountBadge(icon: "location", count: recording.sensorCounts.poseSamples)
-                }
-
-                if recording.sensorCounts.gpsSamples > 0 {
-                    SensorCountBadge(icon: "map", count: recording.sensorCounts.gpsSamples)
-                }
-            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color(.systemBackground))
+            )
         }
-        .padding(.vertical, 4)
+        .buttonStyle(.plain)
     }
 
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
+        formatter.dateFormat = "MM/dd HH:mm"
         return formatter.string(from: date)
     }
 
@@ -264,32 +305,45 @@ struct RecordingRow: View {
         let mb = Double(bytes) / (1024.0 * 1024.0)
         if mb < 1.0 {
             let kb = Double(bytes) / 1024.0
-            return String(format: "%.0f KB", kb)
+            return String(format: "%.0fK", kb)
         }
-        return String(format: "%.1f MB", mb)
+        return String(format: "%.1fM", mb)
     }
 }
 
-struct SensorCountBadge: View {
+struct StatPill: View {
     let icon: String
-    let count: Int
+    let value: String
 
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.caption2)
-
-            Text(formatCount(count))
-                .font(.caption2)
+                .font(.system(size: 9))
+            Text(value)
+                .font(.system(size: 10, design: .monospaced))
         }
         .foregroundColor(.secondary)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
     }
+}
 
-    private func formatCount(_ count: Int) -> String {
-        if count >= 1000 {
-            return String(format: "%.1fk", Double(count) / 1000.0)
-        }
-        return "\(count)"
+struct SensorIcon: View {
+    let icon: String
+
+    var body: some View {
+        Image(systemName: icon)
+            .font(.system(size: 10))
+            .foregroundColor(.secondary)
+            .frame(width: 20, height: 20)
+            .background(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(Color(.secondarySystemBackground))
+            )
     }
 }
 
@@ -300,268 +354,204 @@ struct RecordingDetailView: View {
     let onDelete: () -> Void
     let onShare: () -> Void
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @State private var filesList: [FileItem] = []
+    @State private var previewURL: URL?
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
 
     var body: some View {
         NavigationStack {
-            GeometryReader { geometry in
-                let isLandscape = geometry.size.width > geometry.size.height
+            ZStack {
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: isLandscape ? 20 : 24) {
-                    // Header Card
-                    VStack(spacing: 16) {
-                        HStack {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 12) {
+                        // Header Card
+                        HStack(spacing: 12) {
                             Image(systemName: recording.mode.icon)
-                                .font(.system(size: 40, weight: .medium))
-                                .foregroundColor(.accentColor)
+                                .font(.system(size: 20))
+                                .foregroundColor(.primary)
+                                .frame(width: 40, height: 40)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .fill(Color(.secondarySystemBackground))
+                                )
 
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text(recording.mode.rawValue)
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
+                                    .font(.system(.subheadline, weight: .semibold))
 
                                 Text(formatDate(recording.startTime))
-                                    .font(.subheadline)
+                                    .font(.system(size: 10, design: .monospaced))
                                     .foregroundColor(.secondary)
                             }
 
                             Spacer()
                         }
-                        .padding()
+                        .padding(12)
                         .background(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(Color(.systemBackground))
                         )
 
-                        // Session Info
-                        VStack(spacing: 12) {
-                            DetailRow(icon: "clock.fill", label: "Duration", value: formatDuration(recording.duration))
-                            DetailRow(icon: "doc.fill", label: "File Size", value: formatFileSize(recording.fileSize))
-                            DetailRow(icon: "calendar", label: "Started", value: formatFullDate(recording.startTime))
-
-                            if let endTime = recording.endTime {
-                                DetailRow(icon: "calendar.badge.checkmark", label: "Ended", value: formatFullDate(endTime))
-                            }
-
-                            DetailRow(icon: "folder.fill", label: "Session ID", value: String(recording.sessionId.prefix(8)))
+                        // Stats Grid
+                        HStack(spacing: 12) {
+                            DetailBentoCard(icon: "clock", label: "Duration", value: formatDuration(recording.duration))
+                            DetailBentoCard(icon: "doc", label: "Size", value: formatFileSize(recording.fileSize))
                         }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color(.systemBackground))
-                        )
-                    }
+                        .frame(height: 70)
 
-                    // Sensor Counts
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Sensor Data")
-                            .font(.headline)
-                            .padding(.horizontal, 4)
-
-                        VStack(spacing: 10) {
-                            if recording.sensorCounts.cameraFrames > 0 {
-                                SensorDetailRow(icon: "camera.fill", label: "Camera Frames", count: recording.sensorCounts.cameraFrames)
-                            }
-
-                            if recording.sensorCounts.depthFrames > 0 {
-                                SensorDetailRow(icon: "cube.fill", label: "Depth Frames", count: recording.sensorCounts.depthFrames)
-                            }
-
-                            if recording.sensorCounts.imuSamples > 0 {
-                                SensorDetailRow(icon: "gyroscope", label: "IMU Samples", count: recording.sensorCounts.imuSamples)
-                            }
-
-                            if recording.sensorCounts.poseSamples > 0 {
-                                SensorDetailRow(icon: "location.fill", label: "Pose Samples", count: recording.sensorCounts.poseSamples)
-                            }
-
-                            if recording.sensorCounts.gpsSamples > 0 {
-                                SensorDetailRow(icon: "map.fill", label: "GPS Samples", count: recording.sensorCounts.gpsSamples)
-                            }
-                        }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color(.systemBackground))
-                        )
-                    }
-
-                    // File Formats
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("File Formats")
-                            .font(.headline)
-                            .padding(.horizontal, 4)
-
+                        // Sensor Data
                         VStack(spacing: 8) {
-                            ForEach(recording.fileFormats, id: \.self) { format in
-                                HStack {
-                                    Image(systemName: "doc.fill")
-                                        .foregroundColor(.accentColor)
-                                    Text(format.uppercased())
-                                        .font(.system(.body, design: .monospaced))
-                                        .fontWeight(.medium)
-
-                                    Spacer()
-
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.green)
+                            LazyVGrid(columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ], spacing: 8) {
+                                if recording.sensorCounts.cameraFrames > 0 {
+                                    SensorDataCard(icon: "camera.fill", label: "Cam", count: recording.sensorCounts.cameraFrames)
                                 }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(Color(.secondarySystemBackground))
-                                )
+                                if recording.sensorCounts.depthFrames > 0 {
+                                    SensorDataCard(icon: "cube.fill", label: "Depth", count: recording.sensorCounts.depthFrames)
+                                }
+                                if recording.sensorCounts.imuSamples > 0 {
+                                    SensorDataCard(icon: "gyroscope", label: "IMU", count: recording.sensorCounts.imuSamples)
+                                }
+                                if recording.sensorCounts.poseSamples > 0 {
+                                    SensorDataCard(icon: "location.fill", label: "Pose", count: recording.sensorCounts.poseSamples)
+                                }
+                                if recording.sensorCounts.gpsSamples > 0 {
+                                    SensorDataCard(icon: "map.fill", label: "GPS", count: recording.sensorCounts.gpsSamples)
+                                }
                             }
                         }
-                        .padding()
+                        .padding(12)
                         .background(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(Color(.systemBackground))
                         )
-                    }
 
-                    // Files List
-                    if !filesList.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Files")
-                                .font(.headline)
-                                .padding(.horizontal, 4)
-
-                            VStack(spacing: 8) {
+                        // Files List
+                        if !filesList.isEmpty {
+                            VStack(spacing: 6) {
                                 ForEach(filesList) { file in
-                                    HStack {
-                                        Image(systemName: file.icon)
-                                            .foregroundColor(.secondary)
-                                            .frame(width: 24)
+                                    Button {
+                                        previewFile(file)
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: file.icon)
+                                                .font(.system(size: 11))
+                                                .foregroundColor(.secondary)
+                                                .frame(width: 20)
 
-                                        VStack(alignment: .leading, spacing: 2) {
                                             Text(file.name)
-                                                .font(.system(.body, design: .monospaced))
+                                                .font(.system(size: 11, design: .monospaced))
+                                                .foregroundColor(.primary)
                                                 .lineLimit(1)
 
+                                            Spacer()
+
                                             Text(formatFileSize(file.size))
-                                                .font(.caption)
+                                                .font(.system(size: 9, design: .monospaced))
+                                                .foregroundColor(.secondary)
+
+                                            Image(systemName: "chevron.right")
+                                                .font(.system(size: 9))
                                                 .foregroundColor(.secondary)
                                         }
-
-                                        Spacer()
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                                .fill(Color(.secondarySystemBackground))
+                                        )
                                     }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                            .fill(Color(.secondarySystemBackground))
-                                    )
+                                    .buttonStyle(.plain)
                                 }
                             }
-                            .padding()
+                            .padding(12)
                             .background(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                                     .fill(Color(.systemBackground))
                             )
                         }
-                    }
 
-                    // Action Buttons
-                    if isLandscape {
-                        HStack(spacing: 12) {
+                        // Action Buttons
+                        HStack(spacing: 10) {
                             Button {
                                 onShare()
                             } label: {
-                                HStack {
+                                HStack(spacing: 6) {
                                     Image(systemName: "square.and.arrow.up")
-                                        .font(.system(size: 16, weight: .semibold))
-                                    Text("Share Recording")
-                                        .font(.headline)
+                                        .font(.system(size: 11, weight: .semibold))
+                                    Text("Share")
+                                        .font(.system(.caption, weight: .semibold))
                                 }
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 54)
+                                .frame(height: 44)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(Color.accentColor)
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .fill(Theme.accent)
                                 )
                             }
 
                             Button(role: .destructive) {
                                 onDelete()
                             } label: {
-                                HStack {
+                                HStack(spacing: 6) {
                                     Image(systemName: "trash")
-                                        .font(.system(size: 16, weight: .semibold))
-                                    Text("Delete Recording")
-                                        .font(.headline)
+                                        .font(.system(size: 11, weight: .semibold))
+                                    Text("Delete")
+                                        .font(.system(.caption, weight: .semibold))
                                 }
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 54)
+                                .frame(height: 44)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(Color.red)
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .fill(Theme.recording)
                                 )
                             }
                         }
-                        .padding(.top, 8)
-                    } else {
-                        VStack(spacing: 12) {
-                            Button {
-                                onShare()
-                            } label: {
-                                HStack {
-                                    Image(systemName: "square.and.arrow.up")
-                                        .font(.system(size: 16, weight: .semibold))
-                                    Text("Share Recording")
-                                        .font(.headline)
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 54)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(Color.accentColor)
-                                )
-                            }
-
-                            Button(role: .destructive) {
-                                onDelete()
-                            } label: {
-                                HStack {
-                                    Image(systemName: "trash")
-                                        .font(.system(size: 16, weight: .semibold))
-                                    Text("Delete Recording")
-                                        .font(.headline)
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 54)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(Color.red)
-                                )
-                            }
-                        }
-                        .padding(.top, 8)
                     }
+                    .padding(16)
                 }
-                .padding(isLandscape ? 16 : 20)
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Recording Details")
+            .navigationTitle("Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
                         dismiss()
                     }
+                    .font(.caption)
                 }
             }
             .onAppear {
                 loadFiles()
             }
+            .quickLookPreview($previewURL)
+            .alert("Cannot Preview", isPresented: $showingErrorAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
             }
+        }
+    }
+
+    private func previewFile(_ file: FileItem) {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let recordingsDir = documents.appendingPathComponent(Constants.Recording.recordingsDirectory)
+        let fileURL = recordingsDir.appendingPathComponent(recording.sessionId).appendingPathComponent(file.name)
+
+        // Check if the file exists and can be previewed
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            previewURL = fileURL
+        } else {
+            errorMessage = "File not found."
+            showingErrorAlert = true
         }
     }
 
@@ -644,53 +634,55 @@ struct FileItem: Identifiable {
     let icon: String
 }
 
-struct DetailRow: View {
+struct DetailBentoCard: View {
     let icon: String
     let label: String
     let value: String
 
     var body: some View {
-        HStack(spacing: 12) {
+        VStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundColor(.accentColor)
-                .frame(width: 24)
-
-            Text(label)
-                .font(.subheadline)
+                .font(.system(size: 14))
                 .foregroundColor(.secondary)
-
-            Spacer()
-
             Text(value)
-                .font(.subheadline)
-                .fontWeight(.medium)
+                .font(
+                    .system(size: 12, weight: .bold, design: .monospaced)
+                )
+            Text(label)
+                .font(.system(size: 9))
+                .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(.systemBackground))
+        )
     }
 }
 
-struct SensorDetailRow: View {
+struct SensorDataCard: View {
     let icon: String
     let label: String
     let count: Int
 
     var body: some View {
-        HStack(spacing: 12) {
+        VStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundColor(.accentColor)
-                .frame(width: 24)
-
-            Text(label)
-                .font(.subheadline)
-
-            Spacer()
-
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
             Text(formatCount(count))
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+            Text(label)
+                .font(.system(size: 8))
                 .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
     }
 
     private func formatCount(_ count: Int) -> String {
