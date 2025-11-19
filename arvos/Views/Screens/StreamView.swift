@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Charts
 
 struct StreamView: View {
     @EnvironmentObject var viewModel: StreamingViewModel
@@ -175,147 +176,147 @@ struct StreamView: View {
                 Spacer(minLength: 0)
                 // Row 1: FPS Chart + Mode/Recording Boxes (separate, stacked)
             HStack(spacing: 12) {
-                    // FPS Chart Box (flexible, takes most space)
-                BentoCard {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "gauge")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.secondary)
-                                Text("FPS")
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(.secondary)
-                            }
-                            Text(viewModel.fpsFormatted)
-                                .font(.system(size: 36, weight: .bold, design: .monospaced))
-                                .foregroundColor(.primary)
-                            
-                            // Simple line chart
-                            if !fpsHistory.isEmpty {
-                                FPSChartView(data: fpsHistory)
-                                    .frame(minHeight: 120, maxHeight: 150)
-                            } else {
-                                Rectangle()
-                                    .fill(Color(.systemGray5).opacity(0.3))
-                                    .frame(height: 100)
-                                    .cornerRadius(4)
-                            }
-                    }
-                }
-                .frame(maxWidth: .infinity, minHeight: 200)
-
-                    // Mode + Recording Boxes (separate, in VStack)
+                    // Left side: FPS Chart + Server Box (VStack)
                     VStack(spacing: 12) {
-                        // Mode Box (small)
+                        // Server Box (on top of FPS)
+                        if NetworkManager.shared.isServerMode && !NetworkManager.shared.serverIPAddresses.isEmpty {
+            BentoCard {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    HStack {
+                                        Image(systemName: "network")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.secondary)
+                                        Text("Server IP")
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text("\(NetworkManager.shared.connectedClients) client\(NetworkManager.shared.connectedClients == 1 ? "" : "s")")
+                                            .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.secondary)
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        ForEach(NetworkManager.shared.serverIPAddresses.prefix(2), id: \.self) { ip in
+                                            Text(ip)
+                                                .font(.system(size: 12, design: .monospaced))
+                                                .foregroundColor(.primary)
+                                        }
+                                    }
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 80)
+                        }
+                        
+                        // FPS Chart Box (flexible, takes remaining space)
                         BentoCard {
-                            VStack(spacing: 8) {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "gauge")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.secondary)
+                                    Text("FPS")
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(.secondary)
+                                }
+                                Text(viewModel.fpsFormatted)
+                                    .font(.system(size: 36, weight: .bold, design: .monospaced))
+                                    .foregroundColor(.primary)
+                                
+                                // Simple line chart
+                                if !fpsHistory.isEmpty {
+                                    FPSChartView(data: fpsHistory)
+                                        .frame(minHeight: 120, maxHeight: 150)
+                                } else {
+                                    Rectangle()
+                                        .fill(Color(.systemGray5).opacity(0.3))
+                                        .frame(height: 100)
+                                        .cornerRadius(4)
+                                }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                    .frame(maxWidth: .infinity, minHeight: 200)
+
+                    // Right side: Mode + Recording Boxes (separate, in VStack - compact)
+                    VStack(spacing: 12) {
+                        // Mode Box (small, compact)
+                BentoCard {
+                            VStack(spacing: 6) {
                                 Image(systemName: viewModel.selectedMode.icon)
-                                    .font(.system(size: 20))
+                                    .font(.system(size: 18))
                                     .foregroundColor(.primary)
                                 Text(viewModel.selectedMode.rawValue)
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .font(.system(size: 11, weight: .semibold))
                                     .foregroundColor(.secondary)
                                     .lineLimit(2)
                                     .multilineTextAlignment(.center)
                             }
                         }
                         .frame(width: 140)
-                        .frame(height: 90)
+                        .frame(height: 70)
                         
-                        // Recording Box (small)
+                        // Recording Box (small, compact)
                         BentoCard {
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack {
                                     Image(systemName: "record.circle.fill")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 11))
                                         .foregroundColor(Theme.recording)
                                     Text("Recording")
-                                        .font(.system(size: 12, weight: .medium))
+                                        .font(.system(size: 11, weight: .medium))
                                         .foregroundColor(.secondary)
                                 }
                                 
                                 if viewModel.recordingDuration > 0 {
                                     Text(formatDuration(viewModel.recordingDuration))
-                                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                                        .font(.system(size: 14, weight: .bold, design: .monospaced))
                             .foregroundColor(Theme.recording)
                                     
                                     Text(viewModel.recordingSizeFormatted)
-                                        .font(.system(size: 10))
+                                        .font(.system(size: 9))
                                         .foregroundColor(.secondary)
                                 } else {
                                     Text("Not Recording")
-                                        .font(.system(size: 12, weight: .medium))
+                                        .font(.system(size: 11, weight: .medium))
                                         .foregroundColor(.secondary)
                                 }
                             }
                         }
                         .frame(width: 140)
-                        .frame(height: 90)
+                        .frame(height: 70)
                     }
                 }
 
-                // Row 2: IMU Chart + Server Box
-                HStack(spacing: 12) {
-                    // IMU Chart Box (smaller)
+                // Row 2: IMU Chart (full width)
                 BentoCard {
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack {
-                                Image(systemName: "gyroscope")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
-                                Text("IMU Magnitude")
-                                    .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.secondary)
-                            }
-                            Text(String(format: "%.2f", imuMagnitudeHistory.last ?? 0.0))
-                                .font(.system(size: 24, weight: .bold, design: .monospaced))
-                                .foregroundColor(.primary)
-                            
-                            // IMU chart
-                            if !imuMagnitudeHistory.isEmpty {
-                                IMUChartView(data: imuMagnitudeHistory)
-                                    .frame(minHeight: 80, maxHeight: 100)
-                            } else {
-                                Rectangle()
-                                    .fill(Color(.systemGray5).opacity(0.3))
-                                    .frame(height: 60)
-                                    .cornerRadius(4)
-                            }
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 140)
-
-                // Server Box (next to IMU)
-                if NetworkManager.shared.isServerMode && !NetworkManager.shared.serverIPAddresses.isEmpty {
-                    BentoCard {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "network")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
-                                Text("Server IP")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(NetworkManager.shared.connectedClients) client\(NetworkManager.shared.connectedClients == 1 ? "" : "s")")
-                                    .font(.system(size: 11, weight: .medium))
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Image(systemName: "gyroscope")
+                                .font(.system(size: 14))
                                 .foregroundColor(.secondary)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 6) {
-                                ForEach(NetworkManager.shared.serverIPAddresses.prefix(2), id: \.self) { ip in
-                                    Text(ip)
-                                        .font(.system(size: 12, design: .monospaced))
-                                        .foregroundColor(.primary)
-                                }
-                            }
-                        }
+                            Text("IMU Magnitude")
+                                .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.secondary)
                     }
-                    .frame(width: 160)
-                    .frame(minHeight: 140)
+                        Text(String(format: "%.2f", imuMagnitudeHistory.last ?? 0.0))
+                            .font(.system(size: 24, weight: .bold, design: .monospaced))
+                            .foregroundColor(.primary)
+                        
+                        // IMU chart
+                        if !imuMagnitudeHistory.isEmpty {
+                            IMUChartView(data: imuMagnitudeHistory)
+                                .frame(minHeight: 100, maxHeight: 140)
+                        } else {
+                            Rectangle()
+                                .fill(Color(.systemGray5).opacity(0.3))
+                                .frame(height: 80)
+                                .cornerRadius(4)
+                        }
                 }
             }
+            .frame(maxWidth: .infinity, minHeight: 160)
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 20)
@@ -498,12 +499,12 @@ struct BentoCard<Content: View>: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(20)
+            .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(Color(.secondarySystemGroupedBackground))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .stroke(Color(.separator).opacity(0.5), lineWidth: 0.5)
                     )
             )
@@ -515,39 +516,52 @@ struct BentoCard<Content: View>: View {
 struct FPSChartView: View {
     let data: [Double]
     
+    private var chartData: [FPSDataPoint] {
+        data.enumerated().map { FPSDataPoint(index: $0, value: $1) }
+    }
+    
     var body: some View {
-        GeometryReader { geometry in
-            if !data.isEmpty {
-                let maxValue = max(data.max() ?? 30, 30)
-                let minValue = max(0, (data.min() ?? 0) - 2)
-                let range = maxValue - minValue
-                
-                // Sample data for better performance (only render every Nth point)
-                let sampleRate = max(1, data.count / 20) // Max 20 points for rendering
-                let sampledData = stride(from: 0, to: data.count, by: sampleRate).map { data[$0] }
-                
-                Path { path in
-                    for (sampledIndex, value) in sampledData.enumerated() {
-                        let originalIndex = sampledIndex * sampleRate
-                        let x = CGFloat(sampledIndex) / CGFloat(max(sampledData.count - 1, 1)) * geometry.size.width
-                        let y = geometry.size.height - (CGFloat(value - minValue) / CGFloat(range)) * geometry.size.height
-                        
-                        if sampledIndex == 0 {
-                            path.move(to: CGPoint(x: x, y: y))
-                        } else {
-                            path.addLine(to: CGPoint(x: x, y: y))
+        if !data.isEmpty {
+            let maxValue = max(data.max() ?? 30, 30)
+            let minValue = max(0, (data.min() ?? 0) - 2)
+            
+            Chart(chartData) { point in
+                LineMark(
+                    x: .value("Time", point.index),
+                    y: .value("FPS", point.value)
+                )
+                .foregroundStyle(Color.accentColor)
+                .interpolationMethod(.catmullRom)
+                .lineStyle(StrokeStyle(lineWidth: 2))
+            }
+            .chartYScale(domain: minValue...maxValue)
+            .chartYAxis {
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                        .foregroundStyle(Color(.separator).opacity(0.3))
+                    AxisValueLabel {
+                        if let intValue = value.as(Double.self) {
+                            Text(String(format: "%.0f", intValue))
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
-                .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
-                .drawingGroup() // Cache rendering for better performance
-            } else {
-                // Empty state
-                Rectangle()
-                    .fill(Color(.systemGray5).opacity(0.3))
             }
+            .chartXAxis(.hidden)
+            .frame(maxWidth: .infinity)
+        } else {
+            // Empty state
+            Rectangle()
+                .fill(Color(.systemGray5).opacity(0.3))
         }
     }
+}
+
+private struct FPSDataPoint: Identifiable {
+    let id = UUID()
+    let index: Int
+    let value: Double
 }
 
 // MARK: - IMU Chart View
@@ -555,38 +569,52 @@ struct FPSChartView: View {
 struct IMUChartView: View {
     let data: [Double]
     
+    private var chartData: [IMUDataPoint] {
+        data.enumerated().map { IMUDataPoint(index: $0, value: $1) }
+    }
+    
     var body: some View {
-        GeometryReader { geometry in
-            if !data.isEmpty {
-                let maxValue = max(data.max() ?? 2.0, 2.0)
-                let minValue = 0.0
-                let range = maxValue - minValue
-                
-                // Sample data for better performance (only render every Nth point)
-                let sampleRate = max(1, data.count / 20) // Max 20 points for rendering
-                let sampledData = stride(from: 0, to: data.count, by: sampleRate).map { data[$0] }
-                
-                Path { path in
-                    for (sampledIndex, value) in sampledData.enumerated() {
-                        let x = CGFloat(sampledIndex) / CGFloat(max(sampledData.count - 1, 1)) * geometry.size.width
-                        let y = geometry.size.height - (CGFloat(value - minValue) / CGFloat(range)) * geometry.size.height
-                        
-                        if sampledIndex == 0 {
-                            path.move(to: CGPoint(x: x, y: y))
-                        } else {
-                            path.addLine(to: CGPoint(x: x, y: y))
+        if !data.isEmpty {
+            let maxValue = max(data.max() ?? 2.0, 2.0)
+            let minValue = 0.0
+            
+            Chart(chartData) { point in
+                LineMark(
+                    x: .value("Time", point.index),
+                    y: .value("Magnitude", point.value)
+                )
+                .foregroundStyle(Color.green)
+                .interpolationMethod(.catmullRom)
+                .lineStyle(StrokeStyle(lineWidth: 2))
+            }
+            .chartYScale(domain: minValue...maxValue)
+            .chartYAxis {
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                        .foregroundStyle(Color(.separator).opacity(0.3))
+                    AxisValueLabel {
+                        if let doubleValue = value.as(Double.self) {
+                            Text(String(format: "%.2f", doubleValue))
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
-                .stroke(Color.green, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
-                .drawingGroup() // Cache rendering for better performance
-            } else {
-                // Empty state
-                Rectangle()
-                    .fill(Color(.systemGray5).opacity(0.3))
             }
+            .chartXAxis(.hidden)
+            .frame(maxWidth: .infinity)
+        } else {
+            // Empty state
+            Rectangle()
+                .fill(Color(.systemGray5).opacity(0.3))
         }
     }
+}
+
+private struct IMUDataPoint: Identifiable {
+    let id = UUID()
+    let index: Int
+    let value: Double
 }
 
 
