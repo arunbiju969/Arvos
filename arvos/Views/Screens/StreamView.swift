@@ -173,8 +173,8 @@ struct StreamView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 16) {
                 Spacer(minLength: 0)
-                // Row 1: FPS Chart + Mode/Recording Box
-            HStack(spacing: 16) {
+                // Row 1: FPS Chart + Mode/Recording Boxes (separate, stacked)
+            HStack(spacing: 12) {
                     // FPS Chart Box (flexible, takes most space)
                 BentoCard {
                         VStack(alignment: .leading, spacing: 12) {
@@ -204,112 +204,118 @@ struct StreamView: View {
                 }
                 .frame(maxWidth: .infinity, minHeight: 200)
 
-                    // Mode + Recording Box (merged)
-                BentoCard {
-                        VStack(spacing: 16) {
-                            // Mode Section
+                    // Mode + Recording Boxes (separate, in VStack)
+                    VStack(spacing: 12) {
+                        // Mode Box (small)
+                        BentoCard {
                             VStack(spacing: 8) {
                                 Image(systemName: viewModel.selectedMode.icon)
-                                    .font(.system(size: 24))
+                                    .font(.system(size: 20))
                                     .foregroundColor(.primary)
                                 Text(viewModel.selectedMode.rawValue)
-                                    .font(.system(size: 13, weight: .semibold))
+                                    .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(.secondary)
                                     .lineLimit(2)
                                     .multilineTextAlignment(.center)
                             }
-                            
-                            Divider()
-                            
-                            // Recording Section
-                            VStack(alignment: .leading, spacing: 8) {
+                        }
+                        .frame(width: 140)
+                        .frame(height: 90)
+                        
+                        // Recording Box (small)
+                        BentoCard {
+                            VStack(alignment: .leading, spacing: 6) {
                                 HStack {
                                     Image(systemName: "record.circle.fill")
-                                        .font(.system(size: 14))
+                                        .font(.system(size: 12))
                                         .foregroundColor(Theme.recording)
                                     Text("Recording")
-                                        .font(.system(size: 13, weight: .medium))
+                                        .font(.system(size: 12, weight: .medium))
                                         .foregroundColor(.secondary)
                                 }
                                 
                                 if viewModel.recordingDuration > 0 {
                                     Text(formatDuration(viewModel.recordingDuration))
-                            .font(.system(size: 20, weight: .bold, design: .monospaced))
-                                        .foregroundColor(Theme.recording)
+                                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                            .foregroundColor(Theme.recording)
                                     
                                     Text(viewModel.recordingSizeFormatted)
-                                        .font(.system(size: 11))
+                                        .font(.system(size: 10))
                                         .foregroundColor(.secondary)
                                 } else {
                                     Text("Not Recording")
-                                        .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.secondary)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(.secondary)
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        .frame(width: 140)
+                        .frame(height: 90)
                     }
-                    .frame(width: 180)
-                    .frame(minHeight: 200)
                 }
 
-                // Row 2: IMU Chart (full width)
-                    BentoCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: "gyroscope")
-                                .font(.system(size: 16))
-                                .foregroundColor(.secondary)
-                            Text("IMU Magnitude")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundColor(.secondary)
-                        }
-                        Text(String(format: "%.2f", imuMagnitudeHistory.last ?? 0.0))
-                            .font(.system(size: 28, weight: .bold, design: .monospaced))
-                            .foregroundColor(.primary)
-                        
-                        // IMU chart
-                        if !imuMagnitudeHistory.isEmpty {
-                            IMUChartView(data: imuMagnitudeHistory)
-                                .frame(minHeight: 120, maxHeight: 150)
-                        } else {
-                            Rectangle()
-                                .fill(Color(.systemGray5).opacity(0.3))
-                                .frame(height: 100)
-                                .cornerRadius(4)
-                        }
+                // Row 2: IMU Chart + Server Box
+                HStack(spacing: 12) {
+                    // IMU Chart Box (smaller)
+                BentoCard {
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Image(systemName: "gyroscope")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                                Text("IMU Magnitude")
+                                    .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.secondary)
+                            }
+                            Text(String(format: "%.2f", imuMagnitudeHistory.last ?? 0.0))
+                                .font(.system(size: 24, weight: .bold, design: .monospaced))
+                                .foregroundColor(.primary)
+                            
+                            // IMU chart
+                            if !imuMagnitudeHistory.isEmpty {
+                                IMUChartView(data: imuMagnitudeHistory)
+                                    .frame(minHeight: 80, maxHeight: 100)
+                            } else {
+                                Rectangle()
+                                    .fill(Color(.systemGray5).opacity(0.3))
+                                    .frame(height: 60)
+                                    .cornerRadius(4)
+                            }
+                    }
                 }
-            }
-            .frame(maxWidth: .infinity, minHeight: 200)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 140)
 
-                // Row 3: IP Addresses Box (full width)
+                // Server Box (next to IMU)
                 if NetworkManager.shared.isServerMode && !NetworkManager.shared.serverIPAddresses.isEmpty {
-            BentoCard {
-                        VStack(alignment: .leading, spacing: 16) {
+                    BentoCard {
+                        VStack(alignment: .leading, spacing: 12) {
                             HStack {
                                 Image(systemName: "network")
-                                    .font(.system(size: 16))
+                                    .font(.system(size: 14))
                                     .foregroundColor(.secondary)
-                                Text("Server IP Addresses")
-                                    .font(.system(size: 15, weight: .medium))
+                                Text("Server IP")
+                                    .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.secondary)
                                 Spacer()
                                 Text("\(NetworkManager.shared.connectedClients) client\(NetworkManager.shared.connectedClients == 1 ? "" : "s")")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.secondary)
                             }
                             
-                            VStack(alignment: .leading, spacing: 10) {
-                                ForEach(NetworkManager.shared.serverIPAddresses.prefix(3), id: \.self) { ip in
+                            VStack(alignment: .leading, spacing: 6) {
+                                ForEach(NetworkManager.shared.serverIPAddresses.prefix(2), id: \.self) { ip in
                                     Text(ip)
-                                        .font(.system(size: 15, design: .monospaced))
+                                        .font(.system(size: 12, design: .monospaced))
                                         .foregroundColor(.primary)
                                 }
                             }
                         }
                     }
-                    .frame(minHeight: 120)
+                    .frame(width: 160)
+                    .frame(minHeight: 140)
                 }
+            }
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 20)

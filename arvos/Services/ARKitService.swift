@@ -213,60 +213,65 @@ class ARKitService: NSObject {
         cameraIntrinsics: simd_float3x3,
         viewportSize: CGSize
     ) {
-        guard depthEnabled else { return }
+        autoreleasepool {
+            guard depthEnabled else { return }
 
-        let timestamp = Constants.Time.now()
+            let timestamp = Constants.Time.now()
 
-        // Rate limiting for depth
-        let timeSinceLastDepth = timestamp - lastDepthTime
-        guard lastDepthTime == 0 || timeSinceLastDepth >= depthInterval else {
-            return
-        }
-        lastDepthTime = timestamp
-
-        // Try to get depth data (already extracted from frame)
-        var depthMap: CVPixelBuffer?
-        var confidenceMap: CVPixelBuffer?
-
-        // LiDAR depth (preferred)
-        if let sceneDepth = sceneDepth {
-            depthMap = sceneDepth.depthMap
-            confidenceMap = sceneDepth.confidenceMap
-        }
-        // ARKit depth estimation (fallback)
-        else if let estimatedDepth = estimatedDepth {
-            depthMap = estimatedDepth
-        } else {
-            // Only print first few failures
-            if depthFrameCount < 5 {
-                print("❌ No depth data available")
+            // Rate limiting for depth
+            let timeSinceLastDepth = timestamp - lastDepthTime
+            guard lastDepthTime == 0 || timeSinceLastDepth >= depthInterval else {
+                return
             }
-            return
-        }
+            lastDepthTime = timestamp
 
-        guard let depthBuffer = depthMap else { return }
-        guard !isProcessingDepth else {
-            droppedDepthFrames += 1
-            if droppedDepthFrames % 10 == 0 {
-                print("⚠️ Dropped \(droppedDepthFrames) depth frames due to processing backlog")
+            // Try to get depth data (already extracted from frame)
+            var depthMap: CVPixelBuffer?
+            var confidenceMap: CVPixelBuffer?
+
+            // LiDAR depth (preferred)
+            if let sceneDepth = sceneDepth {
+                depthMap = sceneDepth.depthMap
+                confidenceMap = sceneDepth.confidenceMap
             }
-            return
-        }
-        isProcessingDepth = true
-
-        // Copy pixel buffers for async processing
-        guard let depthCopy = copyPixelBuffer(depthBuffer) else {
-            isProcessingDepth = false
-            return
-        }
-
-        let confidenceCopy: CVPixelBuffer? = {
-            if let confidenceMap, let copied = copyPixelBuffer(confidenceMap) {
-                return copied
+            // ARKit depth estimation (fallback)
+            else if let estimatedDepth = estimatedDepth {
+                depthMap = estimatedDepth
+            } else {
+                // Only print first few failures
+                if depthFrameCount < 5 {
+                    print("❌ No depth data available")
+                }
+                return
             }
-            return nil
-        }()
-        let hasConfidence = confidenceMap != nil
+
+            guard let depthBuffer = depthMap else { return }
+            guard !isProcessingDepth else {
+                droppedDepthFrames += 1
+                if droppedDepthFrames % 10 == 0 {
+                    print("⚠️ Dropped \(droppedDepthFrames) depth frames due to processing backlog")
+                }
+                return
+            }
+            isProcessingDepth = true
+
+            // Copy pixel buffers for async processing
+            guard let depthCopy = copyPixelBuffer(depthBuffer) else {
+                isProcessingDepth = false
+                return
+            }
+
+            let confidenceCopy: CVPixelBuffer? = {
+                if let confidenceMap, let copied = copyPixelBuffer(confidenceMap) {
+                    return copied
+                }
+                return nil
+            }()
+            let hasConfidence = confidenceMap != nil
+
+            // Explicitly release references to original buffers to avoid retaining ARFrame
+            depthMap = nil
+            confidenceMap = nil
 
         // Calculate projection matrix manually to avoid retaining ARCamera
         let projectionMatrix = calculateProjectionMatrix(
@@ -329,6 +334,7 @@ class ARKitService: NSObject {
                     self.delegate?.arKitService(self, didCapture: depthFrame)
                 }
             }
+        }
         }
     }
 
