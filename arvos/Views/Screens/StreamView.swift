@@ -173,7 +173,7 @@ struct StreamView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 16) {
                 Spacer(minLength: 0)
-                // Row 1: FPS Chart + Mode Box
+                // Row 1: FPS Chart + Mode/Recording Box
             HStack(spacing: 16) {
                     // FPS Chart Box (flexible, takes most space)
                 BentoCard {
@@ -204,83 +204,83 @@ struct StreamView: View {
                 }
                 .frame(maxWidth: .infinity, minHeight: 200)
 
-                    // Mode Box (fixed width)
+                    // Mode + Recording Box (merged)
                 BentoCard {
-                        VStack(spacing: 10) {
-                            Image(systemName: viewModel.selectedMode.icon)
-                                .font(.system(size: 28))
-                                .foregroundColor(.primary)
-                            Text(viewModel.selectedMode.rawValue)
-                                .font(.system(size: 13, weight: .semibold))
+                        VStack(spacing: 16) {
+                            // Mode Section
+                            VStack(spacing: 8) {
+                                Image(systemName: viewModel.selectedMode.icon)
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.primary)
+                                Text(viewModel.selectedMode.rawValue)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(2)
+                                    .multilineTextAlignment(.center)
+                            }
+                            
+                            Divider()
+                            
+                            // Recording Section
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "record.circle.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(Theme.recording)
+                                    Text("Recording")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                if viewModel.recordingDuration > 0 {
+                                    Text(formatDuration(viewModel.recordingDuration))
+                            .font(.system(size: 20, weight: .bold, design: .monospaced))
+                                        .foregroundColor(Theme.recording)
+                                    
+                                    Text(viewModel.recordingSizeFormatted)
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                } else {
+                                    Text("Not Recording")
+                                        .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.secondary)
-                                .lineLimit(2)
-                                .multilineTextAlignment(.center)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                    .frame(width: 120)
+                    .frame(width: 180)
                     .frame(minHeight: 200)
                 }
 
-                // Row 2: IMU Chart + Recording Box
-                HStack(spacing: 16) {
-                    // IMU Chart Box (flexible)
+                // Row 2: IMU Chart (full width)
                     BentoCard {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "gyroscope")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.secondary)
-                                Text("IMU Magnitude")
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(.secondary)
-                            }
-                            Text(String(format: "%.2f", imuMagnitudeHistory.last ?? 0.0))
-                                .font(.system(size: 28, weight: .bold, design: .monospaced))
-                                .foregroundColor(.primary)
-                            
-                            // IMU chart
-                            if !imuMagnitudeHistory.isEmpty {
-                                IMUChartView(data: imuMagnitudeHistory)
-                                    .frame(minHeight: 120, maxHeight: 150)
-                            } else {
-                                Rectangle()
-                                    .fill(Color(.systemGray5).opacity(0.3))
-                                    .frame(height: 100)
-                                    .cornerRadius(4)
-                            }
-                    }
-                }
-                .frame(maxWidth: .infinity, minHeight: 200)
-
-                    // Recording Box (flexible)
-                    BentoCard {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "record.circle.fill")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(Theme.recording)
-                                Text("Recording")
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            if viewModel.recordingDuration > 0 {
-                                Text(formatDuration(viewModel.recordingDuration))
-                                    .font(.system(size: 32, weight: .bold, design: .monospaced))
-                                .foregroundColor(Theme.recording)
-                                
-                                Text(viewModel.recordingSizeFormatted)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
-                            } else {
-                                Text("Not Recording")
-                                    .font(.system(size: 16, weight: .medium))
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "gyroscope")
+                                .font(.system(size: 16))
                                 .foregroundColor(.secondary)
-                            }
+                            Text("IMU Magnitude")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.secondary)
                         }
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 200)
+                        Text(String(format: "%.2f", imuMagnitudeHistory.last ?? 0.0))
+                            .font(.system(size: 28, weight: .bold, design: .monospaced))
+                            .foregroundColor(.primary)
+                        
+                        // IMU chart
+                        if !imuMagnitudeHistory.isEmpty {
+                            IMUChartView(data: imuMagnitudeHistory)
+                                .frame(minHeight: 120, maxHeight: 150)
+                        } else {
+                            Rectangle()
+                                .fill(Color(.systemGray5).opacity(0.3))
+                                .frame(height: 100)
+                                .cornerRadius(4)
+                        }
                 }
+            }
+            .frame(maxWidth: .infinity, minHeight: 200)
 
                 // Row 3: IP Addresses Box (full width)
                 if NetworkManager.shared.isServerMode && !NetworkManager.shared.serverIPAddresses.isEmpty {
@@ -392,7 +392,7 @@ struct StreamView: View {
     private var actionButtons: some View {
         VStack(spacing: 12) {
             if viewModel.isStreaming {
-                // Stop button (primary)
+                // Stop button (primary) - visible in both light and dark mode
                 Button {
                     viewModel.toggleStreaming()
                 } label: {
@@ -403,12 +403,12 @@ struct StreamView: View {
                         .frame(height: 56)
                         .background(
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(Color.black)
+                                .fill(Color.red)
                         )
                 }
                 .buttonStyle(.plain)
             } else {
-                // Start button (primary)
+                // Start button (primary) - visible in both light and dark mode
             Button {
                 viewModel.toggleStreaming()
             } label: {
@@ -419,7 +419,7 @@ struct StreamView: View {
                         .frame(height: 56)
                         .background(
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(Color.black)
+                                .fill(Theme.success)
                         )
                 }
                 .buttonStyle(.plain)

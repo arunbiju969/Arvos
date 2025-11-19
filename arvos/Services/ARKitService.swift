@@ -293,38 +293,41 @@ class ARKitService: NSObject {
 
         depthProcessingQueue.async { [weak self] in
             guard let self else { return }
-
-            let cloud = self.createPointCloud(
-                from: depthCopy,
-                cameraTransform: cameraTransform,
-                intrinsics: cameraIntrinsics,
-                confidenceMap: confidenceCopy
-            )
-
-            DispatchQueue.main.async {
-                self.isProcessingDepth = false
-
-                let pointCount = cloud.points.count
-                if pointCount == 0 {
-                    if self.depthFrameCount < 5 {
-                        print("⚠️ Depth cloud empty (0 points)")
-                    }
-                    return
-                }
-
-                self.depthFrameCount += 1
-                if self.depthFrameCount <= 3 || self.depthFrameCount % 10 == 0 {
-                    print("✅ Depth frame #\(self.depthFrameCount): \(pointCount) points")
-                }
-
-                let depthFrame = DepthFrame(
-                    timestamp: timestamp,
-                    pointCloud: cloud,
+            
+            // Use autoreleasepool to reduce memory pressure during intensive processing
+            autoreleasepool {
+                let cloud = self.createPointCloud(
+                    from: depthCopy,
                     cameraTransform: cameraTransform,
                     intrinsics: cameraIntrinsics,
-                    hasConfidenceData: hasConfidence
+                    confidenceMap: confidenceCopy
                 )
-                self.delegate?.arKitService(self, didCapture: depthFrame)
+
+                DispatchQueue.main.async {
+                    self.isProcessingDepth = false
+
+                    let pointCount = cloud.points.count
+                    if pointCount == 0 {
+                        if self.depthFrameCount < 5 {
+                            print("⚠️ Depth cloud empty (0 points)")
+                        }
+                        return
+                    }
+
+                    self.depthFrameCount += 1
+                    if self.depthFrameCount <= 3 || self.depthFrameCount % 10 == 0 {
+                        print("✅ Depth frame #\(self.depthFrameCount): \(pointCount) points")
+                    }
+
+                    let depthFrame = DepthFrame(
+                        timestamp: timestamp,
+                        pointCloud: cloud,
+                        cameraTransform: cameraTransform,
+                        intrinsics: cameraIntrinsics,
+                        hasConfidenceData: hasConfidence
+                    )
+                    self.delegate?.arKitService(self, didCapture: depthFrame)
+                }
             }
         }
     }
