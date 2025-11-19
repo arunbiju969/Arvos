@@ -206,7 +206,13 @@ class ARKitService: NSObject {
 
     // MARK: - Helper Methods
 
-    private func processDepthFrame(_ frame: ARFrame) {
+    private func processDepthFrame(
+        sceneDepth: ARDepthData?,
+        estimatedDepth: CVPixelBuffer?,
+        cameraTransform: simd_float4x4,
+        cameraIntrinsics: simd_float3x3,
+        viewportSize: CGSize
+    ) {
         guard depthEnabled else { return }
 
         let timestamp = Constants.Time.now()
@@ -218,22 +224,22 @@ class ARKitService: NSObject {
         }
         lastDepthTime = timestamp
 
-        // Try to get depth data
+        // Try to get depth data (already extracted from frame)
         var depthMap: CVPixelBuffer?
         var confidenceMap: CVPixelBuffer?
 
         // LiDAR depth (preferred)
-        if let sceneDepth = frame.sceneDepth {
+        if let sceneDepth = sceneDepth {
             depthMap = sceneDepth.depthMap
-            confidenceMap = sceneDepth.confidenceMap  // Add confidence data
+            confidenceMap = sceneDepth.confidenceMap
         }
         // ARKit depth estimation (fallback)
-        else if let estimatedDepth = frame.estimatedDepthData {
+        else if let estimatedDepth = estimatedDepth {
             depthMap = estimatedDepth
         } else {
             // Only print first few failures
             if depthFrameCount < 5 {
-                print("❌ No depth data available from ARFrame (tracking: \(frame.camera.trackingState))")
+                print("❌ No depth data available")
             }
             return
         }
@@ -260,22 +266,24 @@ class ARKitService: NSObject {
             }
             return nil
         }()
-        let cameraTransform = frame.camera.transform
-        let intrinsics = frame.camera.intrinsics
         let hasConfidence = confidenceMap != nil
 
-        // Get ARKit camera projection matrix for correct perspective
-        let viewportSize = CGSize(width: 256, height: 192) // Depth resolution
-        let cameraProjection = frame.camera.projectionMatrix(for: .portrait, viewportSize: viewportSize, zNear: 0.001, zFar: 1000)
+        // Calculate projection matrix manually to avoid retaining ARCamera
+        let projectionMatrix = calculateProjectionMatrix(
+            intrinsics: cameraIntrinsics,
+            viewportSize: viewportSize,
+            zNear: 0.001,
+            zFar: 1000
+        )
 
         // Emit depth visualization sample for real-time rendering
         let depthSample = DepthVisualizationSample(
             timestamp: timestamp,
             depthMap: depthCopy,
             confidenceMap: confidenceCopy,
-            intrinsics: intrinsics,
+            intrinsics: cameraIntrinsics,
             cameraTransform: cameraTransform,
-            projectionMatrix: cameraProjection
+            projectionMatrix: projectionMatrix
         )
 
         DispatchQueue.main.async { [weak self] in
@@ -289,7 +297,7 @@ class ARKitService: NSObject {
             let cloud = self.createPointCloud(
                 from: depthCopy,
                 cameraTransform: cameraTransform,
-                intrinsics: intrinsics,
+                intrinsics: cameraIntrinsics,
                 confidenceMap: confidenceCopy
             )
 
@@ -313,7 +321,7 @@ class ARKitService: NSObject {
                     timestamp: timestamp,
                     pointCloud: cloud,
                     cameraTransform: cameraTransform,
-                    intrinsics: intrinsics,
+                    intrinsics: cameraIntrinsics,
                     hasConfidenceData: hasConfidence
                 )
                 self.delegate?.arKitService(self, didCapture: depthFrame)
@@ -412,6 +420,46 @@ class ARKitService: NSObject {
         )
     }
 
+    // Calculate projection matrix from intrinsics
+    private func calculateProjectionMatrix(
+        intrinsics: simd_float3x3,
+        viewportSize: CGSize,
+        zNear: Float,
+        zFar: Float
+    ) -> simd_float4x4 {
+        // Extract camera parameters from intrinsics matrix
+        let fx = intrinsics[0][0]  // Focal length X
+        let fy = intrinsics[1][1]  // Focal length Y
+        let cx = intrinsics[2][0]  // Principal point X
+        let cy = intrinsics[2][1]  // Principal point Y
+        
+        let width = Float(viewportSize.width)
+        let height = Float(viewportSize.height)
+        
+        // Calculate projection matrix (similar to ARCamera.projectionMatrix)
+        // This is a standard perspective projection matrix
+        let fovX = 2.0 * atan(width / (2.0 * fx))
+        let fovY = 2.0 * atan(height / (2.0 * fy))
+        
+        // Use the larger FOV for consistency
+        let fov = max(fovX, fovY)
+        let aspect = width / height
+        
+        // Build perspective projection matrix
+        let f = 1.0 / tan(fov / 2.0)
+        let range = zFar - zNear
+        
+        // Column-major matrix
+        var projection = simd_float4x4(
+            SIMD4<Float>(f / aspect, 0, 0, 0),
+            SIMD4<Float>(0, f, 0, 0),
+            SIMD4<Float>((cx / width - 0.5) * 2.0, (0.5 - cy / height) * 2.0, -(zFar + zNear) / range, -1),
+            SIMD4<Float>(0, 0, -2 * zFar * zNear / range, 0)
+        )
+        
+        return projection
+    }
+    
     // Copy pixel buffer for async processing
     // Swift 6 uses automatic memory management for Core Foundation objects
     private func copyPixelBuffer(_ pixelBuffer: CVPixelBuffer) -> CVPixelBuffer? {
@@ -462,26 +510,50 @@ extension ARKitService: ARSessionDelegate {
             print("📊 ARFrame #\(frameCount): tracking=\(frame.camera.trackingState), sceneDepth=\(frame.sceneDepth != nil), estimatedDepth=\(frame.estimatedDepthData != nil)")
         }
 
+        // Extract all needed data from ARFrame immediately to avoid retention
+        // Extract camera first (struct copy, safe)
+        let camera = frame.camera
+        let capturedImage = frame.capturedImage
+        let cameraIntrinsics = camera.intrinsics
+        let cameraTransform = camera.transform
+        let trackingState = camera.trackingState
+        
         // Process camera frame at target FPS (10 FPS)
         if lastCameraTime == 0 || timestamp - lastCameraTime >= cameraInterval {
             lastCameraTime = timestamp
-            processCameraFrame(frame, timestamp: timestamp)
+            processCameraFrame(
+                pixelBuffer: capturedImage,
+                intrinsics: cameraIntrinsics,
+                timestamp: timestamp
+            )
         }
 
         // Process pose at target FPS
         if timestamp - lastPoseTime >= poseInterval {
             lastPoseTime = timestamp
-            let poseData = PoseData(timestamp: timestamp, camera: frame.camera)
+            // Use already extracted camera (struct copy, no frame retention)
+            let poseData = PoseData(timestamp: timestamp, camera: camera)
             delegate?.arKitService(self, didUpdate: poseData)
         }
 
         // Process depth at target FPS
         if depthEnabled {
-            processDepthFrame(frame)
+            // Extract depth data without retaining the frame
+            let sceneDepth = frame.sceneDepth
+            let estimatedDepth = frame.estimatedDepthData
+            processDepthFrame(
+                sceneDepth: sceneDepth,
+                estimatedDepth: estimatedDepth,
+                cameraTransform: cameraTransform,
+                cameraIntrinsics: cameraIntrinsics,
+                viewportSize: CGSize(width: 256, height: 192)
+            )
         }
+        
+        // Frame goes out of scope here, no retention
     }
 
-    private func processCameraFrame(_ frame: ARFrame, timestamp: UInt64) {
+    private func processCameraFrame(pixelBuffer: CVPixelBuffer, intrinsics: simd_float3x3, timestamp: UInt64) {
         // Skip if still processing previous frame to prevent ARFrame retention
         guard !isProcessingCamera else {
             droppedCameraFrames += 1
@@ -492,18 +564,15 @@ extension ARKitService: ARSessionDelegate {
         }
         isProcessingCamera = true
 
-        let pixelBuffer = frame.capturedImage
-
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
-        let intrinsicsMatrix = frame.camera.intrinsics
 
         // Copy buffer for async processing
         guard let bufferCopy = copyPixelBuffer(pixelBuffer) else {
             isProcessingCamera = false
             return
         }
-        let frameIntrinsics = CameraIntrinsics(intrinsics: intrinsicsMatrix)
+        let frameIntrinsics = CameraIntrinsics(intrinsics: intrinsics)
 
         cameraProcessingQueue.async { [weak self] in
             autoreleasepool {
