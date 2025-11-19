@@ -172,134 +172,132 @@ struct StreamView: View {
 
     private var streamingBentoGrid: some View {
         ScrollView(showsIndicators: false) {
-            VStack(spacing: 16) {
+            VStack(spacing: 12) {
                 Spacer(minLength: 0)
-                // Row 1: FPS Chart + Mode/Recording Boxes (separate, stacked)
-            HStack(spacing: 12) {
-                    // Left side: FPS Chart + Server Box (VStack)
-                    VStack(spacing: 12) {
-                        // Server Box (on top of FPS)
-                        if NetworkManager.shared.isServerMode && !NetworkManager.shared.serverIPAddresses.isEmpty {
+                
+                // Row 1: Server Box (full width at top)
+                if NetworkManager.shared.isServerMode && !NetworkManager.shared.serverIPAddresses.isEmpty {
             BentoCard {
-                                VStack(alignment: .leading, spacing: 10) {
-                                    HStack {
-                                        Image(systemName: "network")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                        Text("Server IP")
-                                            .font(.system(size: 13, weight: .medium))
-                                            .foregroundColor(.secondary)
-                                        Spacer()
-                                        Text("\(NetworkManager.shared.connectedClients) client\(NetworkManager.shared.connectedClients == 1 ? "" : "s")")
-                                            .font(.system(size: 11, weight: .medium))
-                                        .foregroundColor(.secondary)
-                                    }
-                                    
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        ForEach(NetworkManager.shared.serverIPAddresses.prefix(2), id: \.self) { ip in
-                                            Text(ip)
-                                                .font(.system(size: 12, design: .monospaced))
-                                                .foregroundColor(.primary)
-                                        }
-                                    }
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Image(systemName: "network")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                                Text("Server")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("\(NetworkManager.shared.connectedClients) client\(NetworkManager.shared.connectedClients == 1 ? "" : "s")")
+                                    .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.secondary)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 6) {
+                                ForEach(NetworkManager.shared.serverIPAddresses.prefix(2), id: \.self) { ip in
+                                    Text(ip)
+                                        .font(.system(size: 13, design: .monospaced))
+                                        .foregroundColor(.primary)
                                 }
                             }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 80)
-                        }
-                        
-                        // FPS Chart Box (flexible, takes remaining space)
-                        BentoCard {
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    Image(systemName: "gauge")
-                                        .font(.system(size: 16))
-                                        .foregroundColor(.secondary)
-                                    Text("FPS")
-                                        .font(.system(size: 15, weight: .medium))
-                                        .foregroundColor(.secondary)
-                                }
-                                Text(viewModel.fpsFormatted)
-                                    .font(.system(size: 36, weight: .bold, design: .monospaced))
-                                    .foregroundColor(.primary)
-                                
-                                // Simple line chart
-                                if !fpsHistory.isEmpty {
-                                    FPSChartView(data: fpsHistory)
-                                        .frame(minHeight: 120, maxHeight: 150)
-                                } else {
-                                    Rectangle()
-                                        .fill(Color(.systemGray5).opacity(0.3))
-                                        .frame(height: 100)
-                                        .cornerRadius(4)
-                                }
                         }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 90)
                 }
-                    .frame(maxWidth: .infinity, minHeight: 200)
+                
+                // Row 2: FPS (left) + Mode/Rec (right, stacked - heights match)
+                HStack(alignment: .top, spacing: 12) {
+                    // FPS Chart Box (left, large)
+                    BentoCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "gauge")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.secondary)
+                                Text("FPS")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(.secondary)
+                            }
+                            Text(viewModel.fpsFormatted)
+                                .font(.system(size: 36, weight: .bold, design: .monospaced))
+                                .foregroundColor(.primary)
+                            
+                            // Chart
+                            if !fpsHistory.isEmpty {
+                                FPSChartView(data: fpsHistory)
+                                    .frame(minHeight: 120, maxHeight: 150)
+                            } else {
+                                Rectangle()
+                                    .fill(Color(.systemGray5).opacity(0.3))
+                                    .frame(height: 100)
+                                    .cornerRadius(4)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 220)
 
-                    // Right side: Mode + Recording Boxes (separate, in VStack - compact)
+                    // Mode + Recording Boxes (right, stacked vertically - total height matches FPS)
                     VStack(spacing: 12) {
-                        // Mode Box (small, compact)
-                BentoCard {
-                            VStack(spacing: 6) {
+                        // Mode Box (top)
+                        BentoCard {
+                            VStack(spacing: 8) {
                                 Image(systemName: viewModel.selectedMode.icon)
-                                    .font(.system(size: 18))
+                                    .font(.system(size: 20))
                                     .foregroundColor(.primary)
                                 Text(viewModel.selectedMode.rawValue)
-                                    .font(.system(size: 11, weight: .semibold))
+                                    .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(.secondary)
                                     .lineLimit(2)
                                     .multilineTextAlignment(.center)
                             }
                         }
                         .frame(width: 140)
-                        .frame(height: 70)
+                        .frame(height: 104)
                         
-                        // Recording Box (small, compact)
+                        // Recording Box (bottom)
                         BentoCard {
-                            VStack(alignment: .leading, spacing: 6) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 HStack {
                                     Image(systemName: "record.circle.fill")
-                                        .font(.system(size: 11))
+                                        .font(.system(size: 12))
                                         .foregroundColor(Theme.recording)
-                                    Text("Recording")
-                                        .font(.system(size: 11, weight: .medium))
+                                    Text("Rec")
+                                        .font(.system(size: 12, weight: .medium))
                                         .foregroundColor(.secondary)
                                 }
                                 
                                 if viewModel.recordingDuration > 0 {
                                     Text(formatDuration(viewModel.recordingDuration))
-                                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                            .foregroundColor(Theme.recording)
+                                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                                        .foregroundColor(Theme.recording)
                                     
                                     Text(viewModel.recordingSizeFormatted)
-                                        .font(.system(size: 9))
+                                        .font(.system(size: 10))
                                         .foregroundColor(.secondary)
                                 } else {
                                     Text("Not Recording")
-                                        .font(.system(size: 11, weight: .medium))
+                                        .font(.system(size: 12, weight: .medium))
                                         .foregroundColor(.secondary)
                                 }
                             }
                         }
                         .frame(width: 140)
-                        .frame(height: 70)
+                        .frame(height: 104)
                     }
+                    .frame(minHeight: 220) // Total height: 104 + 12 + 104 = 220 (matches FPS)
                 }
 
-                // Row 2: IMU Chart (full width)
+                // Row 3: IMU Chart (full width)
                 BentoCard {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Image(systemName: "gyroscope")
                                 .font(.system(size: 14))
                                 .foregroundColor(.secondary)
-                            Text("IMU Magnitude")
-                                .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
+                            Text("IMU")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
                         Text(String(format: "%.2f", imuMagnitudeHistory.last ?? 0.0))
                             .font(.system(size: 24, weight: .bold, design: .monospaced))
                             .foregroundColor(.primary)
@@ -316,7 +314,8 @@ struct StreamView: View {
                         }
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: 160)
+            .frame(maxWidth: .infinity, minHeight: 180)
+                Spacer(minLength: 0)
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 20)
@@ -399,34 +398,34 @@ struct StreamView: View {
     private var actionButtons: some View {
         VStack(spacing: 12) {
             if viewModel.isStreaming {
-                // Stop button (primary) - visible in both light and dark mode
+                // Stop button - white with black text in dark mode, black with white text in light mode
                 Button {
                     viewModel.toggleStreaming()
                 } label: {
                     Text("Stop Streaming")
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(colorScheme == .dark ? .black : .white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
                         .background(
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(Color.red)
+                                .fill(colorScheme == .dark ? .white : .black)
                         )
                 }
                 .buttonStyle(.plain)
             } else {
-                // Start button (primary) - visible in both light and dark mode
+                // Start button - white with black text in dark mode, black with white text in light mode
             Button {
                 viewModel.toggleStreaming()
             } label: {
                     Text("Start Streaming")
                         .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(colorScheme == .dark ? .black : .white)
                     .frame(maxWidth: .infinity)
                         .frame(height: 56)
                         .background(
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(Theme.success)
+                                .fill(colorScheme == .dark ? .white : .black)
                         )
                 }
                 .buttonStyle(.plain)
@@ -501,12 +500,13 @@ struct BentoCard<Content: View>: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(.secondarySystemGroupedBackground))
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color(.systemBackground))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color(.separator).opacity(0.5), lineWidth: 0.5)
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(Color(.separator), lineWidth: 1)
                     )
+                    .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
             )
     }
 }
