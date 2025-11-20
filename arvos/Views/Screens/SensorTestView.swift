@@ -234,7 +234,7 @@ struct SensorTestView: View {
                                 .frame(height: 54)
                                 .background(
                                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(viewModel.isRunning ? Color.red.opacity(0.9) : Color.accentColor)
+                                        .fill(viewModel.isRunning ? Theme.recording : Theme.accent)
                                 )
                             }
                         }
@@ -251,7 +251,7 @@ struct SensorTestView: View {
                         viewModel.toggleTesting()
                     }
                     .fontWeight(.semibold)
-                    .foregroundColor(viewModel.isRunning ? .red : .primary)
+                    .foregroundColor(viewModel.isRunning ? Theme.recording : Theme.accent)
                 }
             }
         }
