@@ -12,6 +12,7 @@ struct StreamView: View {
     @EnvironmentObject var viewModel: StreamingViewModel
     @State private var scannedQRCode: String?
     @State private var showingModeSelector = false
+    @State private var showingConnectionSheet = false
     @State private var fpsHistory: [Double] = []
     @State private var imuMagnitudeHistory: [Double] = []
     @State private var fpsTimer: Timer?
@@ -75,6 +76,15 @@ struct StreamView: View {
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if !viewModel.isStreaming {
+                    // Connection Config
+                    Button {
+                        showingConnectionSheet = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .foregroundColor(.primary)
+                    }
+                    .accessibilityLabel("Connection Settings")
+
                     // QR Scanner
                     Button {
                         viewModel.showingQRScanner = true
@@ -85,6 +95,9 @@ struct StreamView: View {
                     .accessibilityLabel("Scan QR Code")
                 }
             }
+        }
+        .sheet(isPresented: $showingConnectionSheet) {
+            ConnectionSheet()
         }
         .sheet(isPresented: $viewModel.showingQRScanner) {
             QRScannerView(scannedCode: $scannedQRCode)
@@ -276,7 +289,7 @@ struct StreamView: View {
                                 
                                 if isWideScreen || isLandscape {
                                     HStack(spacing: isWideScreen ? 40 : 20) {
-                                        ForEach(NetworkManager.shared.serverIPAddresses.prefix(isWideScreen ? 4 : 3), id: \.self) { ip in
+                                        ForEach(NetworkManager.shared.serverIPAddresses, id: \.self) { ip in
                                             Text(ip)
                                                 .font(.system(size: isWideScreen ? 16 : 13, design: .monospaced))
                                                 .foregroundColor(.primary)
@@ -284,7 +297,7 @@ struct StreamView: View {
                                     }
                                 } else {
                                     VStack(alignment: .leading, spacing: isWideScreen ? 10 : 6) {
-                                        ForEach(NetworkManager.shared.serverIPAddresses.prefix(2), id: \.self) { ip in
+                                        ForEach(NetworkManager.shared.serverIPAddresses, id: \.self) { ip in
                                             Text(ip)
                                                 .font(.system(size: isWideScreen ? 16 : 13, design: .monospaced))
                                                 .foregroundColor(.primary)
