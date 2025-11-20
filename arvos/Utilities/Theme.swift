@@ -12,6 +12,7 @@ struct Theme {
 
     static let cornerRadius: CGFloat = 8
     static let largeCornerRadius: CGFloat = 12
+    static let buttonCornerRadius: CGFloat = 14 // For primary buttons
 
     // MARK: - Colors (Avoiding System Blue)
 

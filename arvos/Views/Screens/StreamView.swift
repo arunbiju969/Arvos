@@ -834,7 +834,7 @@ struct StreamView: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: isiPad ? 64 : 56)
                         .background(
-                            RoundedRectangle(cornerRadius: isiPad ? 16 : 14, style: .continuous)
+                            RoundedRectangle(cornerRadius: Theme.buttonCornerRadius, style: .continuous)
                                 .fill(colorScheme == .dark ? .white : .black)
                         )
                 }
@@ -850,7 +850,7 @@ struct StreamView: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: isiPad ? 64 : 56)
                         .background(
-                            RoundedRectangle(cornerRadius: isiPad ? 16 : 14, style: .continuous)
+                            RoundedRectangle(cornerRadius: Theme.buttonCornerRadius, style: .continuous)
                                 .fill(colorScheme == .dark ? .white : .black)
                         )
                 }
@@ -866,10 +866,10 @@ struct StreamView: View {
                     .frame(maxWidth: .infinity)
                         .frame(height: isiPad ? 64 : 56)
                         .background(
-                            RoundedRectangle(cornerRadius: isiPad ? 16 : 14, style: .continuous)
+                            RoundedRectangle(cornerRadius: Theme.buttonCornerRadius, style: .continuous)
                                 .stroke(Color(.separator), lineWidth: 1)
                     .background(
-                                    RoundedRectangle(cornerRadius: isiPad ? 16 : 14, style: .continuous)
+                                    RoundedRectangle(cornerRadius: Theme.buttonCornerRadius, style: .continuous)
                                         .fill(Color(.systemBackground))
                                 )
                         )
@@ -1189,10 +1189,10 @@ struct ModeOptionCard: View {
             }
             .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                     .fill(isSelected ? Color(.systemGray6) : Color(.systemBackground))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                             .stroke(isSelected ? Color.black : Color.clear, lineWidth: 2)
                     )
             )

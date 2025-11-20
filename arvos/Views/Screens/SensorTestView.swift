@@ -233,7 +233,7 @@ struct SensorTestView: View {
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 54)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    RoundedRectangle(cornerRadius: Theme.buttonCornerRadius, style: .continuous)
                                         .fill(viewModel.isRunning ? Theme.recording : Theme.accent)
                                 )
                             }
@@ -317,14 +317,14 @@ struct SensorTestView: View {
                     }
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous))
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                 .fill(Color.black.opacity(0.85))
                 .shadow(color: Color.black.opacity(0.3), radius: 12, x: 0, y: 4)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
         )
     }
@@ -445,14 +445,14 @@ struct SensorTestView: View {
             }
             .frame(maxHeight: isLandscape ? 180 : 220)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous))
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                 .fill(Color.black.opacity(0.85))
                 .shadow(color: Color.black.opacity(0.3), radius: 12, x: 0, y: 4)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
         )
     }

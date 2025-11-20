@@ -154,7 +154,7 @@ struct SettingsView: View {
                             Text("Status")
                             Spacer()
                             Text(viewModel.isConnected ? "Connected" : "Disconnected")
-                                .foregroundColor(viewModel.isConnected ? .green : .red)
+                                .foregroundColor(viewModel.isConnected ? Theme.success : Theme.recording)
                         }
 
                         HStack {
@@ -221,7 +221,7 @@ struct SettingsView: View {
                         Spacer()
                         HStack(spacing: 8) {
                             Circle()
-                                .fill(watchManager.isWatchConnected ? Color.green : Color.red)
+                                .fill(watchManager.isWatchConnected ? Theme.success : Theme.recording)
                                 .frame(width: 8, height: 8)
                             Text(watchManager.isWatchConnected ? "Yes" : "No")
                                 .foregroundColor(.secondary)
@@ -333,9 +333,9 @@ struct StatusRow: View {
         case .inactive:
             return .gray
         case .active:
-            return .green
+            return Theme.success
         case .error:
-            return .red
+            return Theme.recording
         }
     }
 }

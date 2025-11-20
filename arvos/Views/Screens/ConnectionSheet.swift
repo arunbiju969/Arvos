@@ -64,7 +64,7 @@ struct ConnectionSheet: View {
                     } label: {
                         HStack {
                             Image(systemName: "cloud")
-                                .foregroundColor(.blue)
+                                .foregroundColor(Theme.accent)
                                 .font(.system(size: 18))
 
                             VStack(alignment: .leading, spacing: 4) {
@@ -128,7 +128,7 @@ struct ConnectionSheet: View {
                             Button("Disconnect") {
                                 viewModel.disconnect()
                             }
-                            .foregroundColor(.red)
+                            .foregroundColor(Theme.recording)
                         }
                     } header: {
                         Text("STATUS")
@@ -224,7 +224,7 @@ struct TroubleshootTip: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 14))
-                .foregroundColor(.accentColor)
+                .foregroundColor(Theme.accent)
                 .frame(width: 20)
 
             VStack(alignment: .leading, spacing: 2) {

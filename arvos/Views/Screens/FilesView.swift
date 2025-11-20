@@ -282,7 +282,7 @@ struct RecordingCard: View {
             }
             .padding(12)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                     .fill(Color(.systemBackground))
             )
         }
@@ -326,7 +326,7 @@ struct StatPill: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
         )
     }
@@ -341,7 +341,7 @@ struct SensorIcon: View {
             .foregroundColor(.secondary)
             .frame(width: 20, height: 20)
             .background(
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                     .fill(Color(.secondarySystemBackground))
             )
     }
@@ -391,7 +391,7 @@ struct RecordingDetailView: View {
                         }
                         .padding(12)
                         .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                                 .fill(Color(.systemBackground))
                         )
 
@@ -428,7 +428,7 @@ struct RecordingDetailView: View {
                         }
                         .padding(12)
                         .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                                 .fill(Color(.systemBackground))
                         )
 
@@ -492,7 +492,7 @@ struct RecordingDetailView: View {
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 44)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                                         .fill(Theme.accent)
                                 )
                             }
@@ -510,7 +510,7 @@ struct RecordingDetailView: View {
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 44)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                                         .fill(Theme.recording)
                                 )
                             }
@@ -655,7 +655,7 @@ struct DetailBentoCard: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(10)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.largeCornerRadius, style: .continuous)
                 .fill(Color(.systemBackground))
         )
     }
@@ -680,7 +680,7 @@ struct SensorDataCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
         )
     }
