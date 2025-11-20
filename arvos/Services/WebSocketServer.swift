@@ -30,9 +30,12 @@ class WebSocketServer: NSObject {
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = true
 
-        // With Multicast Networking entitlement enabled in Apple Developer portal:
-        // Accept connections from any network interface (WiFi, Cellular, Hotspot)
-        parameters.acceptLocalOnly = false  // Listen on 0.0.0.0 (all interfaces)
+        // Network interface configuration:
+        // - acceptLocalOnly = false: Accept connections from local network (same WiFi)
+        //   This works WITHOUT multicast entitlement for local network connections
+        // - With multicast entitlement (when Apple approves): Can also accept from
+        //   cellular/hotspot interfaces. Until then, local WiFi network works fine.
+        parameters.acceptLocalOnly = false  // Listen on all local interfaces (WiFi)
 
         // Enable WebSocket upgrade
         let wsOptions = NWProtocolWebSocket.Options()
@@ -41,6 +44,9 @@ class WebSocketServer: NSObject {
         do {
             listener = try NWListener(using: parameters, on: NWEndpoint.Port(integerLiteral: port))
         } catch {
+            // If setting acceptLocalOnly = false fails (shouldn't happen on local network),
+            // we could fall back to acceptLocalOnly = true, but that would only allow
+            // localhost connections, which isn't useful for our use case.
             throw WebSocketServerError.failedToStart(error.localizedDescription)
         }
 
@@ -126,12 +132,17 @@ class WebSocketServer: NSObject {
 
             if addrFamily == UInt8(AF_INET) {
                 let name = String(cString: interface.ifa_name)
-                if name.starts(with: "en") || name.starts(with: "pdp_ip") {
+                // Include all network interfaces: WiFi (en), cellular (pdp_ip), and link-local (bridge, awdl, llw, utun)
+                if name.starts(with: "en") || name.starts(with: "pdp_ip") || name.starts(with: "bridge") {
                     var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
                     getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
                                &hostname, socklen_t(hostname.count),
                                nil, socklen_t(0), NI_NUMERICHOST)
-                    addresses.append(String(cString: hostname))
+                    let address = String(cString: hostname)
+                    // Filter out localhost
+                    if !address.starts(with: "127.") && !addresses.contains(address) {
+                        addresses.append(address)
+                    }
                 }
             }
         }
