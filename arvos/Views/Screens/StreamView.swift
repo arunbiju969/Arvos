@@ -120,10 +120,10 @@ struct StreamView: View {
 
     private var topHeaderBar: some View {
         let isiPad = UIDevice.current.userInterfaceIdiom == .pad
-        HStack {
+        return HStack {
             // ARVOS text (top left, smaller)
                         Text("ARVOS")
-                .font(.system(size: isiPad ? 32 : 24, weight: .bold, design: .rounded))
+                .font(.system(size: isiPad ? 32 : 24, weight: .bold, design: .monospaced))
                 .foregroundColor(.primary)
 
             Spacer()
@@ -176,7 +176,7 @@ struct StreamView: View {
                         // Quote/Message
                         VStack(spacing: isWideScreen ? 24 : 16) {
                             Text("Ready to Stream")
-                                .font(.system(size: isWideScreen ? 44 : (isLandscape ? 32 : 36), weight: .bold, design: .rounded))
+                                .font(.system(size: isWideScreen ? 44 : (isLandscape ? 32 : 36), weight: .bold, design: .monospaced))
                                 .foregroundColor(.primary)
                             
                             Text("Start streaming sensor data to visualize real-time metrics and monitor your device performance.")
@@ -191,7 +191,7 @@ struct StreamView: View {
                             .padding(.horizontal, isWideScreen ? 200 : (isLandscape ? 100 : 60))
                         
                         // Status Metrics in a nice card
-                        BentoCard {
+                BentoCard {
                             VStack(alignment: .leading, spacing: isWideScreen ? 28 : 20) {
                                 HStack {
                                     Image(systemName: "info.circle.fill")
@@ -199,7 +199,7 @@ struct StreamView: View {
                                         .foregroundColor(.secondary)
                                     Text("Current Status")
                                         .font(.system(size: isWideScreen ? 20 : 16, weight: .semibold))
-                                        .foregroundColor(.primary)
+                            .foregroundColor(.primary)
                                 }
                                 
                                 VStack(alignment: .leading, spacing: isWideScreen ? 20 : 16) {
@@ -238,7 +238,7 @@ struct StreamView: View {
         HStack {
             Text(label)
                 .font(.system(size: isWide ? 18 : 14, weight: .medium))
-                .foregroundColor(.secondary)
+                            .foregroundColor(.secondary)
             Spacer()
             Text(value)
                 .font(.system(size: isWide ? 18 : 14, weight: .semibold, design: .monospaced))
@@ -304,7 +304,7 @@ struct StreamView: View {
                             // Top row: FPS + Mode/Rec
                             HStack(alignment: .top, spacing: isWideScreen ? 16 : 10) {
                                 // FPS Chart Box (left, large)
-                                BentoCard {
+            BentoCard {
                                     VStack(alignment: .leading, spacing: isWideScreen ? 14 : 10) {
                                         HStack {
                                             Image(systemName: "gauge")
@@ -335,7 +335,7 @@ struct StreamView: View {
                                 // Mode + Recording Boxes (right, stacked vertically)
                                 VStack(spacing: isWideScreen ? 14 : 10) {
                                     // Mode Box (top)
-                                    BentoCard {
+                BentoCard {
                                         VStack(spacing: isWideScreen ? 10 : 6) {
                                             Image(systemName: viewModel.selectedMode.icon)
                                                 .font(.system(size: isWideScreen ? 28 : 18))
@@ -384,7 +384,7 @@ struct StreamView: View {
                             }
                             
                             // Bottom row: IMU Chart (full width)
-                            BentoCard {
+                BentoCard {
                                 VStack(alignment: .leading, spacing: isWideScreen ? 12 : 8) {
                                     HStack {
                                         Image(systemName: "gyroscope")
@@ -464,12 +464,12 @@ struct StreamView: View {
                                     .frame(height: 65)
                                     
                                     // Recording Box (bottom)
-                                    BentoCard {
+                BentoCard {
                                         VStack(alignment: .leading, spacing: 6) {
                                             HStack {
                                                 Image(systemName: "record.circle.fill")
                                                     .font(.system(size: 11))
-                                                    .foregroundColor(Theme.recording)
+                            .foregroundColor(Theme.recording)
                                                 Text("Rec")
                                                     .font(.system(size: 11, weight: .medium))
                                                     .foregroundColor(.secondary)
@@ -497,7 +497,7 @@ struct StreamView: View {
                             }
                             
                             // Row 3: IMU Chart (full width in landscape)
-                            BentoCard {
+                BentoCard {
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack {
                                         Image(systemName: "gyroscope")
@@ -538,8 +538,8 @@ struct StreamView: View {
                                                 .foregroundColor(.secondary)
                         Text("FPS")
                                                 .font(.system(size: isWideScreen ? 19 : 15, weight: .medium))
-                                                .foregroundColor(.secondary)
-                                        }
+                            .foregroundColor(.secondary)
+                    }
                                         Text(viewModel.fpsFormatted)
                                             .font(.system(size: isWideScreen ? 48 : 36, weight: .bold, design: .monospaced))
                                             .foregroundColor(.primary)
@@ -561,7 +561,7 @@ struct StreamView: View {
                                 // Mode + Recording Boxes (right, stacked vertically)
                                 VStack(spacing: isWideScreen ? 16 : 12) {
                                     // Mode Box (top)
-                                    BentoCard {
+                    BentoCard {
                                         VStack(spacing: isWideScreen ? 12 : 8) {
                                             Image(systemName: viewModel.selectedMode.icon)
                                                 .font(.system(size: isWideScreen ? 32 : 20))
@@ -582,11 +582,11 @@ struct StreamView: View {
                                             HStack {
                                                 Image(systemName: "record.circle.fill")
                                                     .font(.system(size: isWideScreen ? 18 : 12))
-                                                    .foregroundColor(Theme.recording)
+                                .foregroundColor(Theme.recording)
                                                 Text("Rec")
                                                     .font(.system(size: isWideScreen ? 16 : 12, weight: .medium))
-                                                    .foregroundColor(.secondary)
-                                            }
+                                .foregroundColor(.secondary)
+                        }
                                             
                                             if viewModel.recordingDuration > 0 {
                                                 Text(formatDuration(viewModel.recordingDuration))
@@ -610,7 +610,7 @@ struct StreamView: View {
                             }
                             
                             // Row 3: IMU Chart (full width)
-                            BentoCard {
+            BentoCard {
                                 VStack(alignment: .leading, spacing: isWideScreen ? 14 : 10) {
                                     HStack {
                                         Image(systemName: "gyroscope")
@@ -674,7 +674,7 @@ struct StreamView: View {
                                 // Mode + Recording Boxes (right, stacked vertically)
                                 VStack(spacing: 12) {
                                     // Mode Box (top)
-                                    BentoCard {
+                BentoCard {
                                         VStack(spacing: 8) {
                                             Image(systemName: viewModel.selectedMode.icon)
                                                 .font(.system(size: 20))
@@ -822,7 +822,7 @@ struct StreamView: View {
 
     private var actionButtons: some View {
         let isiPad = UIDevice.current.userInterfaceIdiom == .pad
-        VStack(spacing: isiPad ? 16 : 12) {
+        return VStack(spacing: isiPad ? 16 : 12) {
             if viewModel.isStreaming {
                 // Stop button - white with black text in dark mode, black with white text in light mode
                 Button {
@@ -846,8 +846,8 @@ struct StreamView: View {
             } label: {
                     Text("Start Streaming")
                         .font(.system(size: isiPad ? 20 : 17, weight: .semibold))
-                    .foregroundColor(colorScheme == .dark ? .black : .white)
-                    .frame(maxWidth: .infinity)
+                        .foregroundColor(colorScheme == .dark ? .black : .white)
+                        .frame(maxWidth: .infinity)
                         .frame(height: isiPad ? 64 : 56)
                         .background(
                             RoundedRectangle(cornerRadius: isiPad ? 16 : 14, style: .continuous)
@@ -863,7 +863,7 @@ struct StreamView: View {
                     Text("Change Mode")
                         .font(.system(size: isiPad ? 20 : 17, weight: .medium))
                         .foregroundColor(.primary)
-                        .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity)
                         .frame(height: isiPad ? 64 : 56)
                         .background(
                             RoundedRectangle(cornerRadius: isiPad ? 16 : 14, style: .continuous)
@@ -945,7 +945,7 @@ struct FPSChartView: View {
     private var chartData: [FPSDataPoint] {
         data.enumerated().map { FPSDataPoint(index: $0, value: $1) }
     }
-    
+
     var body: some View {
         if !data.isEmpty {
             let maxValue = max(data.max() ?? 30, 30)
@@ -1051,16 +1051,16 @@ struct SensorIndicator: View {
     let label: String
 
     var body: some View {
-        HStack(spacing: 6) {
+            HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 12))
+                    .font(.system(size: 12))
             Text(label)
                 .font(.system(size: 11, weight: .medium))
         }
         .foregroundColor(.white)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(
+            .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(Theme.accent)
         )
@@ -1175,7 +1175,7 @@ struct ModeOptionCard: View {
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(.primary)
                     Text(mode.description)
-                        .font(.system(size: 14))
+                    .font(.system(size: 14))
                         .foregroundColor(.secondary)
                 }
 
@@ -1223,10 +1223,10 @@ struct CustomSensorOptions: View {
             }
         }
         .padding(16)
-        .background(
+            .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
-        )
+            )
     }
 }
 
@@ -1238,7 +1238,7 @@ struct SensorToggle: View {
     var body: some View {
         Toggle(isOn: $isEnabled) {
             HStack(spacing: 12) {
-                Image(systemName: icon)
+        Image(systemName: icon)
                     .font(.system(size: 18))
                     .foregroundColor(.primary)
                     .frame(width: 32)

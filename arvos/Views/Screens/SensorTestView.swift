@@ -51,7 +51,7 @@ struct SensorTestView: View {
                             }
 
                             Text(viewModel.isRunning ? "Initializing depth sensor…" : "Tap Start to begin")
-                                .font(.system(.subheadline, design: .rounded))
+                                .font(.system(.subheadline, design: .monospaced))
                                 .fontWeight(.medium)
                                 .foregroundColor(.white.opacity(0.8))
                         }
@@ -226,7 +226,7 @@ struct SensorTestView: View {
                                         .font(.system(size: 16, weight: .semibold))
 
                                     Text(viewModel.isRunning ? "Stop" : "Start")
-                                        .font(.system(.headline, design: .rounded))
+                                        .font(.system(.headline, design: .monospaced))
                                         .fontWeight(.semibold)
                                 }
                                 .foregroundColor(.white)

@@ -53,7 +53,7 @@ struct WatchSplashScreenView: View {
             // ARVOS text with animation
             VStack(spacing: 8) {
                 Text("ARVOS")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 24, weight: .bold, design: .monospaced))
                     .foregroundColor(.white)
                     .opacity(opacity)
                     .scaleEffect(scale)

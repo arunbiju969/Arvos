@@ -47,7 +47,7 @@ struct BlackSplashView: View {
                 .ignoresSafeArea()
 
             Text("ARVOS")
-                .font(.system(size: 56, weight: .bold, design: .rounded))
+                .font(.system(size: 56, weight: .bold, design: .monospaced))
                 .foregroundColor(.white)
                 .opacity(opacity)
                 .scaleEffect(scale)
@@ -77,7 +77,7 @@ struct VideoSplashView: View {
             } else {
                 // Fallback while video loads
                 Text("ARVOS")
-                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .font(.system(size: 56, weight: .bold, design: .monospaced))
                     .foregroundColor(.white)
             }
         }
