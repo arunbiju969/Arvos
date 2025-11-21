@@ -299,16 +299,17 @@ class NetworkManager: ObservableObject {
 
     // MARK: - Streaming
 
+    private var imuBroadcastCount = 0
+
     /// Stream IMU data
     func stream(imuData: IMUData) {
         do {
             if isServerMode {
                 try webSocketServer.broadcast(json: imuData)
                 #if DEBUG
-                static var imuCount = 0
-                imuCount += 1
-                if imuCount % 50 == 0 {
-                    print("📤 IMU #\(imuCount) broadcasted")
+                imuBroadcastCount += 1
+                if imuBroadcastCount % 50 == 0 {
+                    print("📤 IMU #\(imuBroadcastCount) broadcasted")
                 }
                 #endif
             } else if let adapter = adapter {
