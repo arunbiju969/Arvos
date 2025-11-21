@@ -18,7 +18,7 @@
 
 ### 2. Connect to Web Studio
 Visit the web interface at:
-**[https://arvos-studio-4u0khl359-jaskirat1616s-projects.vercel.app/](https://arvos-studio-4u0khl359-jaskirat1616s-projects.vercel.app/)**
+**[https://arvos-studio.vercel.app/](https://arvos-studio.vercel.app/)**
 
 The web studio provides:
 - Real-time 3D point cloud visualization
@@ -69,7 +69,7 @@ Choose the best mode for your use case:
 
 ## 🌐 Web Studio Features
 
-The web studio ([link here](https://arvos-studio-4u0khl359-jaskirat1616s-projects.vercel.app/)) provides:
+The web studio ([link here](https://arvos-studio.vercel.app/)) provides:
 
 ✅ **Real-time Visualization**
 - 3D point cloud viewer with orbit controls
@@ -343,7 +343,7 @@ Built for the robotics, AR, and computer vision research community.
 
 **Issues:** [GitHub Issues](https://github.com/jaskirat1616/arvos/issues)
 
-**Web Studio:** [https://arvos-studio-4u0khl359-jaskirat1616s-projects.vercel.app/](https://arvos-studio-4u0khl359-jaskirat1616s-projects.vercel.app/)
+**Web Studio:** [https://arvos-studio.vercel.app/](https://arvos-studio.vercel.app/)
 
 ---
 
