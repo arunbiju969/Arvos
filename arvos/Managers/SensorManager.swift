@@ -174,6 +174,9 @@ class SensorManager: ObservableObject {
                 try imuService.configure(hz: config.imuHz)
                 imuService.start()
                 sensorStatuses.imu = .active
+                #if DEBUG
+                print("✅ IMU started: \(config.imuHz) Hz")
+                #endif
             }
 
             // Configure and start GPS
@@ -181,6 +184,9 @@ class SensorManager: ObservableObject {
                 gpsService.configure(hz: 1) // GPS is typically 1 Hz
                 gpsService.start()
                 sensorStatuses.gps = .active
+                #if DEBUG
+                print("✅ GPS started")
+                #endif
             }
 
             // Configure and start Watch sensors
@@ -460,7 +466,12 @@ extension SensorManager: ARKitServiceDelegate {
 extension SensorManager: IMUServiceDelegate {
     func imuService(_ service: IMUService, didUpdate data: IMUData) {
         // Only stream if IMU is enabled in current mode
-        guard currentConfig.imuEnabled else { return }
+        guard currentConfig.imuEnabled else {
+            #if DEBUG
+            print("⚠️ IMU data blocked - imuEnabled: false")
+            #endif
+            return
+        }
 
         // Stream to network
         networkManager.stream(imuData: data)
@@ -482,7 +493,12 @@ extension SensorManager: IMUServiceDelegate {
 extension SensorManager: GPSServiceDelegate {
     func gpsService(_ service: GPSService, didUpdate location: GPSData) {
         // Only stream if GPS is enabled in current mode
-        guard currentConfig.gpsEnabled else { return }
+        guard currentConfig.gpsEnabled else {
+            #if DEBUG
+            print("⚠️ GPS data blocked - gpsEnabled: false")
+            #endif
+            return
+        }
 
         // Stream to network
         networkManager.stream(gpsData: location)
