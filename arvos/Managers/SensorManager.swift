@@ -74,7 +74,6 @@ class SensorManager: ObservableObject {
 
     func setMode(_ mode: StreamMode) {
         guard !isStreaming else {
-            print("Cannot change mode while streaming")
             return
         }
 
@@ -86,8 +85,6 @@ class SensorManager: ObservableObject {
         guard !isStreaming else { return }
 
         let config = currentConfig
-        print("📡 Starting streaming with mode: \(currentMode)")
-        print("   Camera: \(config.cameraEnabled), Depth: \(config.depthEnabled), IMU: \(config.imuEnabled)")
 
         // Camera system selection:
         // - Use ARKit camera when both camera AND depth are enabled (integrated depth+RGB)
@@ -192,7 +189,6 @@ class SensorManager: ObservableObject {
                     watchSensorManager.startWatchStreaming(hz: config.watchHz)
                     sensorStatuses.watch = .active
                 } else {
-                    print("⚠️ Watch sensors requested but watch not connected")
                     sensorStatuses.watch = .inactive
                 }
             }
@@ -221,7 +217,6 @@ class SensorManager: ObservableObject {
     }
 
     private func handleStartupFailure(_ error: Error, config: ModeConfiguration) {
-        print("Failed to start streaming: \(error)")
 
         if let cameraError = error as? CameraError, config.cameraEnabled {
             sensorStatuses.camera = .error
@@ -339,7 +334,6 @@ class SensorManager: ObservableObject {
     /// This allows creating custom modes by directly specifying sensor settings
     func applyCustomConfiguration(_ config: ModeConfiguration) {
         guard !isStreaming else {
-            print("Cannot change configuration while streaming")
             return
         }
 
@@ -349,13 +343,6 @@ class SensorManager: ObservableObject {
         // Set to custom mode
         currentMode = .custom
 
-        print("📊 Applying custom configuration:")
-        print("   Camera: \(config.cameraEnabled) @ \(config.cameraFPS)fps")
-        print("   Depth: \(config.depthEnabled) @ \(config.depthFPS)fps")
-        print("   IMU: \(config.imuEnabled) @ \(config.imuHz)Hz")
-        print("   Pose: \(config.poseEnabled) @ \(config.poseHz)Hz")
-        print("   GPS: \(config.gpsEnabled)")
-        print("   Watch: \(config.watchEnabled) @ \(config.watchHz)Hz")
 
         // Send config to network
         networkManager.sendModeConfig(.custom)
@@ -407,7 +394,6 @@ extension SensorManager: CameraServiceDelegate {
     }
 
     func cameraService(_ service: CameraService, didEncounterError error: Error) {
-        print("Camera error: \(error)")
         sensorStatuses.camera = .error
         networkManager.sendError("camera_error", details: error.localizedDescription)
     }
@@ -463,7 +449,6 @@ extension SensorManager: ARKitServiceDelegate {
     }
 
     func arKitService(_ service: ARKitService, didEncounterError error: Error) {
-        print("ARKit error: \(error)")
         sensorStatuses.depth = .error
         sensorStatuses.pose = .error
         networkManager.sendError("arkit_error", details: error.localizedDescription)
@@ -487,7 +472,6 @@ extension SensorManager: IMUServiceDelegate {
     }
 
     func imuService(_ service: IMUService, didEncounterError error: Error) {
-        print("IMU error: \(error)")
         sensorStatuses.imu = .error
         networkManager.sendError("imu_error", details: error.localizedDescription)
     }
@@ -510,7 +494,6 @@ extension SensorManager: GPSServiceDelegate {
     }
 
     func gpsService(_ service: GPSService, didEncounterError error: Error) {
-        print("GPS error: \(error)")
         sensorStatuses.gps = .error
         networkManager.sendError("gps_error", details: error.localizedDescription)
     }

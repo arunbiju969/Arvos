@@ -84,7 +84,6 @@ class WebSocketService: NSObject {
             self.isNetworkAvailable = path.status == .satisfied
 
             if !wasAvailable && self.isNetworkAvailable {
-                print("📡 Network connection restored")
                 // Network came back - attempt reconnection immediately if we should reconnect
                 if self.shouldReconnect && self.state != .connected {
                     DispatchQueue.main.async {
@@ -93,7 +92,6 @@ class WebSocketService: NSObject {
                     }
                 }
             } else if wasAvailable && !self.isNetworkAvailable {
-                print("📡 Network connection lost")
             }
         }
         pathMonitor?.start(queue: monitorQueue)
@@ -161,7 +159,6 @@ class WebSocketService: NSObject {
                 messageQueue.append(data)
                 droppedMessages += 1
                 if droppedMessages % 50 == 0 {
-                    print("⚠️ Dropped \(droppedMessages) messages due to network backlog")
                 }
             }
             return
@@ -242,12 +239,10 @@ class WebSocketService: NSObject {
 
         // Don't retry if network is down
         guard isNetworkAvailable else {
-            print("⚠️ Network unavailable, waiting for network restoration")
             return
         }
 
         guard shouldReconnect, reconnectAttempts < Constants.Network.maxReconnectAttempts else {
-            print("❌ Max reconnection attempts reached (\(reconnectAttempts))")
             state = .disconnected
             return
         }
@@ -258,7 +253,6 @@ class WebSocketService: NSObject {
         let jitter = Double.random(in: 0...1.0) // Add jitter to avoid thundering herd
         let delay = baseDelay + jitter
 
-        print("🔄 Reconnection attempt \(reconnectAttempts)/\(Constants.Network.maxReconnectAttempts) in \(String(format: "%.1f", delay))s")
 
         reconnectTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
             self?.attemptConnection()

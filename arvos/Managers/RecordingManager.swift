@@ -150,7 +150,6 @@ class RecordingManager: ObservableObject {
             try writer.writeMessage(channelId: channelId, timestamp: imuData.timestampNs, data: data)
             sensorCounts.imuSamples += 1
         } catch {
-            print("Failed to record IMU data: \(error)")
         }
     }
 
@@ -162,7 +161,6 @@ class RecordingManager: ObservableObject {
             try writer.writeMessage(channelId: channelId, timestamp: gpsData.timestampNs, data: data)
             sensorCounts.gpsSamples += 1
         } catch {
-            print("Failed to record GPS data: \(error)")
         }
     }
 
@@ -174,7 +172,6 @@ class RecordingManager: ObservableObject {
             try writer.writeMessage(channelId: channelId, timestamp: poseData.timestampNs, data: data)
             sensorCounts.poseSamples += 1
         } catch {
-            print("Failed to record pose data: \(error)")
         }
     }
 
@@ -186,7 +183,6 @@ class RecordingManager: ObservableObject {
             do {
                 try writer.writeMessage(channelId: channelId, timestamp: cameraFrame.timestamp, data: cameraFrame.data)
             } catch {
-                print("Failed to record camera frame to MCAP: \(error)")
             }
         }
 
@@ -196,7 +192,6 @@ class RecordingManager: ObservableObject {
                 try recorder.write(frame: cameraFrame)
                 sensorCounts.cameraFrames += 1
             } catch {
-                print("Failed to record video frame: \(error)")
             }
         }
     }
@@ -228,7 +223,6 @@ class RecordingManager: ObservableObject {
                     self.sensorCounts.depthFrames += 1
                 }
             } catch {
-                print("Failed to record depth frame: \(error)")
             }
         }
     }
@@ -269,7 +263,6 @@ class RecordingManager: ObservableObject {
                 return freeSpace > Constants.Recording.minFreeSpace
             }
         } catch {
-            print("Failed to check free space: \(error)")
         }
         return true
     }
@@ -289,7 +282,6 @@ class RecordingManager: ObservableObject {
 
             fileSize = totalSize
         } catch {
-            print("Failed to calculate file size: \(error)")
         }
     }
 
@@ -310,7 +302,6 @@ class RecordingManager: ObservableObject {
                 }
             }
         } catch {
-            print("Failed to list recordings: \(error)")
         }
 
         return recordings.sorted { $0.startTime > $1.startTime }

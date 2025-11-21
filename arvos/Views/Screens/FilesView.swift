@@ -575,7 +575,6 @@ struct RecordingDetailView: View {
                 )
             }.sorted { $0.name < $1.name }
         } catch {
-            print("Failed to load files: \(error)")
         }
     }
 

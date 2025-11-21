@@ -53,14 +53,11 @@ class WebSocketServer: NSObject {
         listener?.stateUpdateHandler = { [weak self] state in
             switch state {
             case .ready:
-                print("📡 WebSocket server started on port \(self?.port ?? 0)")
                 self?.isRunning = true
                 self?.printConnectionInfo()
             case .failed(let error):
-                print("❌ Server failed: \(error)")
                 self?.isRunning = false
             case .cancelled:
-                print("🛑 Server cancelled")
                 self?.isRunning = false
             default:
                 break
@@ -93,14 +90,12 @@ class WebSocketServer: NSObject {
     }
 
     private func handleNewConnection(_ nwConnection: NWConnection) {
-        print("✅ New client connected")
 
         let conn = WebSocketConnection(connection: nwConnection)
         connections.insert(conn)
 
         conn.onDisconnect = { [weak self] in
             self?.connections.remove(conn)
-            print("👋 Client disconnected (\(self?.connections.count ?? 0) remaining)")
         }
 
         conn.start()
@@ -109,11 +104,8 @@ class WebSocketServer: NSObject {
 
     private func printConnectionInfo() {
         let ips = getLocalIPAddresses()
-        print("\n🌐 Connect Studio to:")
         for ip in ips {
-            print("   ws://\(ip):\(port)")
         }
-        print("")
     }
 
     func getLocalIPAddresses() -> [String] {

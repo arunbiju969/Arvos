@@ -173,7 +173,6 @@ extension SensorTestViewModel: ARKitServiceDelegate {
     }
 
     func arKitService(_ service: ARKitService, didEncounterError error: Error) {
-        print("❌ ARKit error: \(error)")
     }
 }
 
@@ -191,7 +190,6 @@ extension SensorTestViewModel: CameraServiceDelegate {
     }
 
     func cameraService(_ service: CameraService, didEncounterError error: Error) {
-        print("❌ Camera error: \(error)")
     }
 }
 
@@ -208,7 +206,6 @@ extension SensorTestViewModel: IMUServiceDelegate {
     }
 
     func imuService(_ service: IMUService, didEncounterError error: Error) {
-        print("❌ IMU error: \(error)")
     }
 }
 
@@ -225,7 +222,6 @@ extension SensorTestViewModel: GPSServiceDelegate {
     }
 
     func gpsService(_ service: GPSService, didEncounterError error: Error) {
-        print("❌ GPS error: \(error)")
     }
 }
 

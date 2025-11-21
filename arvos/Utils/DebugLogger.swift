@@ -12,7 +12,6 @@ struct DebugLogger {
     static func log(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         #if DEBUG
         let fileName = (file as NSString).lastPathComponent
-        print("[\(fileName):\(line)] \(function) - \(message)")
         #endif
     }
 
@@ -21,9 +20,7 @@ struct DebugLogger {
         #if DEBUG
         let fileName = (file as NSString).lastPathComponent
         if let error = error {
-            print("❌ [\(fileName):\(line)] \(function) - \(message): \(error.localizedDescription)")
         } else {
-            print("❌ [\(fileName):\(line)] \(function) - \(message)")
         }
         #endif
     }
@@ -32,7 +29,6 @@ struct DebugLogger {
     static func warning(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         #if DEBUG
         let fileName = (file as NSString).lastPathComponent
-        print("⚠️ [\(fileName):\(line)] \(function) - \(message)")
         #endif
     }
 
@@ -40,7 +36,6 @@ struct DebugLogger {
     static func success(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         #if DEBUG
         let fileName = (file as NSString).lastPathComponent
-        print("✅ [\(fileName):\(line)] \(function) - \(message)")
         #endif
     }
 
@@ -48,7 +43,6 @@ struct DebugLogger {
     static func network(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         #if DEBUG
         let fileName = (file as NSString).lastPathComponent
-        print("📡 [\(fileName):\(line)] \(function) - \(message)")
         #endif
     }
 }

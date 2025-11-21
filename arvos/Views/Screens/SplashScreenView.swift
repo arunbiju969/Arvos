@@ -121,17 +121,12 @@ struct VideoSplashView: View {
             #if DEBUG
             // List available resources for debugging
             if let resourcePath = Bundle.main.resourcePath {
-                print("⚠️ Splash video not found - using fallback")
-                print("   Resource path: \(resourcePath)")
                 if let contents = try? FileManager.default.contentsOfDirectory(atPath: resourcePath) {
                     let videoFiles = contents.filter { $0.lowercased().contains("splash") || $0.lowercased().hasSuffix(".mp4") }
                     if !videoFiles.isEmpty {
-                        print("   Found video files: \(videoFiles)")
                     } else {
-                        print("   No splash or mp4 files found in bundle")
                     }
                 }
-                print("   💡 Make sure Splash.mp4 is added to 'Copy Bundle Resources' in Build Phases")
             }
             #endif
             return

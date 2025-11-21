@@ -141,15 +141,9 @@ class ARKitService: NSObject {
 
     func start() {
         guard let session = arSession, let config = configuration, !isRunning else {
-            print("⚠️ ARKit start failed: session=\(arSession != nil), config=\(configuration != nil), isRunning=\(isRunning)")
             return
         }
 
-        print("🚀 Starting ARKit session")
-        print("   LiDAR: \(hasLiDAR), Depth: \(supportsDepth)")
-        print("   Scene reconstruction: \(config.sceneReconstruction)")
-        print("   Frame semantics: \(config.frameSemantics)")
-        print("   Depth enabled: \(depthEnabled), Target FPS: \(targetDepthFPS)")
 
         session.run(config, options: [.resetTracking, .removeExistingAnchors])
         isRunning = true
@@ -240,7 +234,6 @@ class ARKitService: NSObject {
             } else {
                 // Only print first few failures
                 if depthFrameCount < 5 {
-                    print("❌ No depth data available")
                 }
                 return
             }
@@ -249,7 +242,6 @@ class ARKitService: NSObject {
             guard !isProcessingDepth else {
                 droppedDepthFrames += 1
                 if droppedDepthFrames % 10 == 0 {
-                    print("⚠️ Dropped \(droppedDepthFrames) depth frames due to processing backlog")
                 }
                 return
             }
@@ -314,14 +306,12 @@ class ARKitService: NSObject {
                     let pointCount = cloud.points.count
                     if pointCount == 0 {
                         if self.depthFrameCount < 5 {
-                            print("⚠️ Depth cloud empty (0 points)")
                         }
                         return
                     }
 
                     self.depthFrameCount += 1
                     if self.depthFrameCount <= 3 || self.depthFrameCount % 10 == 0 {
-                        print("✅ Depth frame #\(self.depthFrameCount): \(pointCount) points")
                     }
 
                     let depthFrame = DepthFrame(
@@ -516,7 +506,6 @@ extension ARKitService: ARSessionDelegate {
         // Only print every 30th frame to reduce spam
         frameCount += 1
         if frameCount % 30 == 0 {
-            print("📊 ARFrame #\(frameCount): tracking=\(frame.camera.trackingState), sceneDepth=\(frame.sceneDepth != nil), estimatedDepth=\(frame.estimatedDepthData != nil)")
         }
 
         // Extract all needed data from ARFrame immediately to avoid retention
@@ -567,7 +556,6 @@ extension ARKitService: ARSessionDelegate {
         guard !isProcessingCamera else {
             droppedCameraFrames += 1
             if droppedCameraFrames % 10 == 0 {
-                print("⚠️ Dropped \(droppedCameraFrames) camera frames due to processing backlog")
             }
             return
         }
@@ -604,7 +592,6 @@ extension ARKitService: ARSessionDelegate {
 
                 self.cameraFrameCount += 1
                 if self.cameraFrameCount <= 3 || self.cameraFrameCount % 10 == 0 {
-                    print("✅ ARKit camera frame #\(self.cameraFrameCount): \(width)x\(height), \(jpegData.count) bytes")
                 }
 
                 DispatchQueue.main.async {
@@ -623,7 +610,6 @@ extension ARKitService: ARSessionDelegate {
     }
 
     func session(_ session: ARSession, didFailWithError error: Error) {
-        print("❌ ARSession error: \(error)")
         delegate?.arKitService(self, didEncounterError: error)
     }
 

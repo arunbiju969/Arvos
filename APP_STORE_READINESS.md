@@ -65,7 +65,20 @@
   - Camera permission denied
   - Network connection fails
   - Sensor initialization fails
+  - Web server fails to start
 - **Fix:** Add descriptive error messages in `StreamingViewModel.showError()`
+
+### 6. **Web Server & Multicast Networking** ⚠️ **FUNCTIONALITY NOTE**
+- ✅ Web server implementation exists (`WebSocketServer.swift`)
+- ✅ Server configured to accept local network connections (same WiFi)
+- ⚠️ **Multicast entitlement:** Pending Apple approval (commented out in `arvos.entitlements`)
+- **Current Status:** 
+  - ✅ Web server works on local WiFi network (primary use case)
+  - ⚠️ Cannot accept connections from cellular/hotspot interfaces (requires multicast entitlement)
+- **Action Required:** 
+  - Test web server on local network to ensure it works correctly
+  - Once Apple approves multicast entitlement, uncomment lines 8-9 in `arvos.entitlements`
+  - Update `WebSocketServer.swift` if needed when entitlement is enabled
 
 ---
 
@@ -149,6 +162,11 @@
 - ✅ WiFi info entitlement
 - ✅ Proper code signing setup
 - ✅ Watch connectivity configured
+- ⚠️ **Multicast Networking entitlement:** Currently commented out in `arvos.entitlements` (pending Apple approval)
+  - **Impact:** Web server works on local WiFi network (primary use case) ✅
+  - **Limitation:** Without multicast entitlement, server cannot accept connections from cellular/hotspot interfaces
+  - **Status:** App is functional for local network streaming. Multicast entitlement is optional enhancement.
+  - **Note:** Once Apple approves multicast entitlement, uncomment lines 8-9 in `arvos.entitlements`
 
 ---
 

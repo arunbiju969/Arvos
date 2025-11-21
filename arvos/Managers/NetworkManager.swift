@@ -133,10 +133,8 @@ class NetworkManager: ObservableObject {
         
         guard let adapter = adapter else {
             if protocolType == .websocket {
-                print("ℹ️ Falling back to legacy WebSocketService for WebSocket connections")
                 connectWebSocket(host: config.host, port: config.port)
             } else {
-                print("❌ \(protocolType.rawValue) adapter not yet implemented")
                 DispatchQueue.main.async {
                     self.connectionState = .error
                 }
@@ -151,12 +149,10 @@ class NetworkManager: ObservableObject {
         Task {
             do {
                 try await adapter.connect(config: config)
-                print("✅ Connected using \(protocolType.rawValue)")
                 DispatchQueue.main.async {
                     self.connectionState = .connected
                 }
             } catch {
-                print("❌ Failed to connect using \(protocolType.rawValue): \(error)")
                 DispatchQueue.main.async {
                     self.connectionState = .error
                 }
@@ -167,7 +163,6 @@ class NetworkManager: ObservableObject {
     /// Legacy WebSocket connection (backward compatibility)
     func connectWebSocket(host: String, port: Int) {
         guard let url = URL(string: "ws://\(host):\(port)") else {
-            print("Invalid WebSocket URL")
             return
         }
 
@@ -190,7 +185,6 @@ class NetworkManager: ObservableObject {
     /// Start embedded WebSocket server (iPhone acts as server)
     func startServer() {
         guard isServerMode else {
-            print("⚠️ Not in server mode")
             return
         }
 
@@ -198,12 +192,9 @@ class NetworkManager: ObservableObject {
             try webSocketServer.start()
             serverIPAddresses = webSocketServer.getLocalIPAddresses()
             connectionState = .connected  // Server is "connected" when running
-            print("📡 Server started. Connect Studio to:")
             for ip in serverIPAddresses {
-                print("   ws://\(ip):8765")
             }
         } catch {
-            print("❌ Failed to start server: \(error)")
             connectionState = .error
         }
     }
@@ -261,7 +252,6 @@ class NetworkManager: ObservableObject {
             adapter.delegate = self
             return adapter
         } else {
-            print("⚠️ gRPC requires iOS 18+")
             return nil
         }
     }
@@ -278,7 +268,6 @@ class NetworkManager: ObservableObject {
             adapter.delegate = self
             return adapter
         } else {
-            print("⚠️ QUIC/HTTP3 requires iOS 15+")
             return nil
         }
     }
@@ -315,14 +304,12 @@ class NetworkManager: ObservableObject {
                 try webSocketService.send(json: imuData)
             }
         } catch {
-            print("Failed to stream IMU data: \(error)")
         }
     }
 
     /// Stream GPS data
     func stream(gpsData: GPSData) {
         do {
-            print("📤 Sending GPS: (\(gpsData.latitude), \(gpsData.longitude)), accuracy: ±\(gpsData.horizontalAccuracy)m")
             if isServerMode {
                 try webSocketServer.broadcast(json: gpsData)
             } else if let adapter = adapter {
@@ -332,7 +319,6 @@ class NetworkManager: ObservableObject {
                 try webSocketService.send(json: gpsData)
             }
         } catch {
-            print("❌ Failed to stream GPS data: \(error)")
         }
     }
 
@@ -348,7 +334,6 @@ class NetworkManager: ObservableObject {
                 try webSocketService.send(json: poseData)
             }
         } catch {
-            print("Failed to stream pose data: \(error)")
         }
     }
 
@@ -365,17 +350,18 @@ class NetworkManager: ObservableObject {
             }
 
             #if DEBUG
-            print("📤 Sending camera frame: \(cameraFrame.data.count) bytes, encoded: \(encoded.count) bytes")
             #endif
 
-            if let adapter = adapter {
+            if isServerMode {
+                // Server mode: broadcast to all connected clients
+                webSocketServer.broadcast(data: encoded)
+            } else if let adapter = adapter {
                 try adapter.send(data: encoded)
             } else {
                 // Legacy path
-            webSocketService.send(data: encoded, asText: false)
+                webSocketService.send(data: encoded, asText: false)
             }
         } catch {
-            print("❌ Failed to stream camera frame: \(error)")
         }
     }
 
@@ -383,7 +369,6 @@ class NetworkManager: ObservableObject {
     func stream(depthFrame: DepthFrame) {
         do {
             let plyData = depthFrame.pointCloud.toPLY()
-            print("📤 Sending depth frame: \(depthFrame.pointCloud.points.count) points, PLY size: \(plyData.count) bytes")
             let metadata = depthFrame.metadata()
             let header = try BinaryMessageHeader(metadata: metadata, dataSize: plyData.count)
 
@@ -392,14 +377,16 @@ class NetworkManager: ObservableObject {
                 throw NetworkError.encodingFailed
             }
 
-            if let adapter = adapter {
+            if isServerMode {
+                // Server mode: broadcast to all connected clients
+                webSocketServer.broadcast(data: encoded)
+            } else if let adapter = adapter {
                 try adapter.send(data: encoded)
             } else {
                 // Legacy path
-            webSocketService.send(data: encoded, asText: false)
+                webSocketService.send(data: encoded, asText: false)
             }
         } catch {
-            print("Failed to stream depth frame: \(error)")
         }
     }
 
@@ -418,7 +405,6 @@ class NetworkManager: ObservableObject {
                 try webSocketService.send(json: config)
             }
         } catch {
-            print("Failed to send mode config: \(error)")
         }
     }
 
@@ -441,7 +427,6 @@ class NetworkManager: ObservableObject {
                 try webSocketService.send(json: statusMsg)
             }
         } catch {
-            print("Failed to send status: \(error)")
         }
     }
 
@@ -463,7 +448,6 @@ class NetworkManager: ObservableObject {
                 try webSocketService.send(json: errorMsg)
             }
         } catch {
-            print("Failed to send error: \(error)")
         }
     }
 
@@ -504,7 +488,6 @@ extension NetworkManager: WebSocketServiceDelegate {
 
     func webSocketService(_ service: WebSocketService, didReceiveMessage message: String) {
         // Handle incoming messages from server (commands, acknowledgments, etc.)
-        print("Received message: \(message)")
 
         // Parse and handle server commands
         if let data = message.data(using: .utf8),
@@ -525,7 +508,6 @@ extension NetworkManager: WebSocketServiceDelegate {
     }
 
     func webSocketService(_ service: WebSocketService, didEncounterError error: Error) {
-        print("WebSocket error: \(error.localizedDescription)")
         sendError("websocket_error", details: error.localizedDescription)
     }
 
@@ -569,11 +551,9 @@ extension NetworkManager: StreamingProtocolDelegate {
     }
 
     func streamingProtocol(_ adapter: StreamingProtocol, didReceiveMessage message: String) {
-        print("[\(adapter.protocolName)] message: \(message)")
     }
 
     func streamingProtocol(_ adapter: StreamingProtocol, didEncounterError error: Error) {
-        print("[\(adapter.protocolName)] error: \(error)")
         DispatchQueue.main.async {
             self.connectionState = .error
         }

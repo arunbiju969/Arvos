@@ -131,15 +131,12 @@ class CameraService: NSObject {
 
     func start() {
         guard let session = captureSession, !isRunning else {
-            print("⚠️ Camera start failed: session=\(captureSession != nil), isRunning=\(isRunning)")
             return
         }
 
-        print("🚀 Starting camera service (target FPS: \(targetFPS))")
         sessionQueue.async { [weak self] in
             session.startRunning()
             self?.isRunning = true
-            print("✅ Camera session started")
         }
     }
 
@@ -169,7 +166,6 @@ class CameraService: NSObject {
                 input.device.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: CMTimeScale(fps))
                 input.device.unlockForConfiguration()
             } catch {
-                print("Failed to update FPS: \(error)")
             }
             session.commitConfiguration()
         }
@@ -198,7 +194,6 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         Self.frameCountLock.unlock()
 
         if currentCount <= 3 || currentCount % 10 == 0 {
-            print("✅ Camera frame #\(currentCount) captured (interval: \(timeSinceLastFrame / 1_000_000)ms)")
         }
 
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
@@ -237,7 +232,6 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
 
     func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         // Frame dropped - could log this for debugging
-        print("Camera frame dropped")
     }
 }
 

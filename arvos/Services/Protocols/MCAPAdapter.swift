@@ -68,7 +68,6 @@ final class MCAPAdapter: NSObject, StreamingProtocol {
             let (_, response) = try await session.data(for: request)
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode == 200 {
-                    print("✅ MCAP server health check passed")
                     state = .connected
                     reconnectAttempts = 0
                 } else {
@@ -77,7 +76,6 @@ final class MCAPAdapter: NSObject, StreamingProtocol {
             }
         } catch {
             // Health endpoint might not exist, try connecting anyway
-            print("⚠️ MCAP health check unavailable, attempting connection anyway")
             state = .connected
         }
     }
@@ -146,7 +144,6 @@ final class MCAPAdapter: NSObject, StreamingProtocol {
                 } else if httpResponse.statusCode >= 500 && attempt < maxRetries {
                     // Server error - retry
                     let delay = retryDelay * pow(2.0, Double(attempt))
-                    print("⚠️ MCAP server error \(httpResponse.statusCode), retrying in \(delay)s (attempt \(attempt + 1)/\(maxRetries))")
                     try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                     await sendWithRetry(data: data, url: url, contentType: contentType, dataSize: dataSize, attempt: attempt + 1)
                 } else {
@@ -168,7 +165,6 @@ final class MCAPAdapter: NSObject, StreamingProtocol {
                 self.queuedMessages = max(0, self.queuedMessages - 1)
                 self.droppedMessages += 1
                 if self.droppedMessages % 50 == 0 {
-                    print("❌ MCAP dropped \(self.droppedMessages) messages after retries")
                 }
                 self.delegate?.streamingProtocol(self, didEncounterError: error)
             }

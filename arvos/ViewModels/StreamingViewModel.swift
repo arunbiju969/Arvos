@@ -271,7 +271,6 @@ class StreamingViewModel: ObservableObject {
         // Apply the custom configuration
         sensorManager.applyCustomConfiguration(config)
 
-        print("📊 Data sources updated: Camera=\(camera), Depth=\(depth), IMU=\(imu), Pose=\(pose), GPS=\(gps)")
     }
 
     func updateCameraFPS(_ fps: Int) {

@@ -56,7 +56,6 @@ struct PointCloudMetalView: UIViewRepresentable {
 
             // Create shader library
             guard let library = device.makeDefaultLibrary() else {
-                print("❌ Failed to create Metal library")
                 return
             }
 
@@ -70,7 +69,6 @@ struct PointCloudMetalView: UIViewRepresentable {
             do {
                 pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
             } catch {
-                print("❌ Failed to create pipeline state: \(error)")
             }
 
             // Create depth state

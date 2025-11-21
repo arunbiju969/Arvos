@@ -60,7 +60,6 @@ class WatchSensorManager: ObservableObject {
     
     func startWatchStreaming(hz: Int = 50) {
         guard isWatchConnected else {
-            print("⚠️ Cannot start watch streaming: watch not connected")
             return
         }
         
@@ -72,7 +71,6 @@ class WatchSensorManager: ObservableObject {
         // Perform time sync
         performTimeSync()
         
-        print("✅ Requested watch to start streaming at \(hz) Hz")
     }
     
     func stopWatchStreaming() {
@@ -82,7 +80,6 @@ class WatchSensorManager: ObservableObject {
         isWatchStreaming = false
         watchHz = 0
         
-        print("⏹️ Requested watch to stop streaming")
     }
     
     func updateWatchFrequency(_ hz: Int) {
@@ -186,7 +183,6 @@ extension WatchSensorManager: WatchConnectivityDelegate {
             }
             
         default:
-            print("⚠️ Unknown watch sensor type: \(packet.sensorType)")
         }
     }
     
@@ -198,7 +194,6 @@ extension WatchSensorManager: WatchConnectivityDelegate {
             watchHz = 0
         }
         
-        print("📱 Watch reachability changed: \(isReachable)")
     }
 }
 

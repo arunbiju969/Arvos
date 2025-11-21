@@ -75,7 +75,6 @@ struct DepthPointCloudView: UIViewRepresentable {
 
             // Create shader library
             guard let library = device.makeDefaultLibrary() else {
-                print("❌ Failed to create Metal library")
                 return
             }
 
@@ -83,9 +82,7 @@ struct DepthPointCloudView: UIViewRepresentable {
             do {
                 let computeFunction = library.makeFunction(name: "accumulateDepthPoints")
                 computePipelineState = try device.makeComputePipelineState(function: computeFunction!)
-                print("✅ Created compute pipeline for accumulation")
             } catch {
-                print("❌ Failed to create compute pipeline: \(error)")
             }
 
             // Create render pipeline for simple point cloud (matches Apple's approach)
@@ -100,9 +97,7 @@ struct DepthPointCloudView: UIViewRepresentable {
 
             do {
                 pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
-                print("✅ Created render pipeline for particles")
             } catch {
-                print("❌ Failed to create pipeline state: \(error)")
             }
 
             // Create depth state
@@ -115,7 +110,6 @@ struct DepthPointCloudView: UIViewRepresentable {
             let particleSize = MemoryLayout<SIMD4<Float>>.stride * 2 // position(xyz+pad) + color(rgb+confidence)
             let bufferSize = maxParticles * particleSize
             particleBuffer = device.makeBuffer(length: bufferSize, options: .storageModeShared)
-            print("✅ Created particle buffer for \(maxParticles) particles (\(bufferSize / 1024 / 1024)MB)")
         }
 
         // MARK: - Update Sample
@@ -148,14 +142,6 @@ struct DepthPointCloudView: UIViewRepresentable {
                   let depthSample = depthSample,
                   let depthTexture = depthTexture else {
                 if frameCount % 30 == 0 {
-                    print("❌ Draw guard failed:")
-                    print("   commandQueue: \(commandQueue != nil)")
-                    print("   pipelineState: \(pipelineState != nil)")
-                    print("   depthState: \(depthState != nil)")
-                    print("   drawable: \(view.currentDrawable != nil)")
-                    print("   descriptor: \(view.currentRenderPassDescriptor != nil)")
-                    print("   depthSample: \(depthSample != nil)")
-                    print("   depthTexture: \(depthTexture != nil)")
                 }
                 frameCount += 1
                 return
@@ -240,11 +226,6 @@ struct DepthPointCloudView: UIViewRepresentable {
 
             frameCount += 1
             if frameCount % 30 == 0 {
-                print("🎨 Drawing \(vertexCount) points (current frame)")
-                print("   Depth texture: \(depthTexture.width)x\(depthTexture.height)")
-                print("   View size: \(view.bounds.size)")
-                print("   Aspect ratio: \(aspect)")
-                print("   Camera intrinsics: fx=\(uniforms.fx), fy=\(uniforms.fy), cx=\(uniforms.cx), cy=\(uniforms.cy)")
 
                 // Sample some depth values
                 let depthData = depthSample.depthMap
@@ -262,7 +243,6 @@ struct DepthPointCloudView: UIViewRepresentable {
                             maxD = max(maxD, d)
                         }
                     }
-                    print("   Valid depth samples: \(validCount)/100, range: \(minD)mm - \(maxD)mm")
                 }
                 CVPixelBufferUnlockBaseAddress(depthData, .readOnly)
             }
@@ -294,7 +274,6 @@ struct DepthPointCloudView: UIViewRepresentable {
             depthDescriptor.usage = [.shaderRead]
 
             guard let texture = device.makeTexture(descriptor: depthDescriptor) else {
-                print("❌ Failed to create depth texture")
                 return
             }
 
@@ -321,8 +300,6 @@ struct DepthPointCloudView: UIViewRepresentable {
                         validPoints += 1
                     }
                 }
-                print("🔍 Depth range: \(minDepth)mm to \(maxDepth)mm, valid points in sample: \(validPoints)/100")
-                print("🔍 Camera intrinsics fx=\(sample.intrinsics[0][0]), fy=\(sample.intrinsics[1][1])")
             }
 
             self.depthTexture = texture
@@ -341,7 +318,6 @@ struct DepthPointCloudView: UIViewRepresentable {
                 confidenceDescriptor.usage = [.shaderRead]
 
                 guard let confTexture = device.makeTexture(descriptor: confidenceDescriptor) else {
-                    print("❌ Failed to create confidence texture")
                     return
                 }
 

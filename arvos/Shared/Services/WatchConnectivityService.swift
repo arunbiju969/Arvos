@@ -39,7 +39,6 @@ class WatchConnectivityService: NSObject, ObservableObject {
 
         guard WCSession.isSupported() else {
             #if DEBUG
-            print("⚠️ WatchConnectivity not supported on this device")
             #endif
             return
         }
@@ -59,7 +58,6 @@ class WatchConnectivityService: NSObject, ObservableObject {
     func send(packet: WatchSensorPacket) {
         guard let session = session, session.activationState == .activated else {
             #if DEBUG
-            print("⚠️ WCSession not activated")
             #endif
             bufferPacket(packet)
             return
@@ -67,7 +65,6 @@ class WatchConnectivityService: NSObject, ObservableObject {
         
         #if os(iOS)
         guard session.isWatchAppInstalled else {
-            print("⚠️ Watch app not installed")
             return
         }
         #endif
@@ -91,7 +88,6 @@ class WatchConnectivityService: NSObject, ObservableObject {
             ]
             
             session.sendMessage(dict, replyHandler: nil) { error in
-                print("❌ Failed to send live message: \(error.localizedDescription)")
                 // Fallback to buffering
                 self.bufferPacket(packet)
             }
@@ -99,7 +95,6 @@ class WatchConnectivityService: NSObject, ObservableObject {
             updateSendStatistics(messages: 1, bytes: Int64(encoded.count))
             
         } catch {
-            print("❌ Failed to encode packet: \(error)")
         }
     }
     
@@ -110,7 +105,6 @@ class WatchConnectivityService: NSObject, ObservableObject {
         // Limit buffer size to prevent memory issues
         if messageQueue.count > 1000 {
             messageQueue.removeFirst(500) // Drop oldest half
-            print("⚠️ Message buffer overflow, dropped 500 oldest packets")
         }
         
         queueLock.unlock()
@@ -157,10 +151,8 @@ class WatchConnectivityService: NSObject, ObservableObject {
             
             updateSendStatistics(messages: packetsToSend.count, bytes: Int64(encoded.count))
             
-            print("📤 Flushed \(packetsToSend.count) buffered packets (\(encoded.count) bytes)")
             
         } catch {
-            print("❌ Failed to flush buffer: \(error)")
             // Re-buffer the packets
             queueLock.lock()
             messageQueue.insert(contentsOf: packetsToSend, at: 0)
@@ -184,7 +176,6 @@ class WatchConnectivityService: NSObject, ObservableObject {
     /// Send a command to the companion device
     func sendCommand(_ command: String, parameters: [String: Any] = [:]) {
         guard let session = session, session.activationState == .activated else {
-            print("⚠️ WCSession not activated")
             return
         }
         
@@ -193,7 +184,6 @@ class WatchConnectivityService: NSObject, ObservableObject {
         
         if session.isReachable {
             session.sendMessage(dict, replyHandler: nil) { error in
-                print("❌ Failed to send command: \(error.localizedDescription)")
             }
         } else {
             session.transferUserInfo(dict)
@@ -225,11 +215,9 @@ extension WatchConnectivityService: WCSessionDelegate {
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         DispatchQueue.main.async {
             if let error = error {
-                print("❌ WCSession activation failed: \(error.localizedDescription)")
                 return
             }
             
-            print("✅ WCSession activated: \(activationState.rawValue)")
             
             #if os(iOS)
             self.isPaired = session.isPaired
@@ -243,11 +231,9 @@ extension WatchConnectivityService: WCSessionDelegate {
     
     #if os(iOS)
     func sessionDidBecomeInactive(_ session: WCSession) {
-        print("⚠️ WCSession became inactive")
     }
     
     func sessionDidDeactivate(_ session: WCSession) {
-        print("⚠️ WCSession deactivated, reactivating...")
         session.activate()
     }
     
@@ -256,7 +242,6 @@ extension WatchConnectivityService: WCSessionDelegate {
             self.isPaired = session.isPaired
             self.isWatchAppInstalled = session.isWatchAppInstalled
             self.isWatchReachable = session.isReachable
-            print("📱 Watch state changed - Paired: \(session.isPaired), Installed: \(session.isWatchAppInstalled), Reachable: \(session.isReachable)")
         }
     }
     #endif
@@ -266,11 +251,9 @@ extension WatchConnectivityService: WCSessionDelegate {
             #if os(iOS)
             self.isWatchReachable = session.isReachable
             self.delegate?.watchConnectivity(self, didChangeReachability: session.isReachable)
-            print("📱 Watch reachability: \(session.isReachable)")
             #else
             self.isPhoneReachable = session.isReachable
             self.delegate?.watchConnectivity(self, didChangeReachability: session.isReachable)
-            print("⌚ Phone reachability: \(session.isReachable)")
             #endif
         }
     }
@@ -300,7 +283,6 @@ extension WatchConnectivityService: WCSessionDelegate {
                     self.delegate?.watchConnectivity(self, didReceivePacket: packet)
                 }
             } catch {
-                print("❌ Failed to decode packet: \(error)")
             }
         }
         
@@ -314,9 +296,7 @@ extension WatchConnectivityService: WCSessionDelegate {
                         self.delegate?.watchConnectivity(self, didReceivePacket: packet)
                     }
                 }
-                print("📥 Received \(packets.count) buffered packets")
             } catch {
-                print("❌ Failed to decode packets: \(error)")
             }
         }
         
@@ -327,7 +307,6 @@ extension WatchConnectivityService: WCSessionDelegate {
     }
     
     private func handleCommand(_ command: String, parameters: [String: Any]) {
-        print("📥 Received command: \(command)")
         
         // Post notification for command handling
         NotificationCenter.default.post(

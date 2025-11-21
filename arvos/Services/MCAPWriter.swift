@@ -91,7 +91,6 @@ class MCAPWriter {
         do {
             try writeRecord(opcode: 0x02, data: channelData)
         } catch {
-            print("⚠️ Failed to write channel record: \(error)")
         }
 
         return channelId

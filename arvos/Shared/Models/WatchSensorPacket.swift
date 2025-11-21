@@ -25,7 +25,6 @@ struct WatchSensorPacket: Codable {
 
         guard let encoded = try? JSONEncoder().encode(imuData) else {
             #if DEBUG
-            print("⚠️ Failed to encode watch IMU data")
             #endif
             return nil
         }
@@ -49,7 +48,6 @@ struct WatchSensorPacket: Codable {
 
         guard let encoded = try? JSONEncoder().encode(attitude) else {
             #if DEBUG
-            print("⚠️ Failed to encode watch attitude data")
             #endif
             return nil
         }
@@ -65,7 +63,6 @@ struct WatchSensorPacket: Codable {
     static func motionActivity(timestamp: UInt64, activity: WatchMotionActivityData) -> WatchSensorPacket? {
         guard let encoded = try? JSONEncoder().encode(activity) else {
             #if DEBUG
-            print("⚠️ Failed to encode watch motion activity data")
             #endif
             return nil
         }

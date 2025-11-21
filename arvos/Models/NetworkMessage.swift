@@ -59,7 +59,6 @@ struct BinaryMessage {
         // Encode header as JSON
         guard let headerJSON = try? JSONEncoder().encode(header) else {
             #if DEBUG
-            print("⚠️ Failed to encode binary message header")
             #endif
             return nil
         }

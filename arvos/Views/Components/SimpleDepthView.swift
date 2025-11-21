@@ -49,7 +49,6 @@ struct SimpleDepthView: UIViewRepresentable {
             self.commandQueue = device.makeCommandQueue()
 
             guard let library = device.makeDefaultLibrary() else {
-                print("❌ Failed to create Metal library")
                 return
             }
 
@@ -61,9 +60,7 @@ struct SimpleDepthView: UIViewRepresentable {
 
             do {
                 pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
-                print("✅ Simple pipeline created")
             } catch {
-                print("❌ Pipeline error: \(error)")
             }
         }
 
@@ -71,7 +68,6 @@ struct SimpleDepthView: UIViewRepresentable {
             guard let sample = sample else { return }
             self.depthSample = sample
             self.pointCount = sample.width * sample.height
-            print("🔍 SimpleDepth: Got sample \(sample.width)×\(sample.height) = \(pointCount) points")
         }
 
         func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
