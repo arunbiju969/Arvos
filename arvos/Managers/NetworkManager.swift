@@ -192,10 +192,17 @@ class NetworkManager: ObservableObject {
             try webSocketServer.start()
             serverIPAddresses = webSocketServer.getLocalIPAddresses()
             connectionState = .connected  // Server is "connected" when running
+            #if DEBUG
+            print("📡 Server started. Connect Studio to:")
             for ip in serverIPAddresses {
+                print("   ws://\(ip):8765")
             }
+            #endif
         } catch {
             connectionState = .error
+            #if DEBUG
+            print("❌ Failed to start server: \(error)")
+            #endif
         }
     }
 
