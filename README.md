@@ -1,128 +1,247 @@
-# ARVOS
+# Arvos - Professional Sensor Streaming for iOS
 
-**Stream iPhone + Apple Watch sensors to your computer for AR/robotics research.**
+**Stream iPhone sensors (LiDAR, Camera, IMU, GPS, ARKit) to your computer for AR/VR, robotics research, and computer vision development.**
 
-Turn your iPhone (and optional Apple Watch) into a professional research sensor platform with LiDAR, cameras, IMU, ARKit pose tracking, wearable motion activity, and gestures.
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![iOS](https://img.shields.io/badge/iOS-16.0+-black.svg)](https://www.apple.com/ios/)
+[![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org/)
+[![Python SDK](https://img.shields.io/badge/Python%20SDK-PyPI-blue.svg)](https://pypi.org/project/arvos-sdk/)
 
 ---
 
-## 🌐 Quickest Start: Web Viewer (No Install!)
+## 🚀 Quick Start
 
-Stream to your browser in 30 seconds:
+### 1. Download the App
+- Clone this repository
+- Open `arvos.xcodeproj` in Xcode
+- Build and run on your iPhone 12 Pro or newer
 
-```bash
-cd arvos-sdk/web-viewer
-./start-viewer.sh
-# Scan QR code with iPhone → Done!
+### 2. Connect to Web Studio
+Visit the web interface at:
+**[https://arvos-studio-4u0khl359-jaskirat1616s-projects.vercel.app/](https://arvos-studio-4u0khl359-jaskirat1616s-projects.vercel.app/)**
+
+The web studio provides:
+- Real-time 3D point cloud visualization
+- Live camera feed
+- Sensor data monitoring (IMU, GPS, Pose)
+- Recording controls
+- Statistics and diagnostics
+
+### 3. Start Streaming
+1. Open Arvos app on iPhone
+2. Tap **"START"** to begin the embedded WebSocket server
+3. Your iPhone will display connection URLs (WiFi and hotspot)
+4. In Web Studio, enter your iPhone's IP address
+5. Click **"Connect"** and watch your sensor data stream in real-time!
+
+---
+
+## 📱 Supported Sensors
+
+| Sensor | Rate | Description |
+|--------|------|-------------|
+| **Camera** | 5-30 FPS | 1920×1080 RGB, JPEG compressed |
+| **LiDAR Depth** | 1-5 FPS | Point clouds with confidence maps |
+| **IMU** | 50-200 Hz | Accelerometer, gyroscope, gravity |
+| **ARKit Pose** | 30-60 Hz | 6DOF tracking with transforms |
+| **GPS** | 1 Hz | Location and altitude (outdoor) |
+| **Apple Watch** | 50-100 Hz | Wearable IMU and motion activity *(optional)* |
+
+All sensors are **nanosecond-synchronized** for research-grade data collection.
+
+---
+
+## 🎯 Streaming Modes
+
+Choose the best mode for your use case:
+
+| Mode | Sensors Enabled | Use Case |
+|------|----------------|----------|
+| **Full Sensor** | All sensors | Maximum data collection |
+| **RGBD** | Camera + Depth + Pose | 3D reconstruction, SLAM |
+| **Visual-Inertial** | Camera + IMU + Pose | VIO algorithm development |
+| **LiDAR** | Depth only | Point cloud mapping |
+| **Camera** | RGB camera only | Computer vision |
+| **Telemetry** | IMU + GPS only | Motion tracking |
+| **Custom** | User-selected | Flexible configuration |
+
+---
+
+## 🌐 Web Studio Features
+
+The web studio ([link here](https://arvos-studio-4u0khl359-jaskirat1616s-projects.vercel.app/)) provides:
+
+✅ **Real-time Visualization**
+- 3D point cloud viewer with orbit controls
+- Live camera feed display
+- IMU and GPS data charts
+
+✅ **Recording & Export**
+- MCAP format recording
+- H.264 video compression
+- Synchronized sensor timestamps
+
+✅ **Connection Modes**
+- Direct WiFi connection (same network)
+- iPhone hotspot support
+- Cloud relay for internet streaming
+
+✅ **Diagnostics**
+- FPS monitoring
+- Network statistics
+- Sensor status indicators
+
+---
+
+## 🔧 Requirements
+
+**iPhone:**
+- iPhone 12 Pro or newer (LiDAR required)
+- iOS 16.0 or later
+- WiFi or Personal Hotspot enabled
+
+**Computer:**
+- Modern web browser (Chrome, Safari, Firefox, Edge)
+- Same WiFi network as iPhone (or connect to iPhone's hotspot)
+
+**Apple Watch (optional):**
+- Apple Watch Series 6 or newer
+- watchOS 9.0 or later
+- Paired with iPhone
+
+---
+
+## ⌚ Apple Watch Companion
+
+Stream wearable sensor data in sync with iPhone sensors:
+
+**Features:**
+- 50-100 Hz IMU (accelerometer, gyroscope, gravity)
+- Attitude tracking (quaternion, pitch, roll, yaw)
+- Motion activity classification (walking, running, cycling, vehicle, stationary)
+- Live UI showing sample count and frequency
+
+**Setup:**
+1. Build and run the iOS app with watch target
+2. Watch app installs automatically on paired watch
+3. Toggle "Apple Watch" in Sensor Test to verify connection
+4. Watch data streams through WebSocket alongside iPhone sensors
+
+---
+
+## 🏗️ Architecture
+
+Arvos uses a **Foxglove-style server architecture**:
+
+```
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│   iPhone    │ ◄─────► │  WebSocket   │ ◄─────► │ Web Studio  │
+│  (Server)   │   WiFi  │  Server      │  WiFi   │  (Client)   │
+│             │         │  Port 8765   │         │             │
+└─────────────┘         └──────────────┘         └─────────────┘
+      │
+      │ Watch Connectivity
+      ▼
+┌─────────────┐
+│ Apple Watch │
+│  (Companion)│
+└─────────────┘
 ```
 
-[→ Full Web Viewer Guide](https://github.com/jaskirat1616/arvos-sdk/tree/main/web-viewer)
+**Key Components:**
+
+- **NetworkManager.swift**: Coordinates streaming and server/client modes
+- **SensorManager.swift**: Manages all sensor services and modes
+- **WebSocketServer.swift**: Embedded server running on iPhone
+- **ARKitService.swift**: LiDAR depth and pose tracking
+- **CameraService.swift**: RGB camera capture
+- **IMUService.swift**: Motion sensor data
+- **GPSService.swift**: Location tracking
+- **WatchSensorManager.swift**: Apple Watch integration
+- **RecordingManager.swift**: MCAP file recording
 
 ---
 
-## 📱 What It Streams
+## 📊 Data Format
 
-- **Camera**: 30 FPS @ 1920x1080 RGB
-- **LiDAR Depth**: 5 FPS point clouds with confidence maps
-- **IMU**: 100-200 Hz accelerometer + gyroscope + gravity
-- **ARKit Pose**: 30-60 Hz 6DOF tracking with quality flags
-- **GPS**: 1 Hz location (outdoor)
-- **Apple Watch** *(optional)*:
-  - 50-100 Hz IMU (accelerometer + gyroscope + gravity)
-  - Attitude (quaternion + pitch/roll/yaw)
-  - Motion activity classifier (walking, running, cycling, vehicle, stationary)
+All sensor data uses **nanosecond timestamps** and standard coordinate systems:
 
-**All sensors nanosecond-synchronized** for research-grade data.
-
----
-
-## 🚀 Getting Started
-
-### Option 1: Web Viewer (Recommended)
-No Python needed - works on ANY device with a browser:
-```bash
-cd arvos-sdk/web-viewer
-./start-viewer.sh
+**IMU Data:**
+```json
+{
+  "type": "imu",
+  "timestamp_ns": 1234567890123456789,
+  "angular_velocity": {"x": 0.1, "y": 0.2, "z": 0.3},
+  "linear_acceleration": {"x": 0.5, "y": 9.8, "z": 0.1},
+  "gravity": {"x": 0.0, "y": 9.81, "z": 0.0}
+}
 ```
 
-### Option 2: Python SDK
-For custom applications and ROS 2 integration:
+**Depth Data:**
+- PLY point cloud format
+- Binary WebSocket messages
+- Confidence map included
+
+**Camera Data:**
+- JPEG compressed images
+- Binary WebSocket messages
+- Intrinsic calibration metadata
+
+---
+
+## 🐍 Python SDK
+
+Process and visualize Arvos data streams with the official Python SDK:
+
+**Installation:**
 ```bash
 pip install arvos-sdk
-python examples/01_quickstart.py
 ```
 
-### Connect iPhone
-1. Open **ARVOS** app
-2. Tap **"CONNECT TO SERVER"**
-3. Select your preferred protocol (see below)
-4. Scan QR code (or enter IP manually)
-5. Tap **"START"** to stream
+**Features:**
+- Connect to Arvos WebSocket streams
+- Real-time data processing
+- Rerun visualization integration
+- MCAP file recording and playback
+- Easy-to-use Python API
+
+**Quick Example:**
+```python
+from arvos_sdk import ArvosClient
+
+client = ArvosClient("192.168.1.100:8765")
+client.connect()
+
+# Process sensor data
+for data in client.stream():
+    if data["type"] == "imu":
+        print(f"IMU: {data}")
+```
+
+**Documentation:** [https://pypi.org/project/arvos-sdk/](https://pypi.org/project/arvos-sdk/)
 
 ---
 
-## 🌐 Supported Streaming Protocols
+## 🛠️ Building from Source
 
-ARVOS supports **7 streaming protocols** to fit different use cases:
+1. **Clone the repository:**
+```bash
+git clone https://github.com/jaskirat1616/arvos.git
+cd arvos
+```
 
-| Protocol | Best For | Default Port | iOS Version | Status |
-|----------|----------|--------------|-------------|--------|
-| **WebSocket** | General purpose, default | 9090 | iOS 16+ | ✅ Complete |
-| **gRPC** | High performance, research | 50051 | iOS 18+ | ✅ Complete |
-| **MQTT** | IoT, multi-subscriber | 1883 | iOS 16+ | ✅ Complete |
-| **HTTP/REST** | Simple integration, webhooks | 8080 | iOS 16+ | ✅ Complete |
-| **Bluetooth LE** | Low bandwidth, cable-free | N/A | iOS 16+ | ✅ Complete |
-| **MCAP Stream** | Robotics research, Foxglove | 17500 | iOS 16+ | ✅ Complete |
-| **QUIC/HTTP3** | Ultra-low latency | 4433 | iOS 16+ | 🚧 Coming Soon |
+2. **Open in Xcode:**
+```bash
+open arvos.xcodeproj
+```
 
-### Protocol Selection Guide
+3. **Select your iPhone as target**
 
-**WebSocket** (Default)
-- ✅ Works everywhere
-- ✅ Bidirectional communication
-- ✅ Good for most use cases
-- Best for: General purpose streaming
-
-**gRPC**
-- ✅ Industry standard for research
-- ✅ Protocol Buffers (efficient)
-- ✅ Bidirectional streaming
-- ⚠️ Requires iOS 18+
-- Best for: High-performance research applications
-
-**MQTT**
-- ✅ Multi-subscriber support
-- ✅ IoT-friendly
-- ✅ Requires MQTT broker (Mosquitto)
-- Best for: IoT deployments, multiple receivers
-
-**HTTP/REST**
-- ✅ Simple POST requests
-- ✅ Easy webhook integration
-- ✅ Works with any HTTP client
-- Best for: Web integrations, simple scripts
-
-**Bluetooth LE**
-- ✅ No Wi-Fi needed
-- ✅ Low power
-- ⚠️ Low bandwidth (telemetry only, no video)
-- Best for: Cable-free telemetry, low-power scenarios
-
-**MCAP Stream**
-- ✅ Robotics standard format
-- ✅ Foxglove Studio compatible
-- ✅ Streaming MCAP files
-- Best for: Robotics research, Foxglove visualization
-
-**QUIC/HTTP3** (Coming Soon)
-- ✅ Ultra-low latency
-- ✅ Better performance on unstable networks
-- ✅ Built-in encryption
-- Best for: Real-time applications, mobile networks
+4. **Build and Run** (⌘R)
 
 ---
 
-## 🎯 Use Cases
+## 🎓 Use Cases
 
 **For Researchers:**
 - SLAM algorithm development with ARKit ground truth
@@ -131,146 +250,101 @@ ARVOS supports **7 streaming protocols** to fit different use cases:
 - Real-time 3D reconstruction
 
 **For Robotics Engineers:**
-- ROS 2 perception testing
-- Mobile sensor platform
-- Algorithm prototyping
-- Live demos
+- Mobile sensor platform testing
+- Algorithm prototyping with real sensor data
+- Live demos and presentations
+- Multi-sensor calibration
+
+**For Developers:**
+- AR/VR application development
+- Computer vision experiments
+- iOS sensor API learning
+- Real-time data streaming projects
 
 **For Students:**
-- Computer vision learning
-- AR experiments
-- Sensor data visualization
-- Course projects
+- Computer vision coursework
+- Robotics projects
+- Sensor data analysis
+- AR research projects
 
 ---
 
-## 📦 Features
+## 🐛 Troubleshooting
 
-- ✅ **7 Streaming Protocols** - WebSocket, gRPC, MQTT, HTTP, BLE, MCAP, QUIC/HTTP3
-- ✅ **7 Streaming Modes** - RGBD, Visual-Inertial, LiDAR, Full Sensor, etc.
-- ✅ **Research Metadata** - Depth confidence, IMU calibration, pose quality
-- ✅ **Local Recording** - MCAP format with H.264 video
-- ✅ **Zero-Install Option** - Web viewer works everywhere
-- ✅ **Professional Tools** - CLI for batch export (KITTI, TUM, EuRoC)
-- ✅ **Open Formats** - PLY, CSV, ROS bags
-- ✅ **Apple Watch Companion** - Stream wearable IMU, pose, and motion activity data in sync with iPhone sensors
+**Connection Issues:**
+- Ensure iPhone and computer are on the same WiFi network
+- Check firewall settings (allow port 8765)
+- Try using iPhone's Personal Hotspot instead
 
----
+**Performance Issues:**
+- Reduce sensor rates in Custom mode
+- Lower camera resolution if needed
+- Close background apps on iPhone
 
-## 💻 Requirements
+**ARFrame Retention Warnings:**
+- Normal during startup (should clear within 10 seconds)
+- Persistent warnings indicate memory pressure - try lower FPS
 
-**iPhone:**
-- iPhone 12 Pro or newer (for LiDAR)
-- iOS 16.0+ (iOS 18+ for gRPC)
-- Same WiFi network as computer (or Bluetooth for BLE)
-
-**Computer:**
-- Any OS with Python 3.8+ or modern browser
-- Same WiFi network as iPhone (for Wi-Fi protocols)
-- Firewall allows selected protocol port
-
-**Apple Watch (optional):**
-- Apple Watch Series 6 or newer (watchOS 9.0+)
-- Paired with the streaming iPhone
-- arvos watch companion app installed (see below)
-
----
-
-## ⌚ Apple Watch Companion
-
-Augment iPhone data with wearable motion sensing—perfect for robotics operators, telepresence rigs, and human-in-the-loop research.
-
-**What you get**
-- 50 Hz wearable IMU with nanosecond timestamps
-- Attitude (quaternion & Euler angles)
-- Motion activity classification (running, walking, cycling, vehicle, stationary)
-- Live UI on both watch and iPhone
-
-**Setup (once)**
-1. Follow [`WATCH_XCODE_SETUP.md`](WATCH_XCODE_SETUP.md) to add the watch target in Xcode
-2. Build & run the iOS app — the watch app installs automatically on the paired watch
-3. Toggle "Apple Watch" in **Sensor Test** to visualize wearable data
-4. Stream or record — watch packets flow through the existing WebSocket/MCAP pipeline
-
-**Deep dive docs**
-- [`WATCH_INTEGRATION.md`](WATCH_INTEGRATION.md) – architecture & transport details
-- [`WATCH_TESTING_GUIDE.md`](WATCH_TESTING_GUIDE.md) – validation checklist
-- [`WATCH_IMPLEMENTATION_SUMMARY.md`](WATCH_IMPLEMENTATION_SUMMARY.md)
-
----
-
-## 📚 Documentation
-
-- **Web Viewer**: [arvos-sdk/web-viewer/README.md](https://github.com/jaskirat1616/arvos-sdk/tree/main/web-viewer)
-- **Python SDK**: [arvos-sdk/README.md](https://github.com/jaskirat1616/arvos-sdk)
-- **Examples**: [arvos-sdk/examples/](https://github.com/jaskirat1616/arvos-sdk/tree/main/examples)
-- **Watch Companion Guides**: [`WATCH_INTEGRATION.md`](WATCH_INTEGRATION.md), [`WATCH_XCODE_SETUP.md`](WATCH_XCODE_SETUP.md), [`WATCH_TESTING_GUIDE.md`](WATCH_TESTING_GUIDE.md)
-- **CLI Tools**: [arvos-sdk/arvos/cli/](https://github.com/jaskirat1616/arvos-sdk/tree/main/arvos/cli)
-
----
-
-## 🔧 Protocol Setup Guides
-
-### WebSocket (Default)
-No setup required - works out of the box!
-
-### gRPC
-1. Run Python server: `python examples/grpc_stream_server.py`
-2. In iOS app, select "gRPC" protocol
-3. Enter server IP and port 50051
-4. Connect!
-
-### MQTT
-1. Install and start Mosquitto broker:
-   ```bash
-   brew install mosquitto
-   mosquitto -c mosquitto.conf
-   ```
-2. Run Python server: `python examples/mqtt_stream_server.py`
-3. In iOS app, select "MQTT" protocol
-4. Enter broker IP and port 1883
-5. Connect!
-
-### HTTP/REST
-1. Run Python server: `python examples/http_stream_server.py`
-2. In iOS app, select "HTTP/REST" protocol
-3. Enter server IP and port 8080
-4. Connect!
-
-### Bluetooth LE
-1. Run Python receiver: `python examples/ble_receiver.py`
-2. In iOS app, select "Bluetooth LE" protocol
-3. The app will automatically advertise
-4. Python script will discover and connect
-
-### MCAP Stream
-1. Run Python server: `python examples/mcap_stream_server.py`
-2. In iOS app, select "MCAP Stream" protocol
-3. Enter server IP and port 17500
-4. Connect and stream to MCAP file!
-
----
-
-## 🤝 Contributing
-
-Found a bug? Have a feature request? [Open an issue!](https://github.com/jaskirat1616/arvos/issues)
+**Web Studio Not Loading Data:**
+- Check browser console for WebSocket errors
+- Verify IP address is correct
+- Try restarting both app and web studio
 
 ---
 
 ## 📜 License
 
-MIT License - Use freely in your research and projects
+This project is licensed under the **GNU General Public License v3.0**.
+
+See [LICENSE](LICENSE) for full details.
+
+**Key Points:**
+- ✅ Free to use, modify, and distribute
+- ✅ Must share source code modifications
+- ✅ Must use GPL for derivative works
+- ✅ Commercial use allowed
+- ⚠️ No warranty provided
 
 ---
 
-**Made for the robotics and AR research community** ❤️
+## 🤝 Contributing
 
-## Build
+Contributions are welcome! Please:
 
-1. Open `arvos.xcodeproj` in Xcode
-2. Select your iPhone
-3. Build & Run
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+**Areas where help is needed:**
+- Additional sensor support (magnetometer, barometer)
+- New streaming protocols (ROS 2 native, RTSP)
+- Performance optimizations
+- Bug fixes and testing
+- Documentation improvements
 
 ---
 
-**Clean. Reliable. Professional.**
+## 🙏 Acknowledgments
+
+Built for the robotics, AR, and computer vision research community.
+
+**Technologies used:**
+- ARKit for depth and pose tracking
+- AVFoundation for camera capture
+- CoreMotion for IMU data
+- Network framework for WebSocket server
+- Watch Connectivity for wearable integration
+
+---
+
+## 📧 Contact
+
+**Issues:** [GitHub Issues](https://github.com/jaskirat1616/arvos/issues)
+
+**Web Studio:** [https://arvos-studio-4u0khl359-jaskirat1616s-projects.vercel.app/](https://arvos-studio-4u0khl359-jaskirat1616s-projects.vercel.app/)
+
+---
+
+**Made with ❤️ for researchers and developers**
