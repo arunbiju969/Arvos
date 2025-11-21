@@ -501,82 +501,82 @@ class ARKitService: NSObject {
 
 extension ARKitService: ARSessionDelegate {
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        let timestamp = Constants.Time.now()
+        // CRITICAL: Wrap entire delegate in autoreleasepool to prevent ARFrame retention
+        autoreleasepool {
+            let timestamp = Constants.Time.now()
 
-        // Only print every 30th frame to reduce spam
-        frameCount += 1
-        if frameCount % 30 == 0 {
-        }
+            frameCount += 1
 
-        // Extract all needed data from ARFrame immediately to avoid retention
-        // Extract camera first (struct copy, safe)
-        let camera = frame.camera
-        let capturedImage = frame.capturedImage
-        let cameraIntrinsics = camera.intrinsics
-        let cameraTransform = camera.transform
-        let trackingState = camera.trackingState
-        
-        // Process camera frame at target FPS (15 FPS) - only if not currently processing
-        if !isProcessingCamera && (lastCameraTime == 0 || timestamp - lastCameraTime >= cameraInterval) {
-            lastCameraTime = timestamp
-            processCameraFrame(
-                pixelBuffer: capturedImage,
-                intrinsics: cameraIntrinsics,
-                timestamp: timestamp
-            )
-        }
+            // Extract all needed data from ARFrame immediately
+            let camera = frame.camera
+            let cameraIntrinsics = camera.intrinsics
+            let cameraTransform = camera.transform
 
-        // Process pose at target FPS
-        if timestamp - lastPoseTime >= poseInterval {
-            lastPoseTime = timestamp
-            // Use already extracted camera (struct copy, no frame retention)
-            let poseData = PoseData(timestamp: timestamp, camera: camera)
-            delegate?.arKitService(self, didUpdate: poseData)
-        }
+            // CRITICAL FIX: Copy buffers IMMEDIATELY, don't pass frame references
+            var capturedImageCopy: CVPixelBuffer?
+            if !isProcessingCamera && (lastCameraTime == 0 || timestamp - lastCameraTime >= cameraInterval) {
+                capturedImageCopy = copyPixelBuffer(frame.capturedImage)
+            }
 
-        // Process depth at target FPS - only if not currently processing
-        if depthEnabled && !isProcessingDepth && (timestamp - lastDepthTime >= depthInterval) {
-            lastDepthTime = timestamp
-            // Extract depth data without retaining the frame
-            let sceneDepth = frame.sceneDepth
-            let estimatedDepth = frame.estimatedDepthData
-            processDepthFrame(
-                sceneDepth: sceneDepth,
-                estimatedDepth: estimatedDepth,
-                cameraTransform: cameraTransform,
-                cameraIntrinsics: cameraIntrinsics,
-                viewportSize: CGSize(width: 256, height: 192)
-            )
+            // Copy depth buffers IMMEDIATELY before frame goes out of scope
+            var depthMapCopy: CVPixelBuffer?
+            var confidenceMapCopy: CVPixelBuffer?
+
+            if depthEnabled && !isProcessingDepth && (timestamp - lastDepthTime >= depthInterval) {
+                if let sceneDepth = frame.sceneDepth {
+                    depthMapCopy = copyPixelBuffer(sceneDepth.depthMap)
+                    if let confidence = sceneDepth.confidenceMap {
+                        confidenceMapCopy = copyPixelBuffer(confidence)
+                    }
+                }
+            }
+
+            // ARFrame goes out of scope HERE - no retention beyond this point
+
+            // Process camera with COPIED buffer (not frame reference)
+            if let capturedImageCopy = capturedImageCopy {
+                lastCameraTime = timestamp
+                processCameraFrameWithCopy(
+                    pixelBuffer: capturedImageCopy,
+                    intrinsics: cameraIntrinsics,
+                    timestamp: timestamp
+                )
+            }
+
+            // Process pose at target FPS
+            if timestamp - lastPoseTime >= poseInterval {
+                lastPoseTime = timestamp
+                let poseData = PoseData(timestamp: timestamp, camera: camera)
+                delegate?.arKitService(self, didUpdate: poseData)
+            }
+
+            // Process depth with COPIED buffers
+            if let depthMapCopy = depthMapCopy {
+                lastDepthTime = timestamp
+                processDepthFrameWithCopy(
+                    depthMap: depthMapCopy,
+                    confidenceMap: confidenceMapCopy,
+                    cameraTransform: cameraTransform,
+                    cameraIntrinsics: cameraIntrinsics
+                )
+            }
         }
-        
-        // Frame goes out of scope here, no retention
+        // Autoreleasepool ends - all temporary objects released
     }
 
-    private func processCameraFrame(pixelBuffer: CVPixelBuffer, intrinsics: simd_float3x3, timestamp: UInt64) {
-        // Skip if still processing previous frame to prevent ARFrame retention
-        guard !isProcessingCamera else {
-            droppedCameraFrames += 1
-            if droppedCameraFrames % 10 == 0 {
-            }
-            return
-        }
+    private func processCameraFrameWithCopy(pixelBuffer: CVPixelBuffer, intrinsics: simd_float3x3, timestamp: UInt64) {
+        // Buffer is ALREADY copied - don't copy again
         isProcessingCamera = true
 
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
-
-        // Copy buffer for async processing
-        guard let bufferCopy = copyPixelBuffer(pixelBuffer) else {
-            isProcessingCamera = false
-            return
-        }
         let frameIntrinsics = CameraIntrinsics(intrinsics: intrinsics)
 
         cameraProcessingQueue.async { [weak self] in
             autoreleasepool {
                 guard let self else { return }
 
-                guard let jpegData = self.encodeJPEG(from: bufferCopy, quality: self.arkitJPEGQuality) else {
+                guard let jpegData = self.encodeJPEG(from: pixelBuffer, quality: self.arkitJPEGQuality) else {
                     DispatchQueue.main.async {
                         self.isProcessingCamera = false
                     }
@@ -598,6 +598,73 @@ extension ARKitService: ARSessionDelegate {
                 DispatchQueue.main.async {
                     self.delegate?.arKitService(self, didCapture: cameraFrame)
                     self.isProcessingCamera = false
+                }
+            }
+        }
+    }
+
+    private func processDepthFrameWithCopy(
+        depthMap: CVPixelBuffer,
+        confidenceMap: CVPixelBuffer?,
+        cameraTransform: simd_float4x4,
+        cameraIntrinsics: simd_float3x3
+    ) {
+        // Buffers are ALREADY copied - no retention risk
+        isProcessingDepth = true
+        let timestamp = Constants.Time.now()
+
+        let hasConfidence = confidenceMap != nil
+
+        // Calculate projection matrix
+        let viewportSize = CGSize(width: 256, height: 192)
+        let projectionMatrix = calculateProjectionMatrix(
+            intrinsics: cameraIntrinsics,
+            viewportSize: viewportSize,
+            zNear: 0.001,
+            zFar: 1000
+        )
+
+        // Emit depth visualization sample
+        let depthSample = DepthVisualizationSample(
+            timestamp: timestamp,
+            depthMap: depthMap,
+            confidenceMap: confidenceMap,
+            intrinsics: cameraIntrinsics,
+            cameraTransform: cameraTransform,
+            projectionMatrix: projectionMatrix
+        )
+
+        DispatchQueue.main.async { [weak self] in
+            self?.delegate?.arKitService(self!, didOutputDepthSample: depthSample)
+        }
+
+        depthProcessingQueue.async { [weak self] in
+            autoreleasepool {
+                guard let self else { return }
+
+                let cloud = self.createPointCloud(
+                    from: depthMap,
+                    cameraTransform: cameraTransform,
+                    intrinsics: cameraIntrinsics,
+                    confidenceMap: confidenceMap
+                )
+
+                DispatchQueue.main.async {
+                    self.isProcessingDepth = false
+
+                    let pointCount = cloud.points.count
+                    guard pointCount > 0 else { return }
+
+                    self.depthFrameCount += 1
+
+                    let depthFrame = DepthFrame(
+                        timestamp: timestamp,
+                        pointCloud: cloud,
+                        cameraTransform: cameraTransform,
+                        intrinsics: cameraIntrinsics,
+                        hasConfidenceData: hasConfidence
+                    )
+                    self.delegate?.arKitService(self, didCapture: depthFrame)
                 }
             }
         }
