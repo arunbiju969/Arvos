@@ -304,6 +304,13 @@ class NetworkManager: ObservableObject {
         do {
             if isServerMode {
                 try webSocketServer.broadcast(json: imuData)
+                #if DEBUG
+                static var imuCount = 0
+                imuCount += 1
+                if imuCount % 50 == 0 {
+                    print("📤 IMU #\(imuCount) broadcasted")
+                }
+                #endif
             } else if let adapter = adapter {
                 try adapter.send(json: imuData)
             } else {
@@ -322,6 +329,9 @@ class NetworkManager: ObservableObject {
         do {
             if isServerMode {
                 try webSocketServer.broadcast(json: gpsData)
+                #if DEBUG
+                print("📤 GPS: \(gpsData.latitude), \(gpsData.longitude)")
+                #endif
             } else if let adapter = adapter {
                 try adapter.send(json: gpsData)
             } else {
