@@ -181,8 +181,9 @@ extension WatchSensorManager: WatchConnectivityDelegate {
             DispatchQueue.main.async {
                 self.latestActivity = activity
             }
-            
+
         default:
+            break
         }
     }
     
