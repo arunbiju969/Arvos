@@ -304,6 +304,9 @@ class NetworkManager: ObservableObject {
                 try webSocketService.send(json: imuData)
             }
         } catch {
+            #if DEBUG
+            print("Failed to stream IMU: \(error)")
+            #endif
         }
     }
 
@@ -319,6 +322,9 @@ class NetworkManager: ObservableObject {
                 try webSocketService.send(json: gpsData)
             }
         } catch {
+            #if DEBUG
+            print("Failed to stream GPS: \(error)")
+            #endif
         }
     }
 

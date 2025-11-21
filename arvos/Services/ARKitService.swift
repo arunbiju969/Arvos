@@ -41,8 +41,8 @@ class ARKitService: NSObject {
 
     // Camera frame timing
     private var lastCameraTime: UInt64 = 0
-    private var cameraInterval: UInt64 = 33_333_333  // 30 FPS (33ms)
-    private let arkitJPEGQuality: CGFloat = 0.5
+    private var cameraInterval: UInt64 = 66_666_666  // 15 FPS (66ms) - slower to prevent ARFrame retention
+    private let arkitJPEGQuality: CGFloat = 0.4  // Lower quality for faster processing
 
     // Frame counters
     private var frameCount = 0
@@ -516,8 +516,8 @@ extension ARKitService: ARSessionDelegate {
         let cameraTransform = camera.transform
         let trackingState = camera.trackingState
         
-        // Process camera frame at target FPS (10 FPS)
-        if lastCameraTime == 0 || timestamp - lastCameraTime >= cameraInterval {
+        // Process camera frame at target FPS (15 FPS) - only if not currently processing
+        if !isProcessingCamera && (lastCameraTime == 0 || timestamp - lastCameraTime >= cameraInterval) {
             lastCameraTime = timestamp
             processCameraFrame(
                 pixelBuffer: capturedImage,
@@ -534,8 +534,9 @@ extension ARKitService: ARSessionDelegate {
             delegate?.arKitService(self, didUpdate: poseData)
         }
 
-        // Process depth at target FPS
-        if depthEnabled {
+        // Process depth at target FPS - only if not currently processing
+        if depthEnabled && !isProcessingDepth && (timestamp - lastDepthTime >= depthInterval) {
+            lastDepthTime = timestamp
             // Extract depth data without retaining the frame
             let sceneDepth = frame.sceneDepth
             let estimatedDepth = frame.estimatedDepthData
