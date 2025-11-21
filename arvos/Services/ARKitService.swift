@@ -41,8 +41,8 @@ class ARKitService: NSObject {
 
     // Camera frame timing
     private var lastCameraTime: UInt64 = 0
-    private var cameraInterval: UInt64 = 66_666_666  // 15 FPS (66ms) - slower to prevent ARFrame retention
-    private let arkitJPEGQuality: CGFloat = 0.4  // Lower quality for faster processing
+    private var cameraInterval: UInt64 = 100_000_000  // 10 FPS (100ms) - slower to prevent ARFrame retention
+    private let arkitJPEGQuality: CGFloat = 0.3  // Lower quality for faster processing
 
     // Frame counters
     private var frameCount = 0
