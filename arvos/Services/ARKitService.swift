@@ -449,7 +449,7 @@ class ARKitService: NSObject {
         let range = zFar - zNear
         
         // Column-major matrix
-        var projection = simd_float4x4(
+        let projection = simd_float4x4(
             SIMD4<Float>(f / aspect, 0, 0, 0),
             SIMD4<Float>(0, f, 0, 0),
             SIMD4<Float>((cx / width - 0.5) * 2.0, (0.5 - cy / height) * 2.0, -(zFar + zNear) / range, -1),
@@ -523,13 +523,14 @@ extension ARKitService: ARSessionDelegate {
             // Process camera with COPIED buffer
             if shouldProcessCamera {
                 let cameraIntrinsics = camera.intrinsics
-                let capturedImageCopy = copyPixelBuffer(frame.capturedImage)
-                lastCameraTime = timestamp
-                processCameraFrameWithCopy(
-                    pixelBuffer: capturedImageCopy,
-                    intrinsics: cameraIntrinsics,
-                    timestamp: timestamp
-                )
+                if let capturedImageCopy = copyPixelBuffer(frame.capturedImage) {
+                    lastCameraTime = timestamp
+                    processCameraFrameWithCopy(
+                        pixelBuffer: capturedImageCopy,
+                        intrinsics: cameraIntrinsics,
+                        timestamp: timestamp
+                    )
+                }
             }
 
             // Process pose at target FPS
@@ -544,16 +545,17 @@ extension ARKitService: ARSessionDelegate {
                 if let sceneDepth = frame.sceneDepth {
                     let cameraTransform = camera.transform
                     let cameraIntrinsics = camera.intrinsics
-                    let depthMapCopy = copyPixelBuffer(sceneDepth.depthMap)
-                    let confidenceMapCopy = sceneDepth.confidenceMap.map { copyPixelBuffer($0) }
+                    if let depthMapCopy = copyPixelBuffer(sceneDepth.depthMap) {
+                        let confidenceMapCopy = sceneDepth.confidenceMap.flatMap { copyPixelBuffer($0) }
 
-                    lastDepthTime = timestamp
-                    processDepthFrameWithCopy(
-                        depthMap: depthMapCopy,
-                        confidenceMap: confidenceMapCopy,
-                        cameraTransform: cameraTransform,
-                        cameraIntrinsics: cameraIntrinsics
-                    )
+                        lastDepthTime = timestamp
+                        processDepthFrameWithCopy(
+                            depthMap: depthMapCopy,
+                            confidenceMap: confidenceMapCopy,
+                            cameraTransform: cameraTransform,
+                            cameraIntrinsics: cameraIntrinsics
+                        )
+                    }
                 }
             }
         }
@@ -608,6 +610,7 @@ extension ARKitService: ARSessionDelegate {
         // Buffers are ALREADY copied - no retention risk
         isProcessingDepth = true
         let timestamp = Constants.Time.now()
+        let hasConfidence = confidenceMap != nil
 
         // DON'T emit depth visualization sample - it causes CVPixelBuffer retention
         // SensorManager doesn't use it anyway (line 440-443 does nothing)
