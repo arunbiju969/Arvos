@@ -28,15 +28,9 @@ struct SensorTestView: View {
                         .ignoresSafeArea()
                     
                     // Main depth/LiDAR view
-                    if let depthSample = viewModel.latestDepthSample {
-                        // Point cloud view mode
-                        if hasLiDAR {
-                            DepthPointCloudView(depthSample: depthSample)
-                                .ignoresSafeArea()
-                        } else {
-                            SimpleDepthView(depthSample: depthSample)
-                                .ignoresSafeArea()
-                        }
+                    if let depthFrame = viewModel.latestDepthFrame {
+                        PointCloudMetalView(pointCloud: depthFrame.pointCloud)
+                            .ignoresSafeArea()
                     } else {
                         // Loading state
                         VStack(spacing: 18) {

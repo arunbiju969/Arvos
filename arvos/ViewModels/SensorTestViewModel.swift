@@ -28,6 +28,7 @@ class SensorTestViewModel: ObservableObject {
 
     // Latest sensor data
     @Published var latestPointCloud: PointCloud?
+    @Published var latestDepthFrame: DepthFrame?
     @Published var latestDepthSample: DepthVisualizationSample?
     @Published var latestCameraImage: UIImage?
     @Published var latestIMU: IMUData?
@@ -60,6 +61,13 @@ class SensorTestViewModel: ObservableObject {
         
         sensorManager.watchSensorManager.$watchHz
             .assign(to: &$watchHz)
+
+        sensorManager.$latestDepthFrame
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] depthFrame in
+                self?.latestDepthFrame = depthFrame
+            }
+            .store(in: &cancellables)
         
         sensorManager.watchSensorManager.$latestAttitude
             .receive(on: DispatchQueue.main)
@@ -115,6 +123,7 @@ class SensorTestViewModel: ObservableObject {
 
         // Clear data
         latestPointCloud = nil
+        latestDepthFrame = nil
         latestDepthSample = nil
         latestCameraImage = nil
         latestIMU = nil
@@ -149,6 +158,7 @@ extension SensorTestViewModel: ARKitServiceDelegate {
         DispatchQueue.main.async {
             if self.showLiDAR {
                 self.latestPointCloud = frame.pointCloud
+                self.latestDepthFrame = frame
                 self.recordSensorUpdate()
             }
         }
